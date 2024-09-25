@@ -1,0 +1,41 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+	"name": "GitOps",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:bookworm",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+			"minikube": "none"
+		},
+		"ghcr.io/rio/features/kustomize:1": {},
+		"ghcr.io/gickis/devcontainer-features/kubeseal": {},
+		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
+		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"weaveworks.vscode-gitops-tools",
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"redhat.vscode-yaml"
+			]
+		}
+	},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
+	],
+	"runArgs": ["--add-host=kubernetes:host-gateway"]
+}
