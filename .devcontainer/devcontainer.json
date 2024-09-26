@@ -37,5 +37,8 @@
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
 	],
-	"runArgs": ["--add-host=kubernetes:host-gateway"]
+	"runArgs": ["--add-host=kubernetes:host-gateway"],
+	"containerEnv": {
+		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem"
+	}
 }
