@@ -19,6 +19,8 @@ spec:
   values:
     oauth:
       clientId: k1FnJf3pDp11CNTRL
+    apiServerProxyConfig:
+      mode: true
   valuesFrom:
     - kind: Secret
       name: tailscale-operator-secret
