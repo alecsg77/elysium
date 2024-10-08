@@ -1,0 +1,18 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: bitnami
+  namespace: coder
+spec:
+  interval: 10m0s
+  url: https://charts.bitnami.com/bitnami
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: coder-v2
+  namespace: coder
+spec:
+  interval: 10m0s
+  url: https://helm.coder.com/v2
