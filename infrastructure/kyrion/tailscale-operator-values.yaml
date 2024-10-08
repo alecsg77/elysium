@@ -1,0 +1,17 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+  namespace: tailscale
+spec:
+  values:
+    oauth:
+      clientId: k1FnJf3pDp11CNTRL
+    operatorConfig:
+      hostname: "kyrion"
+  valuesFrom:
+    - kind: Secret
+      name: tailscale-operator-secret
+      valuesKey: oauth-client-secret
+      targetPath: oauth.clientSecret
