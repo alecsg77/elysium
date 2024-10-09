@@ -1,13 +1,5 @@
----
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
-metadata:
-  name: coder
-  namespace: coder
-spec:
-  values:
-    coder:
-      service:
-        annotations:
-          tailscale.com/expose: "true"
-          tailscale.com/hostname: "coder"
+- op: add
+  path: "/spec/values/coder/env/-"
+  value:
+    name: CODER_ACCESS_URL
+    value: "https://coder.flyingfox-tailor.ts.net"
