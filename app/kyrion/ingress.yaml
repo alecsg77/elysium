@@ -4,6 +4,8 @@ kind: Ingress
 metadata:
   name: coder
   namespace: coder
+  annotations:
+    tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
 spec:
   defaultBackend:
     service:

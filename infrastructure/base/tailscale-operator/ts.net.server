@@ -1,0 +1,5 @@
+ts.net {
+    errors
+    cache 30
+    forward . 10.43.162.122
+}
