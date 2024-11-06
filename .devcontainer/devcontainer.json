@@ -3,7 +3,9 @@
 {
 	"name": "GitOps",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bookworm",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
@@ -25,7 +27,8 @@
 			"extensions": [
 				"weaveworks.vscode-gitops-tools",
 				"ms-kubernetes-tools.vscode-kubernetes-tools",
-				"redhat.vscode-yaml"
+				"redhat.vscode-yaml",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	},
