@@ -16,3 +16,12 @@ metadata:
 spec:
   interval: 10m0s
   url: https://helm.coder.com/v2
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: coder-logstream-kube
+  namespace: coder
+spec:
+  interval: 10m0s
+  url:  https://helm.coder.com/logstream-kube

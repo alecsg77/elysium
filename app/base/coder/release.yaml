@@ -53,3 +53,20 @@ spec:
             secretKeyRef:
               name: coder-db-url
               key: url
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: coder-logstream-kube
+  namespace: coder
+spec:
+  chart:
+    spec:
+      chart: coder-logstream-kube
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: coder-logstream-kube
+  interval: 10m0s
+  targetNamespace: coder
+  values: {}

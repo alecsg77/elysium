@@ -9,3 +9,7 @@ patches:
     target:
       kind: HelmRelease
       name: coder
+  - path: coder-logstream-kube-values.yaml
+    target:
+      kind: HelmRelease
+      name: coder-logstream-kube
