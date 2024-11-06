@@ -39,6 +39,14 @@ spec:
   targetNamespace: coder
   values:
     coder:
+      serviceAccount:
+        extraRules:
+          - apiGroups: [""]
+            resources: ["secrets"]
+            verbs:
+              - get
+              - list
+              - watch
       env:
         - name: CODER_PG_CONNECTION_URL
           valueFrom:
