@@ -3,3 +3,7 @@
   value:
     name: CODER_ACCESS_URL
     value: "https://coder.flyingfox-tailor.ts.net"
+- op: add
+  path: "/spec/values/coder/service"
+  value:
+    type: ClusterIP
