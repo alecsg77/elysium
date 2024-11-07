@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - ../base/coder
-  - ingress.yaml
 
 patches:
   - path: coder-values.yaml

@@ -7,3 +7,13 @@
   path: "/spec/values/coder/service"
   value:
     type: ClusterIP
+- op: add
+  path: "/spec/values/coder/ingress"
+  value:
+    enable: true
+    annotations: 
+      tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+    className: tailscale
+    host: coder
+    tls:
+      enable: true
