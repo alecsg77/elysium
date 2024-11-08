@@ -53,6 +53,35 @@ spec:
             secretKeyRef:
               name: coder-db-url
               key: url
+        - name: CODER_OAUTH2_GITHUB_ALLOW_SIGNUPS
+          value: "true"
+        - name: CODER_OAUTH2_GITHUB_ALLOW_EVERYONE
+          value: "true"
+        - name: CODER_OAUTH2_GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: coder-oauth2-github
+              key: clientId
+        - name: CODER_OAUTH2_GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: coder-oauth2-github
+              key: clientSecret
+        - name: CODER_EXTERNAL_AUTH_0_ID
+          value: "primary-github"
+        - name: CODER_EXTERNAL_AUTH_0_TYPE
+          value: "github"
+        - name: CODER_EXTERNAL_AUTH_0_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: coder-oauth2-github
+              key: clientId
+        - name: CODER_EXTERNAL_AUTH_0_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: coder-oauth2-github
+              key: clientSecret
+
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
