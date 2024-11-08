@@ -44,5 +44,6 @@
 	"runArgs": ["--add-host=kubernetes:host-gateway"],
 	"containerEnv": {
 		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem"
-	}
+	},
+	"postCreateCommand": "sudo sh -c 'kustomize completion bash > /etc/bash_completion.d/kustomize'"
 }
