@@ -1,0 +1,6 @@
+{
+    "recommendations": [
+        "weaveworks.vscode-gitops-tools",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
+    ]    
+}
