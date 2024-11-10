@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
 - sealed-secrets
 - tailscale-operator
+- system-upgrade-controller.yaml
+- k3s-upgrade.yaml
