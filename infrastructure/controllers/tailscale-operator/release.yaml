@@ -16,6 +16,9 @@ spec:
   targetNamespace: tailscale
   install:
     createNamespace: true
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
   values:
     apiServerProxyConfig:
       mode: "true"
