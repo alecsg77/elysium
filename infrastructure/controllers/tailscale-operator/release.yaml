@@ -5,11 +5,20 @@ metadata:
   name: tailscale-operator
   namespace: tailscale
 spec:
+  chart:
+    spec:
+      chart: tailscale-operator
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: tailscale
+  interval: 1h0m0s
+  targetNamespace: tailscale
   values:
+    apiServerProxyConfig:
+      mode: "true"
     oauth:
       clientId: k1FnJf3pDp11CNTRL
-    operatorConfig:
-      hostname: "kyrion"
   valuesFrom:
     - kind: Secret
       name: tailscale-operator-secret

@@ -9,6 +9,15 @@ patches:
     target:
       kind: HelmRelease
       name: coder
+  - patch: |-
+      - op: add
+        path: "/spec/values/coder/env/-"
+        value:
+          name: CODER_ACCESS_URL
+          value: "https://coder.flyingfox-tailor.ts.net"
+    target:
+      kind: HelmRelease
+      name: coder
   - path: coder-logstream-kube-values.yaml
     target:
       kind: HelmRelease

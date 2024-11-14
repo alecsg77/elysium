@@ -1,0 +1,8 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: coder-logstream-kube
+  namespace: coder
+spec:
+  values: 
+    url: "https://coder.flyingfox-tailor.ts.net"

@@ -1,0 +1,18 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: coder
+  namespace: coder
+spec:
+  values:
+    coder:
+      service:
+        type: ClusterIP
+      ingress:
+        enable: true
+        annotations:
+          tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+        className: tailscale
+        host: coder
+        tls:
+          enable: true

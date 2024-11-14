@@ -5,6 +5,7 @@ resources:
   - release.yaml
   - repository.yaml
   - dns.yaml
+  - tailscale-operator-secret-selead.yaml
 
 configMapGenerator:
   - name: coredns-custom

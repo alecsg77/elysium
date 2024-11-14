@@ -98,4 +98,3 @@ spec:
         name: coder-logstream-kube
   interval: 10m0s
   targetNamespace: coder
-  values: {}
