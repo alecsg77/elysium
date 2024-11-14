@@ -2,6 +2,7 @@ apiVersion: tailscale.com/v1alpha1
 kind: DNSConfig
 metadata:
   name: ts-dns
+  namespace: tailscale
 spec:
   nameserver:
     image:
