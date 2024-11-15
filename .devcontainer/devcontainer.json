@@ -45,5 +45,9 @@
 	"containerEnv": {
 		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem"
 	},
-	"postCreateCommand": "sudo sh -c 'kustomize completion bash > /etc/bash_completion.d/kustomize'"
+	"postCreateCommand": {
+		"kustomize": "sudo sh -c 'kustomize completion bash > /etc/bash_completion.d/kustomize'",
+		"flux": "sudo sh -c 'flux completion bash > /etc/bash_completion.d/flux'",
+		"kompose": "sudo sh -c 'kompose completion bash > /etc/bash_completion.d/kompose'"
+	}
 }
