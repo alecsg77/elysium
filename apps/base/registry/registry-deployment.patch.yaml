@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: registry
+spec:
+  template:
+    spec:
+      containers:
+        - name: registry
+          envFrom:
+            - prefix: REGISTRY_
+              configMapRef:
+                name: registry-config-env
+                optional: true
