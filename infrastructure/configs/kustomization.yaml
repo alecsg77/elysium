@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ts-dns.yaml
   - k3s-upgrade.yaml
+  - cluster-issuers.yaml
 
 configMapGenerator:
   - name: coredns-custom
