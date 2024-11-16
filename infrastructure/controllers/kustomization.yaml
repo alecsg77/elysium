@@ -5,3 +5,4 @@ resources:
   - sealed-secrets
   - tailscale-operator
   - system-upgrade.yaml
+  - cert-manager.yaml
