@@ -6,4 +6,4 @@ resources:
   - release.yaml
   - repository.yaml
   - secret.yaml
-  - sealed-secret.yaml
+  - sealed-secrets.yaml
