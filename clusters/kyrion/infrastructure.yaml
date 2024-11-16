@@ -14,6 +14,17 @@ spec:
   path: ./infrastructure/controllers
   prune: true
   wait: true
+  patches:
+    - patch: |
+        apiVersion: helm.toolkit.fluxcd.io/v2
+        kind: HelmRelease
+        metadata:
+          name: tailscale-operator
+          namespace: flux-system
+        spec:
+          values:
+            operatorConfig:
+              hostname: kyrion
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -31,12 +42,3 @@ spec:
     name: flux-system
   path: ./infrastructure/configs
   prune: true
-  patches:
-    - patch: |
-        - op: replace
-          path: /spec/values/operatorConfig/hostname
-          value: kyrion
-      target:
-        kind: HelmRelease
-        name: tailscale-operator
-        namespace: tailscale

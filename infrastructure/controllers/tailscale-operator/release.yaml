@@ -16,7 +16,7 @@ spec:
   targetNamespace: tailscale
   install:
     createNamespace: true
-    crds: CreateReplace
+    crds: Create
   upgrade:
     crds: CreateReplace
   values:
