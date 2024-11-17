@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../base/coder
   - ../base/registry
+  - ../base/podinfo
 
 patches:
   - path: coder-values.yaml
@@ -23,6 +24,7 @@ patches:
     target:
       kind: HelmRelease
       name: coder-logstream-kube
+  - path: podinfo-values.yaml
 
 configMapGenerator:
   - name: registry-config-env
