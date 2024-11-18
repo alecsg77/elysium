@@ -5,6 +5,7 @@ resources:
   - ts-dns.yaml
   - k3s-upgrade.yaml
   - cluster-issuers.yaml
+  - traefik-config.yaml
 
 configMapGenerator:
   - name: coredns-custom
