@@ -14,3 +14,4 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - ts.net.server
+      - arkham.docker.local.server
