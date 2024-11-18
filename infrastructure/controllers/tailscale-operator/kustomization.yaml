@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   - release.yaml
   - repository.yaml
-  - tailscale-operator-secret-selead.yaml
+  - tailscale-operator-secret.yaml

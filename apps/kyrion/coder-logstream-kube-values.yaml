@@ -5,4 +5,4 @@ metadata:
   namespace: coder
 spec:
   values: 
-    url: "https://coder.flyingfox-tailor.ts.net"
+    url: "https://coder.${ts_net}"

@@ -16,7 +16,7 @@ patches:
         path: "/spec/values/coder/env/-"
         value:
           name: CODER_ACCESS_URL
-          value: "https://coder.flyingfox-tailor.ts.net"
+          value: "https://coder.${ts_net}"
     target:
       kind: HelmRelease
       name: coder

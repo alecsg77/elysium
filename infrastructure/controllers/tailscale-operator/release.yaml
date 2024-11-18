@@ -23,7 +23,7 @@ spec:
     apiServerProxyConfig:
       mode: "true"
     oauth:
-      clientId: kLXypvPppG11CNTRL
+      clientId: ${ts_oauth_clientID}
   valuesFrom:
     - kind: Secret
       name: tailscale-operator-secret
