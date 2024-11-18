@@ -5,6 +5,7 @@ resources:
   - ../base/coder
   - ../base/registry
   - ../base/podinfo
+  - web-public.yaml
 
 patches:
   - path: coder-values.yaml
