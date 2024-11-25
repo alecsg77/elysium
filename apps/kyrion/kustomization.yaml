@@ -5,7 +5,9 @@ resources:
   - ../base/coder
   - ../base/registry
   - ../base/podinfo
+  - ../base/capacitor.yaml
   - web-public.yaml
+  - capacitor-ingress.yaml
 
 patches:
   - path: coder-values.yaml
