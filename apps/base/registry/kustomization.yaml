@@ -7,6 +7,9 @@ resources:
   - namespace.yaml
   - repository.yaml
   - release.yaml
+  - registry.yaml
+  - policy.yaml
+  
 configMapGenerator:
   - name: registry-values
     files:
