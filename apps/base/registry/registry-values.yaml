@@ -1,6 +1,6 @@
 image:
   repository: registry
-  tag: "2"
+  tag: "2" # {"$imagepolicy": "registry:registry:tag"}
 
 volumes:
   - name: registry

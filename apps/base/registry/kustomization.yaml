@@ -9,7 +9,8 @@ resources:
   - release.yaml
   - registry.yaml
   - policy.yaml
-  
+  - automation.yaml
+
 configMapGenerator:
   - name: registry-values
     files:
