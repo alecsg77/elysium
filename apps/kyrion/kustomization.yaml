@@ -28,9 +28,3 @@ patches:
       kind: HelmRelease
       name: coder-logstream-kube
   - path: podinfo-values.yaml
-
-configMapGenerator:
-  - name: registry-config-env
-    namespace: registry
-    envs:
-      - registry.env

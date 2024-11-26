@@ -1,0 +1,10 @@
+image:
+  repository: registry
+  tag: "2"
+
+volumes:
+  - name: registry
+    size: "100Mi"
+    path: /var/lib/registry
+
+containerPort: 5000

@@ -1,0 +1,17 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: registry
+  namespace: registry
+spec:
+  releaseName: registry
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+  interval: 10m
+  valuesFrom:
+    - kind: ConfigMap
+      name: registry-values
