@@ -1,0 +1,8 @@
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: connector
+  namespace: tailscale
+spec:
+  hostname: svizzera
+  exitNode: true

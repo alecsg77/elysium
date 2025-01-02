@@ -8,6 +8,7 @@ resources:
   - ../base/capacitor.yaml
   - web-public.yaml
   - capacitor-ingress.yaml
+  - connector.yaml
 
 patches:
   - path: coder-values.yaml
