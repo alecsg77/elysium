@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: db
+  namespace: romm
+spec:
+  chart:
+    spec:
+      chart: mariadb
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+  interval: 10m0s
+  targetNamespace: romm
+  values:
+    auth:
+      username: romm
+      password: romm
+      database: romm
+    persistence:
+      size: 10Gi

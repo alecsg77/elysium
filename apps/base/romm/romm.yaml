@@ -1,0 +1,70 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: romm
+  namespace: romm
+spec:
+  dependsOn:
+    - name: db
+  releaseName: romm
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+  interval: 10m
+  values:
+    image:
+      repository: rommapp/romm
+      tag: "3.7.0-beta.1"
+    vars:
+      TZ: "Europe/Rome"
+      ENABLE_RESCAN_ON_FILESYSTEM_CHANGE: "true"
+      ENABLE_SCHEDULED_RESCAN: "true"
+      ENABLE_SCHEDULED_UPDATE_MAME_XML: "true"
+      GUNICORN_WORKERS: "4"
+      DB_HOST: romm-db-mariadb.romm.svc.cluster.local
+    sealedSecrets:
+      DB_USER: AgA9HrkcQUgHZVw0aouj1uM1VVkuOFY4ICehkNmyWEUdGF/FpEQzxyN1L9iRJH3u3hXmNxQuR8xv4inP9fZZNvD32BFqj8TqzA5ChFTRlOk229uABvt7Saw+RGyNArZX0yEK6bUf1K2z6TMRbVNZIUQ8ywT8iq8NCyKBqjCWbUCUfo6dG7s3JVfpTYKWVos4/xGKkLw43HgURASBy/4kUl9FFj/wVXutBujLCYe/BeIlikWS6cYlQrE6DGMKgZzh8abPEKTkqkaySXg5+G4zlpFQD3fdpyIB8gZnE+bT3mJISPapWVFzPrifNJgiXM0cJrOeS7p/UNqIcNDd6xw0DHinL6KSMXt/JnZHEabirSZLS+uaB5v5xyTCfFBGUugBaFpW583YpbvkTuKA6op9apOron+4snLnb878xUWcEeZmJd0JDCVBKckMLtRFQqXnOFdOX3RVOVGtQWuQEny3z4ebzj3I6OXjut00Vl75gv7rgiO2xaq/nttE86vu51hdr4wLyMKP4Ozsmhq6ij3nnSbRpjk2IN3h/03AdtR7nhlVLnMYIVvccq7qgEW50UZAKQoH9S8FvBsbMURnI5FndNNL4FnE3NEIFFOontXz532tbeFHqWsxZq0NfQ4/8noUGTpvBfa80ih7ZJnFtqcxpzQYoEa8MJyV1XgJTlBEBozZZObpgRKFBZVz4gBpfdY2SDPdEWMS
+      DB_PASSWD: AgA9HrkcQUgHZVw0aouj1uM1VVkuOFY4ICehkNmyWEUdGF/FpEQzxyN1L9iRJH3u3hXmNxQuR8xv4inP9fZZNvD32BFqj8TqzA5ChFTRlOk229uABvt7Saw+RGyNArZX0yEK6bUf1K2z6TMRbVNZIUQ8ywT8iq8NCyKBqjCWbUCUfo6dG7s3JVfpTYKWVos4/xGKkLw43HgURASBy/4kUl9FFj/wVXutBujLCYe/BeIlikWS6cYlQrE6DGMKgZzh8abPEKTkqkaySXg5+G4zlpFQD3fdpyIB8gZnE+bT3mJISPapWVFzPrifNJgiXM0cJrOeS7p/UNqIcNDd6xw0DHinL6KSMXt/JnZHEabirSZLS+uaB5v5xyTCfFBGUugBaFpW583YpbvkTuKA6op9apOron+4snLnb878xUWcEeZmJd0JDCVBKckMLtRFQqXnOFdOX3RVOVGtQWuQEny3z4ebzj3I6OXjut00Vl75gv7rgiO2xaq/nttE86vu51hdr4wLyMKP4Ozsmhq6ij3nnSbRpjk2IN3h/03AdtR7nhlVLnMYIVvccq7qgEW50UZAKQoH9S8FvBsbMURnI5FndNNL4FnE3NEIFFOontXz532tbeFHqWsxZq0NfQ4/8noUGTpvBfa80ih7ZJnFtqcxpzQYoEa8MJyV1XgJTlBEBozZZObpgRKFBZVz4gBpfdY2SDPdEWMS
+      ROMM_AUTH_SECRET_KEY: AgBRkI26iF/btSud9hIWKmBaYJyZSbAnxsoNczLJ5KLeUSaE/CF8D4VXFlFZZDesUDmd477f/QyS0MDZaKDlmAN+y58Bdpe/j675enHBhATR3H2Hse0Sq8NqREh7Q038FiBtDnpRMetXwTv1iteJTMW/3QUE3EWeiTe0CnGxZddNs6vv4ms3Mk9dirCP2nfnGu+216Tt4hJDYr2c41RtRllsXGQfqlHZv0gab9KScoFZzORkK1eEquOW3Ik6Td3lX6ApCR6kytLRbPIu0bEeGbt2Yh0jfBFpDkWc2/p9QDpJArLURojfqEEqTxunUlLV6ZP70jA03jYYX0Bel/AbOyAB48G7R3V9fanoRTcPXZigehdmH1bRSzJ2Dx4AWMRMCI7XxBY7B5/VMOUe7QsNKzTprjHiJj7CsLtrUDNOHdU1uORcaIESS7M/oBzcNPHnEc0wV/LOkijFVowTPfK05Fyb922erbnVzOwhwBER4uzK0kggeSV37QBOt/Sv4yDSehZNoGul0RKuan5qel98sdAIVHJVupe95ukrcsFQlu8IxY03ciwGz7IV3g6jT7VfwvchyRNt8YQdyLtRkujQOniIhXhH/n75+wWl80dSz06FCLclGyWx6BKTlpTEzqv3ZIMVezCHGXvzF38zQuhmjWyGf1vYCIasga4m6atEfwwQOIerenejzNnfzvKxqQasVrhOZzFgmzM+DH2/d//wiI5Xnutv5E7VzjbXeGy/ZXA4qnUIa8+VT38bJeWW/IyENWHuVkNK7RIwNN5DNaCaD5xm
+      IGDB_CLIENT_ID: AgAxdcH3cNz/Fn0xAmy1U8vqH9eKAuelaNmB5BJP0hiZmdc5wxvtmHPefK9VzukslLYgLAIvx05l57EsZ3hzxKrGVPYwroPIC1tAtkvUES8cXRZVpFF61dtddmPMDfpfgmZuqCYm3dwmhkWis5ShhhTgSSZaqemKAwmCU52eYQH80CBgffnn1xTI7finHbuLhZHvYo/VgcxFBOqyaNlOWbGjcPAkeKuRkibKu3K+VypAZvfRO9syQXBq0CgHe58AfM2yTtHBfVihfaO7EQiNBzznANB5MakSRJqiyRreP+bFDu1+DWud4KkvzxJrm+LA2AMwHnLoRRM3pLChAyaRDPxE0lpM/4u+AyyuSS4G6V3RKViWGVouICwll1JCgXC3L26zlXjI3VpvTXGcPQSNYT73uzTtQB2Ot9lKKSXjj682U+m86nWO1UThuO9BUHkrSZHuAmC+b0GmpioYbGyNWWeaIEA/W68AZN1hdYOJsLDa7CaNx5F0CaIjWKZn+CdNiyBzxJQ4kRb9WgW6T9euhTvlNMMYgBjpHcDR1tGDVwsfIK7YEDEOdYChNHYfFBbWSYfl5v1ja/CioEfP0O/OmXkX73pehH548TZiKZZriHY//VGwRMllazByi4jEiVwX70VVxGlHeSA0kXU7EDVda2mKKsoFuw6vrysROtQsOVHdmw39w6J5wMN/+DFI5kKfMfQ85A1Jf/1xD//nYtYnHWScwERBZ25hL+1GyOHF9qE=
+      IGDB_CLIENT_SECRET: AgCeq6ay15Sg4DG/1O2NjZj/30pchRxxsKnaRv8QDaTPuNm6PTS7qUnrhlGbDMnaxXBB1h2Dn/JwqbCshn4pXpRx+rMRi3li6R6D7oyL11U7K5UIbnjgJiE7UnSjNZHRFPo8puQwjnjlAjq0HPJdPGq5Q4cSTrkByMiol37s3HF9oISHZjk2Cfz0mqThT4PCyZVR5n87Xn9zkAeD3MxEmUjf7i2i4sqeRs28TtazxXGKPo/CWTFLnTVaUjDWLMKCb1u/3I+sVn/rQyYcXv009bx+boghOpCAw7xjfy3OXo21Q4cCylcqW12Xcad2C3ImI7yiX3G3m0Gj2ymUrUN33pHy5WJAIVtTIMt/I9aaRAUWSFP1TZzM13jjA1MCvMYR8xTxAvJeXPTw9HIO57mdcNLhYCpfwB1FOPLhWXxKA8ygVS1+jBNWR9F48JJgr/Hwdmj6omMCTAKvfKM7Nd46Tapqt+ycYhwHOKCKrp++QE2Yc6LajFsgQ3FGLBa6LMWXU6QMf8sdlKxsbqB4aiXwSo4ZzWQqdqELonWJkpU+QLCThDC1OObk52BM1bkJegQSpBf1/VFz7eXPdzoh7+qKOR+hlR6gcWQqQjalY3ob2npvlIKudRVfb08EnMQoLSzZ9NFJS2Q28yAh4826mCOCcbJtxcTa7HUdjG12RdPKJGEmoNJa19lJKkcijYmPoYw8100hsAHvZB3CRf9Xty1/IgR4yjuHsYJRDNG897kPG3s=
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "4"
+        memory: "4Gi"
+    volumes:
+      - name: resources
+        size: "100Mi"
+        path: /romm/resources
+      - name: redis-data
+        size: "100Mi"
+        path: /redis-data
+      - name: library
+        size: "100Mi"
+        path: /romm/library
+        hostPath:
+          path: /mnt/library/arkham/romm/library
+          type: DirectoryOrCreate
+      - name: assets
+        size: "100Mi"
+        path: /romm/assets
+        hostPath:
+          path: /mnt/library/arkham/romm/assets
+          type: DirectoryOrCreate
+      - name: config
+        size: "100Mi"
+        path: /romm/config
+        hostPath:
+          path: /mnt/library/arkham/romm/config
+          type: DirectoryOrCreate
+    containerPort: 8080
+    ingress:
+      tlsEnabled: true
+      ingressClassName: tailscale
+      host: romm

@@ -9,6 +9,7 @@ resources:
   - web-public.yaml
   - capacitor-ingress.yaml
   - connector.yaml
+  - ../base/romm
 
 patches:
   - path: coder-values.yaml
