@@ -54,6 +54,14 @@ spec:
       target:
         kind: ClusterIssuer
         name: letsencrypt
+    - patch: |
+        apiVersion: tailscale.com/v1alpha1
+        kind: Connector
+        metadata:
+          name: connector
+          namespace: tailscale
+        spec:
+          hostname: svizzera
   postBuild:
     substituteFrom:
       - kind: Secret

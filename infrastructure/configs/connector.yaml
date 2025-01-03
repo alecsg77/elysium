@@ -4,5 +4,4 @@ metadata:
   name: connector
   namespace: tailscale
 spec:
-  hostname: svizzera
   exitNode: true

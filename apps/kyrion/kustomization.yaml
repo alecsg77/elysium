@@ -2,14 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ../base
   - ../base/coder
   - ../base/registry
   - ../base/podinfo
-  - ../base/capacitor.yaml
+  - ../base/romm
   - web-public.yaml
   - capacitor-ingress.yaml
-  - connector.yaml
-  - ../base/romm
 
 patches:
   - path: coder-values.yaml
