@@ -12,6 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: bitnami
+        namespace: flux-system
   interval: 10m0s
   targetNamespace: coder
   values:

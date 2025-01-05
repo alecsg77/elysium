@@ -1,8 +1,0 @@
-image:
-  repository: registry
-  tag: "2.8.3" # {"$imagepolicy": "registry:registry:tag"}
-volumes:
-  - name: registry
-    size: "100Mi"
-    path: /var/lib/registry
-containerPort: 5000

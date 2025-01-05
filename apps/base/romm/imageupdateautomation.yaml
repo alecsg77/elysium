@@ -1,8 +1,9 @@
+---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
 metadata:
-  name: registry
-  namespace: registry
+  name: romm
+  namespace: flux-system
 spec:
-  image: registry
+  image: rommapp/romm
   interval: 12h

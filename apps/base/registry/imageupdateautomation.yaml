@@ -1,0 +1,21 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: registry
+  namespace: flux-system
+spec:
+  image: registry
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: registry-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: registry
+  policy:
+    semver:
+      range: 2.x
