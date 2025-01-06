@@ -1,0 +1,23 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: raiplaysoundrss
+  namespace: flux-system
+spec:
+  image: ghcr.io/alecsg77/raiplaysoundrss
+  interval: 12h
+  secretRef:
+    name: ghcr-alecsg77-regcred
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: raiplaysoundrss-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: raiplaysoundrss
+  policy:
+    semver:
+      range: "*"

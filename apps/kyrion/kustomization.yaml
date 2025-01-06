@@ -7,6 +7,7 @@ resources:
   - ../base/registry
   - ../base/podinfo
   - ../base/romm
+  - ../base/raiplaysoundrss
   - web-public.yaml
   - capacitor-ingress.yaml
 
