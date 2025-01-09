@@ -7,3 +7,4 @@ resources:
   - system-upgrade.yaml
   - cert-manager.yaml
   - nfd.yaml
+  - inteldeviceplugins.yaml
