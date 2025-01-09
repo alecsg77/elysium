@@ -8,6 +8,7 @@ resources:
   - traefik-config.yaml
   - connector.yaml
   - imageupdateautomation.yaml
+  - local-storage-class.yaml
 
 
 configMapGenerator:
