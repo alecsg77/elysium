@@ -6,3 +6,4 @@ resources:
   - tailscale-operator
   - system-upgrade.yaml
   - cert-manager.yaml
+  - nfd.yaml
