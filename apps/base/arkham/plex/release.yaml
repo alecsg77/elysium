@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: linuxserver/plex # {"$imagepolicy": "flux-system:plex-policy:name"}
-      tag: "latest" # {"$imagepolicy": "flux-system:plex-policy:tag"}
+      tag: "1.41.3" # {"$imagepolicy": "flux-system:plex-policy:tag"}
     resources:
       requests:
         cpu: "1"
@@ -65,7 +65,7 @@ spec:
     podSpec:
       hostNetwork: true
     container:
-       ports:
+      ports:
         - name: http
           containerPort: 32400
           hostPort: 32400
