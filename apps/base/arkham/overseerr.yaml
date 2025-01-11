@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "flux-system:overseerr-policy:name"}
-      tag: "latest" # {"$imagepolicy": "flux-system:overseerr-policy:tag"}
+      tag: "version-v1.33.2" # {"$imagepolicy": "flux-system:overseerr-policy:tag"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
