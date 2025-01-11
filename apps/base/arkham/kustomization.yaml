@@ -6,3 +6,4 @@ resources:
   - pvc.yaml
   - qbittorrent
   - plex
+  - flaresolverr.yaml
