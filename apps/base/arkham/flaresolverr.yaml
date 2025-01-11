@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: ghcr.io/flaresolverr/flaresolverr # {"$imagepolicy": "flux-system:flaresolverr-policy:name"}
-      tag: "latest" # {"$imagepolicy": "flux-system:flaresolverr-policy:tag"}
+      tag: "v3.3.21" # {"$imagepolicy": "flux-system:flaresolverr-policy:tag"}
     resources:
       requests:
         cpu: "2"
