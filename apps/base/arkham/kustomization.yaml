@@ -8,3 +8,4 @@ resources:
   - plex
   - flaresolverr.yaml
   - overseerr.yaml
+  - apprise-api.yaml
