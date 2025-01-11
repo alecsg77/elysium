@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/apprise-api # {"$imagepolicy": "flux-system:apprise-api-policy:name"}
-      tag: "latest" # {"$imagepolicy": "flux-system:apprise-api-policy:tag"}
+      tag: "version-v1.1.8" # {"$imagepolicy": "flux-system:apprise-api-policy:tag"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
