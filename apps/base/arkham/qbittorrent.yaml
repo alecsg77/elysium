@@ -1,4 +1,3 @@
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -16,7 +15,7 @@ spec:
   interval: 10m
   values:
     image:
-      repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
+      repository: linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
       tag: "5.0.3" # {"$imagepolicy": "flux-system:qbittorrent-policy:tag"}
     resources:
       requests:
