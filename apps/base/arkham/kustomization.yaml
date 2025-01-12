@@ -4,8 +4,8 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - pvc.yaml
-  - qbittorrent
-  - plex
+  - qbittorrent.yaml
+  - plex.yaml
   - flaresolverr.yaml
   - overseerr.yaml
   - apprise-api.yaml

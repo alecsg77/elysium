@@ -15,7 +15,7 @@ spec:
   interval: 10m
   values:
     image:
-      repository: linuxserver/plex # {"$imagepolicy": "flux-system:plex-policy:name"}
+      repository: lscr.io/linuxserver/plex # {"$imagepolicy": "flux-system:plex-policy:name"}
       tag: "1.41.3" # {"$imagepolicy": "flux-system:plex-policy:tag"}
     resources:
       requests:
@@ -69,3 +69,24 @@ spec:
         - name: http
           containerPort: 32400
           hostPort: 32400
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: plex
+  namespace: flux-system
+spec:
+  image: lscr.io/linuxserver/plex
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: plex-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: plex
+  policy:
+    semver:
+      range: 1.x

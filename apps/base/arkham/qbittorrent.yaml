@@ -1,3 +1,4 @@
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -15,7 +16,7 @@ spec:
   interval: 10m
   values:
     image:
-      repository: linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
+      repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
       tag: "5.0.3" # {"$imagepolicy": "flux-system:qbittorrent-policy:tag"}
     resources:
       requests:
@@ -60,3 +61,24 @@ spec:
           protocol: UDP
           containerPort: 51413
           hostPort: 51413
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: qbittorrent
+  namespace: flux-system
+spec:
+  image: lscr.io/linuxserver/qbittorrent
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: qbittorrent-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: qbittorrent
+  policy:
+    semver:
+      range: 5.x
