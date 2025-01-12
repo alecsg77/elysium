@@ -1,0 +1,81 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tautulli
+  namespace: arkham
+spec:
+  releaseName: tautulli
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 10m
+  values:
+    image:
+      repository: lscr.io/linuxserver/tautulli # {"$imagepolicy": "flux-system:tautulli-policy:name"}
+      tag: "version-v2.15.1" # {"$imagepolicy": "flux-system:tautulli-policy:tag"}
+    vars:
+      PUID: ${PUID:=1000}
+      PGID: ${PGID:=1000}
+      TZ: ${TZ:=Etc/UTC}
+    volumes:
+      - name: storage
+        size: "100Mi"
+        path: /config
+        subPath: tautulli/config
+        existingClaim: pvc-storage
+      - name: storage
+        size: "100Mi"
+        path: /plex
+        subPath: plex/config
+        existingClaim: pvc-storage
+      - name: storage
+        size: "500Mi"
+        path: /config/backups
+        subPath: tautulli/backups
+        existingClaim: pvc-storage
+    containerPort: 8181
+    ingress:
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+      host: arkham.${ts_net}
+      path: /tautulli
+    probe:
+      enabled: true
+      path: /tautulli/status
+      settings:
+        initialDelaySeconds: 30
+        timeoutSeconds: 5
+    livenessProbe:
+      enabled: true
+      path: /tautulli/status
+      settings:
+        initialDelaySeconds: 30
+        timeoutSeconds: 10
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: tautulli
+  namespace: flux-system
+spec:
+  image: lscr.io/linuxserver/tautulli
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: tautulli-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: tautulli
+  filterTags:
+    pattern: '^version-v(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$'
+    extract: "$major.$minor.$patch"
+  policy:
+    semver:
+      range: 2.x

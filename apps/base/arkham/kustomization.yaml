@@ -10,3 +10,4 @@ resources:
   - flaresolverr.yaml
   - overseerr.yaml
   - apprise-api.yaml
+  - tautulli.yaml
