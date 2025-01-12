@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: arkham
+  namespace: kube-system
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: traefik
+      port:
+        name: web
+  tls:
+    - hosts:
+        - arkham
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-prefix
+  namespace: arkham
+spec:
+  stripPrefixRegex:
+    regex:
+    - ^/[^/]+

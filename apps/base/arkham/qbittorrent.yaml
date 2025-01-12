@@ -45,9 +45,11 @@ spec:
         existingClaim: pvc-watch
     containerPort: 8080
     ingress:
-      tlsEnabled: true
-      ingressClassName: tailscale
-      host: qbittorrent
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+        traefik.ingress.kubernetes.io/router.middlewares: arkham-strip-prefix@kubernetescrd
+      host: arkham.${ts_net}
+      path: /qbittorrent
     container:
       ports:
         - name: http

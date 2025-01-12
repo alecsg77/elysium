@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - pvc.yaml
+  - ts-ingress.yaml
   - qbittorrent.yaml
   - plex.yaml
   - flaresolverr.yaml
