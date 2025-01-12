@@ -17,6 +17,10 @@ spec:
     image:
       repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "flux-system:overseerr-policy:name"}
       tag: "version-v1.33.2" # {"$imagepolicy": "flux-system:overseerr-policy:tag"}
+    resources:
+      limits:
+        cpu: "1"
+        memory: "2Gi"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
