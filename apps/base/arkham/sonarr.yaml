@@ -1,0 +1,88 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sonarr
+  namespace: arkham
+spec:
+  releaseName: sonarr
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 10m
+  values:
+    image:
+      repository: lscr.io/linuxserver/sonarr # {"$imagepolicy": "flux-system:sonarr-policy:name"}
+      tag: "4.0.12" # {"$imagepolicy": "flux-system:sonarr-policy:tag"}
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+    vars:
+      PUID: ${PUID:=1000}
+      PGID: ${PGID:=1000}
+      TZ: ${TZ:=Etc/UTC}
+    volumes:
+      - name: storage
+        size: "100Mi"
+        path: /config
+        subPath: sonarr/config
+        existingClaim: pvc-storage
+      - name: downloads
+        size: "100Mi"
+        path: /downloads
+        existingClaim: pvc-downloads
+      - name: library
+        size: "100Mi"
+        path: /media/library
+        existingClaim: pvc-library
+      - name: backups
+        size: "500Mi"
+        path: /backups
+        subPath: sonarr/backups
+        existingClaim: pvc-backups
+    containerPort: 8989
+    ingress:
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+      host: arkham.${ts_net}
+      path: /sonarr
+    probe:
+      enabled: true
+      path: /sonarr/ping
+      settings:
+        initialDelaySeconds: 30
+        timeoutSeconds: 5
+    livenessProbe:
+      enabled: true
+      path: /sonarr/ping
+      settings:
+        initialDelaySeconds: 30
+        timeoutSeconds: 10
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: sonarr
+  namespace: flux-system
+spec:
+  image: lscr.io/linuxserver/sonarr
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: sonarr-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: sonarr
+  policy:
+    semver:
+      range: 4.x

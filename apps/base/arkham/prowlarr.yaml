@@ -1,0 +1,80 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prowlarr
+  namespace: arkham
+spec:
+  releaseName: prowlarr
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 10m
+  values:
+    image:
+      repository: lscr.io/linuxserver/prowlarr # {"$imagepolicy": "flux-system:prowlarr-policy:name"}
+      tag: "1.29.2" # {"$imagepolicy": "flux-system:prowlarr-policy:tag"}
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+    vars:
+      PUID: ${PUID:=1000}
+      PGID: ${PGID:=1000}
+      TZ: ${TZ:=Etc/UTC}
+    volumes:
+      - name: storage
+        size: "100Mi"
+        path: /config
+        subPath: prowlarr/config
+        existingClaim: pvc-storage
+      - name: backups
+        size: "500Mi"
+        path: /backups
+        subPath: prowlarr/backups
+        existingClaim: pvc-backups
+    containerPort: 9696
+    ingress:
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+      host: arkham.${ts_net}
+      path: /prowlarr
+    probe:
+      enabled: true
+      path: /prowlarr/ping
+      settings:
+        initialDelaySeconds: 30
+        timeoutSeconds: 5
+    livenessProbe:
+      enabled: true
+      path: /prowlarr/ping
+      settings:
+        initialDelaySeconds: 30
+        timeoutSeconds: 10
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: prowlarr
+  namespace: flux-system
+spec:
+  image: lscr.io/linuxserver/prowlarr
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: prowlarr-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: prowlarr
+  policy:
+    semver:
+      range: 1.x

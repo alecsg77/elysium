@@ -12,3 +12,8 @@ resources:
   - apprise-api.yaml
   - tautulli.yaml
   - msmtpd.yaml
+  - radarr.yaml
+  - sonarr.yaml
+  - lidarr.yaml
+  - bazarr.yaml
+  - prowlarr.yaml
