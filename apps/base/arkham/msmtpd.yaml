@@ -1,0 +1,73 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: msmtpd
+  namespace: arkham
+spec:
+  releaseName: msmtpd
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 10m
+  values:
+    image:
+      repository: crazymax/msmtpd # {"$imagepolicy": "flux-system:msmtpd-policy:name"}
+      tag: "1.8.27" # {"$imagepolicy": "flux-system:msmtpd-policy:tag"}
+    vars:
+      PUID: ${PUID:=1000}
+      PGID: ${PGID:=1000}
+      TZ: ${TZ:=Etc/UTC}
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_TLS: on
+      SMTP_STARTTLS: on
+      SMTP_TLS_CHECKCERT: on
+      SMTP_AUTH: on
+      SMTP_USER_FILE: /run/secrets/smtp_user
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      SMTP_DOMAIN: localhost
+    containerPort: 2500
+    sealedFileSecrets:
+      - name: secrets
+        path: /run/secrets
+        filesToMount:
+          - name: smtp_user
+            source: AgAqTk2p9vmFbyVR+akq+Ak3V0DyU3fwGENqrNZ8Ldn87mrlADtO+ydvhMpkS71CPX6xhFFD4wOj9mObZjSabxTI3LfPZXq1m6uRtu047K2mX6xwQSGLVVS92z93ivCSwgi/4SCgpMSgZSWHtH+vaBUyjI5pKGqaeCI4+PBsWUqwNcJuzGxKqafdoKv3Ne92eD6cc4QNaUPioeWITzpNKxETP7jaDGgIEmzTfmgGztV5GEogTy8hta96MRvYB32t6qkk4jMu2d6zhAJmM7dFBlc1vMrWzt3NGbUQ3F4HCh9NQzHGhZc7Q+YFX6EW1wBjuhptDR9/9g8dYgYy80FZdWipIjzdbB+rLNmiPojm6SePyiDNEKTuFsvUZsvuvZzy5VNSGcp0GHN/E8Fk75UWA/Kycqvu9gfRCmrp8l8kHK2yTXeXQCsmN5Ash6YUqFc5yzbeKZ8x3aCf61wN0Y1jRBr11UdCD5rN6jsJQ9C88ep0L1G6lQKwha5pZzINz8jSdsUCZLJIYyoilVakPSLSqktpwsz/e3oNySqJUBkAOXt0pzRmidakPuUbv3mtDdifJSza3L6DJWsXewm+cMINChX7Ru3Bn90CJc7jvJc6geGueswUtxEdfdK2D/2Yd1WNJ3PxfIE9wQ06SgAPW5iSRSTq8gf4UASb3XuXe4cSZA33oVfp77gYQ6dicp8Vr8L3u+TBcpVo/sw=
+          - name: smtp_password
+            source: AgBwcpGvskPcV9eNTdaDSVRsdd5cacY8FdFdFbDmAZQDmSD2L0hjsIuucULLR713cfhamCUJ13x4LYAotVVN7iwH8KigjfUmiEeSIO+X5NjMaarsH2M4DMI/OydsyH/Ipv8GpxQuJjHGqx78SaAb4bpGu4S1X7S9Xiwb+DE0763gMBnDyz5KMOYu7b27zqz0OzrtFNbOIu6qmrVyKwd2iAC/yS3lAbgEJSYpWcm8kT05uVpm6bXGoJIuGBC5WT47Jo0HDKtG2vvyuoXgEEK17xLaYdy8kP0q2//8rSqwS8UnZZJemvILMNaV5oLPjjMV7IBgj5XNhPSZUPdQzvVy0je/nBroqrHHnUA26Qg7gSeGDCaZfglGWaVNB+mNoTaWjF27xxeL15+UD+028shXCY2NRw8wuD11IJZzJdRx+wHsf/ixANaePLYasvvs5W8ymR+IYEFZVyJUoWN8SV0Xg0bG9AFI3bWhDNMn+OLwHwMfIVthw9oF2sfY6EDI811gWwprAwXDfRCq2M7uWMvJseyt0aBTDddipmVftX/ZI/bVePlxwuzTTNJeqg2KC0rFU0EZrdg/DO+O35K3oC53m1AsICsAE9G5ffALCybaORxDubMgLuEyWCT44XNPugs6eRx/N8L1ydNTTTowdARs4+ayTq96GsTkzxyDIl6PnC6Xuwm0+4TaAtIUifkA/cuE+OmblsePCjog/S9X2Z0ivom1
+    podSpec:
+      automountServiceAccountToken: false
+    container:
+      livenessProbe:
+        exec:
+          command:
+            - /bin/sh
+            - -c
+            - echo EHLO localhost | nc 127.0.0.1 2500 | grep 250 || exit 1
+        periodSeconds: 10
+        timeoutSeconds: 5
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: msmtpd
+  namespace: flux-system
+spec:
+  image: crazymax/msmtpd
+  interval: 12h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: msmtpd-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: msmtpd
+  policy:
+    semver:
+      range: 1.x

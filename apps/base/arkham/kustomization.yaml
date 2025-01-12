@@ -11,3 +11,4 @@ resources:
   - overseerr.yaml
   - apprise-api.yaml
   - tautulli.yaml
+  - msmtpd.yaml
