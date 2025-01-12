@@ -15,7 +15,7 @@ spec:
   interval: 10m
   values:
     image:
-      repository: linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
+      repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
       tag: "5.0.3" # {"$imagepolicy": "flux-system:qbittorrent-policy:tag"}
     resources:
       requests:
