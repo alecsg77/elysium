@@ -54,3 +54,30 @@ spec:
       storage: 1Gi
   storageClassName: local-storage
   volumeName: pv-arkham-library
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: pvc-backups
+    namespace: arkham  
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: pvc-plex-logs
+    namespace: arkham  
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-storage
+  volumeName: pv-arkham-plex-logs

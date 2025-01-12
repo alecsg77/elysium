@@ -27,16 +27,15 @@ spec:
         path: /config
         subPath: tautulli/config
         existingClaim: pvc-storage
-      - name: storage
+      - name: logs
         size: "100Mi"
         path: /plex
-        subPath: plex/config
-        existingClaim: pvc-storage
-      - name: storage
+        existingClaim: pvc-plex-logs
+      - name: backups
         size: "500Mi"
         path: /config/backups
-        subPath: tautulli/backups
-        existingClaim: pvc-storage
+        subPath: tautulli
+        existingClaim: pvc-backups
     containerPort: 8181
     ingress:
       annotations:

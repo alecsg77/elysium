@@ -44,11 +44,11 @@ spec:
       - name: tmp
         size: "10Gi"
         path: /tmp
-      - name: storage
+      - name: backups
         size: "500Mi"
         path: /backups
-        subPath: plex/backups
-        existingClaim: pvc-storage
+        subPath: plex
+        existingClaim: pvc-backups
     containerPort: 32400
     probe:
       enabled: true
