@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - sealed-secrets
   - tailscale-operator
+  - https://github.com/rancher/system-upgrade-controller/releases/latest/download/crd.yaml
   - system-upgrade.yaml
   - cert-manager.yaml
   - nfd.yaml
