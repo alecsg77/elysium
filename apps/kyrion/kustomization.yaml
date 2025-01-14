@@ -11,6 +11,7 @@ resources:
   - ../base/arkham
   - web-public.yaml
   - capacitor-ingress.yaml
+  - coder-prom.yaml
 
 patches:
   - path: coder-values.yaml
@@ -23,6 +24,11 @@ patches:
         value:
           name: CODER_ACCESS_URL
           value: "https://coder.${ts_net}"
+      - op: add
+        path: "/spec/values/coder/env/-"
+        value:
+          name: CODER_PROMETHEUS_ENABLE
+          value: "true"
     target:
       kind: HelmRelease
       name: coder
