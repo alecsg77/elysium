@@ -53,6 +53,11 @@ spec:
           - hosts:
             -  prometheus
       prometheusSpec:
+        ruleSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
+        scrapeConfigSelectorNilUsesHelmValues: false
         externalUrl: https://prometheus.${ts_net}
     grafana:
       defaultDashboardsTimezone: browser
