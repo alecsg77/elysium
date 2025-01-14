@@ -9,6 +9,7 @@ resources:
   - connector.yaml
   - imageupdateautomation.yaml
   - local-storage-class.yaml
+  - ts-default-proxy-class.yaml
 
 
 configMapGenerator:

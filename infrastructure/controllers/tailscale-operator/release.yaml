@@ -24,6 +24,8 @@ spec:
       mode: "true"
     oauth:
       clientId: ${ts_oauth_clientID}
+    proxyConfig:
+      defaultProxyClass: default
   valuesFrom:
     - kind: Secret
       name: tailscale-operator-secret
