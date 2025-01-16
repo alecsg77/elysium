@@ -10,3 +10,4 @@ resources:
   - nfd.yaml
   - inteldeviceplugins.yaml
   - monitor.yaml
+  - csi-rclone.yaml
