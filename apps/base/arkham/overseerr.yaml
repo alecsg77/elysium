@@ -47,8 +47,6 @@ spec:
     ingress:
       annotations:
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
-        cert-manager.io/cluster-issuer: letsencrypt
-      tlsEnabled: true
       host: home.${DOMAIN}
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
