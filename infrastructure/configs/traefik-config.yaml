@@ -11,6 +11,40 @@ spec:
         allowExternalNameServices: true
       kubernetesIngress:
         allowExternalNameServices: true
+    ingressRoute:
+      dashboard:
+        enabled: false
+    additionalArguments:
+      - "--api.insecure=true"
+    extraObjects:
+      - apiVersion: v1
+        kind: Service
+        metadata:
+          name: traefik-api
+        spec:
+          type: ClusterIP
+          selector:
+            app.kubernetes.io/name: traefik
+            app.kubernetes.io/instance: traefik-kube-system
+          ports:
+            - port: 9000
+              name: traefik
+              targetPort: traefik
+              protocol: TCP
+      - apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: traefik-dashboard
+        spec:
+          defaultBackend:
+            service:
+              name: traefik-api
+              port:
+                name: traefik
+          ingressClassName: tailscale
+          tls:
+            - hosts:
+              - traefik-dashboard
     metrics:
       prometheus:
         service:
