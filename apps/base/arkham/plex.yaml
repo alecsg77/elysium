@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/plex # {"$imagepolicy": "flux-system:plex-policy:name"}
-      tag: "1.41.3" # {"$imagepolicy": "flux-system:plex-policy:tag"}
+      tag: "1.41.4" # {"$imagepolicy": "flux-system:plex-policy:tag"}
     resources:
       requests:
         cpu: "1"
