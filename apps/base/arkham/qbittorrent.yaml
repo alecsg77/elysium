@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "flux-system:qbittorrent-policy:name"}
-      tag: "5.0.3" # {"$imagepolicy": "flux-system:qbittorrent-policy:tag"}
+      tag: "5.0.4" # {"$imagepolicy": "flux-system:qbittorrent-policy:tag"}
     resources:
       requests:
         cpu: "500m"
