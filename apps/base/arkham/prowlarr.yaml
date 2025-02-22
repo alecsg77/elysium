@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/prowlarr # {"$imagepolicy": "flux-system:prowlarr-policy:name"}
-      tag: "1.30.2" # {"$imagepolicy": "flux-system:prowlarr-policy:tag"}
+      tag: "1.31.2" # {"$imagepolicy": "flux-system:prowlarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
