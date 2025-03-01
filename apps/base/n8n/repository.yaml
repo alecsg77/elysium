@@ -1,0 +1,14 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  interval: 24h
+  url: https://github.com/n8n-io/n8n-hosting
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/kubernetes
