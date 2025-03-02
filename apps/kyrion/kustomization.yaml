@@ -5,7 +5,6 @@ resources:
   - ../base
   - ../base/coder
   - ../base/registry
-  - ../base/podinfo
   - ../base/romm
   - ../base/raiplaysoundrss
   - ../base/arkham
@@ -40,4 +39,4 @@ patches:
     target:
       kind: HelmRelease
       name: coder-logstream-kube
-  - path: podinfo-values.yaml
+  
