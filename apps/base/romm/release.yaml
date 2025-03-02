@@ -21,6 +21,10 @@ spec:
       database: romm
     persistence:
       size: 10Gi
+  valuesFrom:
+    - kind: Secret
+      name: romm-db-secret-values
+      optional: true
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease

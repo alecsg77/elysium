@@ -15,6 +15,7 @@ resources:
   - coder-prom.yaml
   - n8n-config.yaml
   - n8n-sealed-secret.yaml
+  - romm-db-secret-values.yaml
 
 patches:
   - path: coder-values.yaml
