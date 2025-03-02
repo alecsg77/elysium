@@ -5,7 +5,7 @@ metadata:
   name: csi-rclone
   namespace: flux-system
 spec:
-  interval: 1h0m0s
+  interval: 24h
   ref:
     branch: master
   url: https://github.com/wunderio/csi-rclone.git
@@ -16,7 +16,7 @@ metadata:
   name: csi-rclone
   namespace: flux-system
 spec:
-  interval: 1h0m0s
+  interval: 12h
   path: deploy/kubernetes/1.20
   prune: true
   sourceRef:

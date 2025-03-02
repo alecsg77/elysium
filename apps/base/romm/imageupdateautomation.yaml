@@ -6,4 +6,4 @@ metadata:
   namespace: flux-system
 spec:
   image: rommapp/romm
-  interval: 12h
+  interval: 24h

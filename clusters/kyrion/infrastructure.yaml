@@ -6,14 +6,14 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
-  retryInterval: 1m
-  timeout: 5m
+  retryInterval: 5m
+  timeout: 30m
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./infrastructure/controllers
   prune: true
   wait: true
+  path: ./infrastructure/controllers
   patches:
     - patch: |
         apiVersion: helm.toolkit.fluxcd.io/v2
@@ -39,13 +39,14 @@ spec:
   dependsOn:
     - name: infra-controllers
   interval: 1h
-  retryInterval: 1m
-  timeout: 5m
+  retryInterval: 5m
+  timeout: 30m
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./infrastructure/configs
   prune: true
+  wait: true
+  path: ./infrastructure/configs
   patches:
     - patch: |
         - op: replace

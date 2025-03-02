@@ -12,7 +12,7 @@ spec:
         kind: HelmRepository
         name: onechart
         namespace: flux-system
-  interval: 10m
+  interval: 12h
   values:
     image:
       repository: crazymax/msmtpd # {"$imagepolicy": "flux-system:msmtpd-policy:name"}
@@ -58,7 +58,7 @@ metadata:
   namespace: flux-system
 spec:
   image: crazymax/msmtpd
-  interval: 12h
+  interval: 24h
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy

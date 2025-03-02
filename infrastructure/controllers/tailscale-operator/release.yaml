@@ -12,7 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: tailscale
-  interval: 1h0m0s
+  interval: 12h
   targetNamespace: tailscale
   install:
     createNamespace: true

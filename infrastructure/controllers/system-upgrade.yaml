@@ -5,7 +5,7 @@ metadata:
   name: system-upgrade
   namespace: flux-system
 spec:
-  interval: 1h0m0s
+  interval: 24h
   ref:
     semver: '*'
   url: https://github.com/rancher/system-upgrade-controller.git
@@ -16,7 +16,7 @@ metadata:
   name: system-upgrade
   namespace: flux-system
 spec:
-  interval: 1h0m0s
+  interval: 12h
   path: ./
   prune: true
   sourceRef:

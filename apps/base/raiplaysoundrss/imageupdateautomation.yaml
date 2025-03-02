@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   image: ghcr.io/alecsg77/raiplaysoundrss
-  interval: 12h
+  interval: 1m0s
   secretRef:
     name: ghcr-alecsg77-regcred
 ---

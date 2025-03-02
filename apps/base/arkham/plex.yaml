@@ -12,7 +12,7 @@ spec:
         kind: HelmRepository
         name: onechart
         namespace: flux-system
-  interval: 10m
+  interval: 12h
   values:
     image:
       repository: lscr.io/linuxserver/plex # {"$imagepolicy": "flux-system:plex-policy:name"}
@@ -77,7 +77,7 @@ metadata:
   namespace: flux-system
 spec:
   image: lscr.io/linuxserver/plex
-  interval: 12h
+  interval: 24h
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy

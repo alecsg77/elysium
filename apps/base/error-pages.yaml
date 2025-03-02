@@ -12,7 +12,7 @@ spec:
         kind: HelmRepository
         name: onechart
         namespace: flux-system
-  interval: 10m
+  interval: 12h
   values:
     image:
       repository: ghcr.io/tarampampam/error-pages # {"$imagepolicy": "flux-system:error-pages-policy:name"}
@@ -28,7 +28,7 @@ metadata:
   namespace: flux-system
 spec:
   image: ghcr.io/tarampampam/error-pages
-  interval: 12h
+  interval: 24h
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy

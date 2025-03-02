@@ -15,7 +15,7 @@ spec:
       version: '>=1.15.0-0'
   install:
     crds: Create
-  interval: 1h0m0s
+  interval: 12h
   releaseName: sealed-secrets-controller
   targetNamespace: flux-system
   upgrade:

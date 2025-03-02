@@ -19,7 +19,7 @@ metadata:
   name: nfd
   namespace: node-feature-discovery
 spec:
-  interval: 30m
+  interval: 12h
   chart:
     spec:
       chart: node-feature-discovery
@@ -28,4 +28,3 @@ spec:
         kind: HelmRepository
         name: nfd
         namespace: node-feature-discovery
-      interval: 12h
