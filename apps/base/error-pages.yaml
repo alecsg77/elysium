@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: ghcr.io/tarampampam/error-pages # {"$imagepolicy": "flux-system:error-pages-policy:name"}
-      tag: "3.3.1" # {"$imagepolicy": "flux-system:error-pages-policy:tag"}
+      tag: "3.3.2" # {"$imagepolicy": "flux-system:error-pages-policy:tag"}
     vars:
       TEMPLATES_ROTATION_MODE: "random-on-each-request"
     containerPort: 8080
