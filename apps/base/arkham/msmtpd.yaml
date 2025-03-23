@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: crazymax/msmtpd # {"$imagepolicy": "flux-system:msmtpd-policy:name"}
-      tag: "1.8.27" # {"$imagepolicy": "flux-system:msmtpd-policy:tag"}
+      tag: "1.8.28" # {"$imagepolicy": "flux-system:msmtpd-policy:tag"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
