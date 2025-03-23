@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/lidarr # {"$imagepolicy": "flux-system:lidarr-policy:name"}
-      tag: "2.9.6" # {"$imagepolicy": "flux-system:lidarr-policy:tag"}
+      tag: "2.10.3" # {"$imagepolicy": "flux-system:lidarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
