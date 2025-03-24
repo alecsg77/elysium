@@ -15,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: registry # {"$imagepolicy": "flux-system:registry-policy:name"}
-      tag: "2.8.3" # {"$imagepolicy": "flux-system:registry-policy:tag"}
+      repository: kerberos/agent # {"$imagepolicy": "flux-system:registry-policy:name"}
+      tag: "v3.3.10" # {"$imagepolicy": "flux-system:registry-policy:tag"}
     volumes:
       - name: registry
         size: "100Mi"
