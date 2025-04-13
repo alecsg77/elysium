@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/tautulli # {"$imagepolicy": "flux-system:tautulli-policy:name"}
-      tag: "version-v2.15.1" # {"$imagepolicy": "flux-system:tautulli-policy:tag"}
+      tag: "version-v2.15.2" # {"$imagepolicy": "flux-system:tautulli-policy:tag"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
