@@ -14,6 +14,7 @@ spec:
       name: letsencrypt-azure
     solvers:
     - dns01:
+        cnameStrategy: Follow
         azureDNS:
           clientID: ${dns_azure_clientID}
           clientSecretSecretRef:
