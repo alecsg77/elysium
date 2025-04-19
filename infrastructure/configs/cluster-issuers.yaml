@@ -23,6 +23,9 @@ spec:
           tenantID: ${dns_azure_tenantID}
           resourceGroupName: ${dns_azure_resourceGroupName}
           hostedZoneName: ${DOMAIN}
+      selector:
+        dnsZones:
+        - '${DOMAIN}'
 ---
 apiVersion: v1
 kind: Secret
