@@ -15,6 +15,6 @@ metadata:
   name: onechart
   namespace: flux-system
 spec:
-  type: "oci"
+  type: "default"
   interval: 24h
-  url: oci://ghcr.io/gimlet-io
+  url: https://chart.onechart.dev
