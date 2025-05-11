@@ -41,9 +41,12 @@ spec:
         size: "100Mi"
         path: /media/library
         existingClaim: pvc-library
-      - name: tmp
+      - name: transcode
         size: "10Gi"
-        path: /tmp
+        path: /transcode
+        hostPath:
+          path: /tmp/plex
+          type: DirectoryOrCreate
       - name: backups
         size: "500Mi"
         path: /backups
