@@ -7,7 +7,6 @@ resources:
   - ts-ingress.yaml
   - qbittorrent.yaml
   - plex.yaml
-  - flaresolverr.yaml
   - overseerr.yaml
   - apprise-api.yaml
   - tautulli.yaml
@@ -17,3 +16,4 @@ resources:
   - lidarr.yaml
   - bazarr.yaml
   - prowlarr.yaml
+  - configarr.yaml

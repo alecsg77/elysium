@@ -1,0 +1,56 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: configarr
+  namespace: arkham
+spec:
+  releaseName: configarr
+  chart:
+    spec:
+      chart: cron-job
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 12h
+  values:
+    image:
+      repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "flux-system:configarr-policy:name"}
+      tag: "1.13.5" # {"$imagepolicy": "flux-system:configarr-policy:tag"}
+    schedule: "0 */24 * * *" # Runs every 24 hours
+    overrideCommand: false
+    podSecurityContext:
+      runAsUser: ${PUID:=1000}
+      runAsGroup: ${PGID:=1000}
+    vars:
+      PUID: ${PUID:=1000}
+      PGID: ${PGID:=1000}
+      TZ: ${TZ:=Etc/UTC}
+      ROOT_PATH: /config
+    volumes:
+      - name: storage
+        size: "100Mi"
+        path: /config
+        subPath: configarr/config
+        existingClaim: pvc-storage
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: configarr
+  namespace: flux-system
+spec:
+  image: ghcr.io/raydak-labs/configarr
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: configarr-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: configarr
+  policy:
+    semver:
+      range: 1.x

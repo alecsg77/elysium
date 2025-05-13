@@ -22,8 +22,8 @@ spec:
         cpu: "500m"
         memory: "1Gi"
       limits:
-        cpu: "2"
-        memory: "2Gi"
+        cpu: "4"
+        memory: "4Gi"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
