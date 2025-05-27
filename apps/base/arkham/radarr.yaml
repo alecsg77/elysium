@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/radarr # {"$imagepolicy": "flux-system:radarr-policy:name"}
-      tag: "5.24.1" # {"$imagepolicy": "flux-system:radarr-policy:tag"}
+      tag: "5.25.0" # {"$imagepolicy": "flux-system:radarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
