@@ -21,3 +21,5 @@ spec:
   policy:
     semver:
       range: "*"
+  digestReflectionPolicy: Always
+  interval: 1m0s

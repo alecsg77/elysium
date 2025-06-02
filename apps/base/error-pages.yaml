@@ -41,6 +41,8 @@ spec:
   policy:
     semver:
       range: 3.x
+  digestReflectionPolicy: Always
+  interval: 24h
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

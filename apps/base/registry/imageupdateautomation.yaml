@@ -19,3 +19,5 @@ spec:
   policy:
     semver:
       range: 2.x
+  digestReflectionPolicy: Always
+  interval: 24h
