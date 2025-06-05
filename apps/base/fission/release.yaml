@@ -1,0 +1,23 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: fission
+  namespace: fission
+spec:
+  releaseName: fission
+  chart:
+    spec:
+      chart: fission-all
+      sourceRef:
+        name: fission-charts
+        kind: HelmRepository
+  interval: 12h
+  values:
+    routerServiceType: ClusterIP
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+    grafana:
+      dashboards:
+        enable: true

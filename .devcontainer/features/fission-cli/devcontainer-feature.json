@@ -1,0 +1,22 @@
+{
+  "name": "Fission CLI",
+  "id": "fission-cli",
+  "version": "1.0.0",
+  "description": "Installs Fission CLI for serverless functions on Kubernetes",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Select the version of Fission CLI to install. Use 'latest' for the latest version."
+    },
+    "architecture": {
+      "type": "string",
+      "default": "amd64",
+      "description": "Select the architecture for Fission CLI."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils",
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube"
+  ]
+}

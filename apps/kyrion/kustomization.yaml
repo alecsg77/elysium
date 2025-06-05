@@ -9,6 +9,7 @@ resources:
   - ../base/raiplaysoundrss
   - ../base/arkham
   - ../base/n8n
+  - ../base/fission
   - web-public.yaml
   - capacitor-ingress.yaml
   - coder-prom.yaml
