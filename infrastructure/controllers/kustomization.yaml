@@ -11,3 +11,4 @@ resources:
   - inteldeviceplugins.yaml
   - monitor.yaml
   - csi-rclone.yaml
+  - arc.yaml
