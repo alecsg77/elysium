@@ -16,7 +16,8 @@
 		"ghcr.io/gickis/devcontainer-features/kubeseal": {},
 		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
 		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
-		"ghcr.io/devcontainers/features/azure-cli": {}
+		"ghcr.io/devcontainers/features/azure-cli": {},
+		"./features/fission-cli": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
