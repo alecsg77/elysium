@@ -16,6 +16,7 @@ resources:
   - n8n-config.yaml
   - n8n-sealed-secret.yaml
   - romm-db-secret-values.yaml
+  - arc-runner-set.yaml
 
 patches:
   - path: coder-values.yaml
