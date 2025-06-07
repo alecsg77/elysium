@@ -1,0 +1,20 @@
+name: Actions Runner Controller Demo
+on:
+  workflow_dispatch:
+
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: kyrion
+    container:
+      image: ubuntu:latest
+      volumes:
+        - /var/run/secrets/kubernetes.io/serviceaccount
+    steps:
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+      
+      - name: Verify connection to cluster
+        run: kubectl get nodes
+      
