@@ -22,12 +22,15 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: coder-service-monitor
-  namespace: coder
+  namespace: monitoring
 spec:
   endpoints:
     - port: prometheus-http
       interval: 10s
       scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - coder
   selector:
     matchLabels:
       app.kubernetes.io/name: coder

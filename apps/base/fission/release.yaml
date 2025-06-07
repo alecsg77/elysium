@@ -17,15 +17,7 @@ spec:
     routerServiceType: ClusterIP
     serviceMonitor:
       enabled: true
-      namespace: "monitor"
-      additionalServiceMonitorLabels:
-        release: "kps"
-    podMonitor:
-      enabled: true
-      namespace: "monitor"
-      additionalPodMonitorLabels:
-        release: "kps"
+      namespace: monitoring
     grafana:
-      namespace: "monitor"
       dashboards:
         enable: true

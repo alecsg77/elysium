@@ -9,6 +9,5 @@ resources:
   - cert-manager.yaml
   - nfd.yaml
   - inteldeviceplugins.yaml
-  - monitor.yaml
   - csi-rclone.yaml
   - arc.yaml
