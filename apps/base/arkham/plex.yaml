@@ -67,6 +67,7 @@ spec:
         timeoutSeconds: 10
     podSpec:
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
     container:
       ports:
         - name: http
