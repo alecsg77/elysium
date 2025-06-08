@@ -1,0 +1,57 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: unmonitorr
+  namespace: arkham
+spec:
+  releaseName: unmonitorr
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 12h
+  values:
+    image:
+      repository: shraymonks/unmonitorr # {"$imagepolicy": "flux-system:unmonitorr-policy:name"}
+      tag: "v1.0.0" # {"$imagepolicy": "flux-system:unmonitorr-policy:tag"}
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+    vars:
+      PLEX_PORT: 9797
+      RADARR_HOST: http://radarr.arkham.svc:7878
+      SONARR_HOST: http://sonarr.arkham.svc:8989
+    existingSecrets:
+      - name: unmonitorr
+        optional: true
+    containerPort: 9797
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: unmonitorr
+  namespace: flux-system
+spec:
+  image: shraymonks/unmonitorr
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: unmonitorr-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: unmonitorr
+  policy:
+    semver:
+      range: 1.x
+  digestReflectionPolicy: Always
+  interval: 24h

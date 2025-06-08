@@ -17,6 +17,7 @@ resources:
   - n8n-sealed-secret.yaml
   - romm-db-secret-values.yaml
   - arc-runner-set.yaml
+  - arkham-unmonitorr-sealed-secret.yaml
 
 patches:
   - path: coder-values.yaml

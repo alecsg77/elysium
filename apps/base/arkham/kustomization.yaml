@@ -17,3 +17,4 @@ resources:
   - bazarr.yaml
   - prowlarr.yaml
   - configarr.yaml
+  - unmonitorr.yaml
