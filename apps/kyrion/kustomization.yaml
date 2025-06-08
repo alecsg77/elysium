@@ -5,18 +5,14 @@ resources:
   - ../base
   - ../base/coder
   - ../base/registry
-  - ../base/romm
   - ../base/raiplaysoundrss
   - ../base/arkham
-  - ../base/n8n
   - ../base/fission
-  - ../base/airflow
   - web-public.yaml
   - capacitor-ingress.yaml
   - coder-prom.yaml
   - n8n-config.yaml
   - n8n-sealed-secret.yaml
-  - romm-db-secret-values.yaml
   - arc-runner-set.yaml
   - arkham-unmonitorr-sealed-secret.yaml
 
