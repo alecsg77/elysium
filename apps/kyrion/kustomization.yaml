@@ -10,6 +10,7 @@ resources:
   - ../base/arkham
   - ../base/n8n
   - ../base/fission
+  - ../base/airflow
   - web-public.yaml
   - capacitor-ingress.yaml
   - coder-prom.yaml

@@ -1,0 +1,40 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: airflow
+  namespace: airflow
+spec:
+  releaseName: airflow
+  chart:
+    spec:
+      chart: airflow
+      sourceRef:
+        name: apache-airflow
+        kind: HelmRepository
+  interval: 12h
+  values:
+    config:
+      webserver:
+        expose_config: 'True'
+    webserverSecretKeySecretName: airflow-webserver-secret-key
+    executor: "CeleryExecutor,KubernetesExecutor"
+    createUserJob:
+      useHelmHooks: false
+      applyCustomEnv: false
+    migrateDatabaseJob:
+      useHelmHooks: false
+      applyCustomEnv: false
+    ingress:
+      web:
+        enabled: true
+        ingressClassName: tailscale
+        hosts:
+          - airflow
+        tls:
+          enabled: true
+    dags:
+      persistence:
+        enabled: true
+      gitSync:
+        enabled: false
