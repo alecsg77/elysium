@@ -1,0 +1,6 @@
+.devcontainer/
+.github/
+.vscode/
+etc/
+functions/
+scripts/

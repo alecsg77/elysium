@@ -1,0 +1,32 @@
+name: Deploy Functions
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: kyrion
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install Fission CLI
+        run: |
+            curl -Lo fission https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-amd64
+            chmod +x fission
+            sudo mv fission /usr/local/bin/
+        env:
+          FISSION_VERSION: 'v1.21.0'
+      
+      - name: Verify connection to cluster
+        run: fission version
+      
+      - name: Deploy functions with Fission
+        working-directory: functions
+        run: |
+          fission spec apply -n default --delete --wait
