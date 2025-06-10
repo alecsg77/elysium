@@ -1,0 +1,26 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: mediamtx
+  namespace: flux-system
+spec:
+  image: bluenviron/mediamtx
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: mediamtx-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: mediamtx
+  filterTags:
+    pattern: '^(?P<version>.*)-ffmpeg$'
+    extract: '$version'
+  policy:
+    semver:
+      range: 1.x
+  digestReflectionPolicy: Always
+  interval: 24h

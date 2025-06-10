@@ -8,6 +8,7 @@ resources:
   - ../base/raiplaysoundrss
   - ../base/arkham
   - ../base/fission
+  - ../base/mediamtx
   - web-public.yaml
   - capacitor-ingress.yaml
   - coder-prom.yaml
@@ -39,4 +40,14 @@ patches:
     target:
       kind: HelmRelease
       name: coder-logstream-kube
-  
+  - path: mediamtx-values-patch.yaml
+    target:
+      kind: HelmRelease
+      name: mediamtx
+      namespace: mediamtx
+
+configMapGenerator:
+  - name: mediamtx-config
+    namespace: mediamtx
+    files:
+      - mediamtx.yml=mediamtx-config.yml

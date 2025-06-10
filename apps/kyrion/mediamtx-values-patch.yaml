@@ -1,0 +1,10 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mediamtx
+  namespace: mediamtx
+spec:
+  values:
+    serviceAnnotations:
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: "mediamtx"

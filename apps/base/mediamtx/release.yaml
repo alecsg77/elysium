@@ -1,0 +1,56 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mediamtx
+  namespace: mediamtx
+spec:
+  releaseName: mediamtx
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 12h
+  values:
+    image:
+      repository: bluenviron/mediamtx # {"$imagepolicy": "flux-system:mediamtx-policy:name"}
+      tag: "1.11.3-ffmpeg" # {"$imagepolicy": "flux-system:mediamtx-policy:tag"}
+    volumes:
+      - name: video0
+        path: /dev/video0
+        hostPath:
+          path: /dev/video0
+          type: CharDevice
+      - name: config-volume
+        path: /mediamtx.yml
+        subPath: mediamtx.yml
+        existingConfigMap: mediamtx-config
+    ports:
+      - containerPort: 8554
+        name: rtsp
+        protocol: TCP
+      - containerPort: 8000
+        name: rtp
+        protocol: UDP
+      - containerPort: 8001
+        name: rtcp
+        protocol: UDP
+      - containerPort: 1935
+        name: rtmp
+        protocol: TCP
+      - containerPort: 8888
+        name: hls
+        protocol: TCP
+      - containerPort: 8889
+        name: http
+        protocol: TCP
+      - containerPort: 8189
+        name: ice
+        protocol: UDP
+      - containerPort: 8890
+        name: srt
+        protocol: UDP
+    securityContext:
+      privileged: true
