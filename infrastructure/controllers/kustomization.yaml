@@ -11,4 +11,3 @@ resources:
   - inteldeviceplugins.yaml
   - csi-rclone.yaml
   - arc.yaml
-  - https://github.com/kubevirt/kubevirt/releases/latest/download/kubevirt-operator.yaml

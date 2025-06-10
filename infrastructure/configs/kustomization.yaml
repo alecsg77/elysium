@@ -10,7 +10,6 @@ resources:
   - imageupdateautomation.yaml
   - local-storage-class.yaml
   - ts-default-proxy-class.yaml
-  - kubevirt.yaml
 
 
 configMapGenerator:
