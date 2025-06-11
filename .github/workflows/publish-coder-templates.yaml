@@ -1,0 +1,65 @@
+name: Publish Coder Template
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'coder/templates/**'
+  workflow_dispatch:
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get short commit SHA to use as template version name
+        id: name
+        run: echo "version_name=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Get latest commit title to use as template version description
+        id: message
+        run:
+          echo "pr_message=$(git log --format=%s -n 1 ${{ github.sha }})" >> $GITHUB_OUTPUT
+
+      - name: Define matrix
+        id: matrix
+        run: |
+          echo "templates=$(find coder/templates -mindepth 1 -maxdepth 1 -type d -not -path "*/\.*" -printf "%f\n" | jq -c -R -s 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+
+      - name: Upload Coder templates
+        uses: actions/upload-artifact@v4
+        with:
+          name: templates
+          path: coder/templates
+    
+    outputs:
+      version_name: ${{ steps.name.outputs.version_name }}
+      version_message: ${{ steps.message.outputs.pr_message }}
+      templates: ${{ steps.matrix.outputs.templates }}
+
+  publish:
+    runs-on: kyrion
+    needs: init
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJSON(needs.init.outputs.templates) }}
+
+    steps:
+      - name: Download Coder templates
+        uses: actions/download-artifact@v4
+        with:
+          name: templates
+
+      - name: Set up Coder CLI
+        uses: coder/setup-action@v1
+        with:
+          access_url: "http://coder.coder.svc"
+          coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
+
+      - name: Push template to Coder
+        run: |
+          coder templates push ${{ matrix.template }} -d ${{ matrix.template }} --name ${{ needs.init.outputs.version_name }} --message "${{ needs.init.outputs.version_message }}" --yes
