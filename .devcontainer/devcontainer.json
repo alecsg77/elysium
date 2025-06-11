@@ -19,7 +19,8 @@
 		"ghcr.io/devcontainers/features/azure-cli": {},
 		"./features/fission-cli": {},
 		"ghcr.io/devcontainers/features/terraform": {},
-		"./features/coder-cli": {}
+		"./features/coder-cli": {},
+		"ghcr.io/tailscale/codespace/tailscale": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -33,7 +34,8 @@
 				"ms-kubernetes-tools.vscode-kubernetes-tools",
 				"redhat.vscode-yaml",
 				"ms-azuretools.vscode-docker",
-				"github.vscode-github-actions"
+				"github.vscode-github-actions",
+				"tailscale.vscode-tailscale"
 			]
 		}
 	},
@@ -53,6 +55,9 @@
 	"postCreateCommand": {
 		"kustomize": "sudo sh -c 'kustomize completion bash > /etc/bash_completion.d/kustomize'",
 		"flux": "sudo sh -c 'flux completion bash > /etc/bash_completion.d/flux'",
-		"kompose": "sudo sh -c 'kompose completion bash > /etc/bash_completion.d/kompose'"
+		"kompose": "sudo sh -c 'kompose completion bash > /etc/bash_completion.d/kompose'",
+		"terraform": "terraform -install-autocomplete",
+		"coder": "sudo sh -c 'coder completion -s bash -p > /etc/bash_completion.d/coder'",
+		"tailscale": "sudo sh -c 'tailscale completion bash > /etc/bash_completion.d/tailscale'"
 	}
 }

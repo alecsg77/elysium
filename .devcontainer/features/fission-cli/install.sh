@@ -1,49 +1,73 @@
 #!/bin/sh
 set -e
 
-VERSION="${VERSION:-"latest"}"
-ARCHITECTURE="${ARCHITECTURE:-"amd64"}"
+readonly FISSION_VERSION="${VERSION:-"latest"}"
 
-echo "Activating feature 'fission-cli'"
-echo "Version: ${VERSION}"
-echo "Architecture: ${ARCHITECTURE}"
+# apt-get configuration
+export DEBIAN_FRONTEND=noninteractive
 
-# Detect OS
-case "$(uname -s)" in
-    Linux*)     OS=linux;;
-    Darwin*)    OS=darwin;;
-    *)          echo "Unsupported OS. Use Linux or Mac."; exit 1;;
-esac
 
-# Create a temporary directory for downloads
-TEMP_DIR=$(mktemp -d)
-cd "${TEMP_DIR}"
-
-# Get the latest version from GitHub if needed
-if [ "${VERSION}" = "latest" ]; then
-    echo "Determining the latest Fission CLI release..."
-    VERSION=$(curl -s https://api.github.com/repos/fission/fission/releases/latest | grep -oP '"name": "\K(.*)(?=")')
-    if [ -z "${VERSION}" ]; then
-        echo "Failed to determine latest version. Please specify a version explicitly."
-        exit 1
+preflight () {
+    if command -v wget > /dev/null; then
+        return
     fi
-    echo "Latest version: ${VERSION}"
-fi
 
-# Download the appropriate binary
-BINARY_URL="https://github.com/fission/fission/releases/download/${VERSION}/fission-${VERSION}-${OS}-${ARCHITECTURE}"
-echo "Downloading Fission CLI from ${BINARY_URL}"
+    if [ -e /etc/os-release ]; then
+        . /etc/os-release
+    fi
 
-# Download binary
-curl -Lo fission "${BINARY_URL}"
+    case "${ID}" in
+        'debian' | 'ubuntu')
+            apt-get update
+            apt-get install -y --no-install-recommends \
+                wget \
+                ca-certificates
+        ;;
+        'fedora')
+            dnf -y install wget
+        ;;
+        *) echo "The ${ID} distribution is not supported."; exit 1 ;;
+    esac
+}
 
-# Make binary executable
-chmod +x fission
+main () {
+    preflight
 
-# Move binary to a location in PATH
-mkdir -p /usr/local/bin
-mv fission /usr/local/bin/
+    local ARCH="$(uname -m)"
+    case "${ARCH}" in
+        "aarch64") ARCH="arm64" ;;
+        "x86_64") ARCH="amd64" ;;
+        *) echo "The current architecture (${ARCH}) is not supported."; exit 1 ;;
+    esac
 
-# Clean up
-cd -
-rm -rf "${TEMP_DIR}"
+    # Get the latest version from GitHub if needed
+    if [ "${FISSION_VERSION}" != "latest" ] ; then
+        CHECKSUMS_URL="https://github.com/fission/fission/releases/download/v${FISSION_VERSION#[vV]}/checksums.txt"
+        BINARY_URL="https://github.com/fission/fission/releases/download/v${FISSION_VERSION#[vV]}/fission-v${FISSION_VERSION#[vV]}-linux-${ARCH}"
+    else
+        local RELEASES_RESPONSE="$(wget -qO- --tries=3 https://api.github.com/repos/fission/fission/releases)"
+        CHECKSUMS_URL="$(echo "${RELEASES_RESPONSE}" | grep "browser_download_url.*checksums.txt" | head -n 1 | cut -d '"' -f 4)"
+        BINARY_URL="$(echo "${RELEASES_RESPONSE}" | grep "browser_download_url.*linux-${ARCH}" | head -n 1 | cut -d '"' -f 4)"
+    fi
+
+    echo "Installing fission ${FISSION_VERSION} for ${ARCH} ..."
+
+    echo "Downloading checksums ${CHECKSUMS_URL} ..."
+    wget --no-verbose -O /tmp/checksums.txt "${CHECKSUMS_URL}"
+    local SHA="$(grep linux-${ARCH} /tmp/checksums.txt | cut -d ' ' -f 1)"
+
+    echo "Downloading ${BINARY_URL} ..."
+    wget --no-verbose -O /tmp/fission "${BINARY_URL}"
+
+    echo "Verifying checksum ${SHA} ..."
+    echo "${SHA}  /tmp/fission" | sha256sum -c -
+
+    # Move binary to a location in PATH
+    mkdir -p /usr/local/bin
+    mv /tmp/fission /usr/local/bin/
+    chmod +x /usr/local/bin/fission
+
+    echo "fission ${FISSION_VERSION} for ${ARCH} installed at $(command -v fission)."
+}
+
+main "$@"
