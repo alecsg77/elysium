@@ -1,6 +1,10 @@
 {
     "recommendations": [
         "weaveworks.vscode-gitops-tools",
-        "ms-kubernetes-tools.vscode-kubernetes-tools"
-    ]    
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml",
+        "github.vscode-github-actions",
+        "tailscale.vscode-tailscale",
+        "hashicorp.terraform"
+    ]
 }

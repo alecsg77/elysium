@@ -33,9 +33,9 @@
 				"weaveworks.vscode-gitops-tools",
 				"ms-kubernetes-tools.vscode-kubernetes-tools",
 				"redhat.vscode-yaml",
-				"ms-azuretools.vscode-docker",
 				"github.vscode-github-actions",
-				"tailscale.vscode-tailscale"
+				"tailscale.vscode-tailscale",
+				"hashicorp.terraform"
 			]
 		}
 	},
