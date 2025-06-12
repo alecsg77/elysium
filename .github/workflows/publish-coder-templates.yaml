@@ -54,11 +54,25 @@ jobs:
         with:
           name: templates
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Set up terraform
+        uses: hashicorp/setup-terraform@v3
+
       - name: Set up Coder CLI
         uses: coder/setup-action@v1
         with:
           access_url: "http://coder.coder.svc"
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
+
+      - name: Validate Terraform template
+        run: |
+          terraform init -input=false -backend=false
+          terraform validate -no-color
+        working-directory: ./${{ matrix.template }}
 
       - name: Push template to Coder
         run: |
