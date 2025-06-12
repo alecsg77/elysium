@@ -1,0 +1,45 @@
+name: Update Coder Templates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Check out Coder Examples Templates
+        uses: actions/checkout@v4
+        with:
+          repository: coder/coder
+          path: coder
+          sparse-checkout: |
+            examples/templates
+      
+      - name: Sync Coder Example Templates
+        run: |
+          for template in kubernetes kubernetes-devcontainer kubernetes-envbox; do
+            rsync -avu --delete "coder/examples/templates/$template" "main/coder/templates/"
+          done
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          path: main
+          add-paths: |
+            coder/templates/**
+          branch: update-coder-templates
+          title: "Update Coder Templates"
+          body: "This PR updates the Coder example templates to the latest version."
+          commit-message: "Update Coder Templates"
+          delete-branch: true
