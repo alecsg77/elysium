@@ -1,0 +1,8 @@
+use_kubeconfig = "false"
+namespace = "coder"
+create_tun = "true"
+create_fuse = "true"
+max_cpus = "24"
+min_cpus = ".5"
+max_memory = "16"
+min_memory = "2"
