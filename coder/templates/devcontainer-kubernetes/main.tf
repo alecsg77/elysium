@@ -147,6 +147,25 @@ data "kubernetes_secret" "cache_repo_dockerconfig_secret" {
   }
 }
 
+data "coder_parameter" "use_service_account" {
+  description  = "Use the workspace owner's service account to authenticate with Kubernetes. This is useful if you want to use the workspace owner's permissions."
+  display_name = "Use workspace owner service account"
+  mutable      = true
+  name         = "use_service_account"
+  type         = "bool"
+  default      = "false"
+  order        = 8
+}
+
+data "kubernetes_service_account" "me" {
+  count = data.coder_parameter.use_service_account.value ? 1 : 0
+  metadata {
+    name = data.coder_workspace_owner.me.name
+    namespace = var.namespace
+  }
+}
+
+
 locals {
   deployment_name            = "coder-${lower(data.coder_workspace.me.id)}"
   devcontainer_builder_image = data.coder_parameter.devcontainer_builder.value
@@ -255,6 +274,8 @@ resource "kubernetes_deployment" "main" {
         }
       }
       spec {
+        service_account_name = data.coder_parameter.use_service_account.value ? data.kubernetes_service_account.me[0].metadata.0.name : null
+        
         security_context {}
 
         container {
