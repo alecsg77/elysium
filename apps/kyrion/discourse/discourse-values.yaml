@@ -1,0 +1,15 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: discourse-values
+  namespace: discourse
+spec:
+  encryptedData:
+    values.yaml: AgAQ1i7IUO6pEIjUXKKkUy/92lwqLUrGvkDHT2XwUZJ3z0aQy94DhEBr2RpXNxE3VgBh+lWDGFKsFaBlmBHOKYdSZ8MY6AZCZQV9KzKxWIHzbCzB4Cu2+UWYhbcgd3/XZ1yPqgxnEhOyL82zRL+ukUZ6lbWhH6xqy9TjAAUjsQJic24T4hC0IUO12ZE+AIS41AdlxRadI0mtCbsgf4+Ok2PrKTekABNdsKCLH7g931qbI900cRcmOt56TuLOQPqTsrfN/0XpgbjFwZSQCaY5L6cADWis7c2AOceaa4lMqLZ+5fQSXbs01dcgvJa5S/nU9MwblRuEqQNSpcJkVIyYpCyoK9nU9goApTN5yM5SuEhpnmQezLYd4D4rzsCIoQlHTXoXDa23XsAjs0UI2pHhiqk9VXdfmd3wX9lhHfPPxG2bKhqTXCp6XUCYEAijmw1AYoGCIINRWblPFn15JLOQPTYb5QcOb/t9oXv+JtjTNTZneVth2zQwS04jC2mM8gFPR4jXEGY9E0mW7+vVhRSmFNfDsuRdnYMpz6jeI1fRiMW5hthlVu1fKVEz+XytUn/cknapb0E8rAPP+AfuCTb26rpAfiugBHx5OQPIga6QQbNlReq+sSgcVY630DXZKigXMHpB7rbiICMmpaGNQDG5B6OfvldAE40TBhu4TjRm8fZaUjj/R5FDyJsmQ+o9X5HUZNWSlEiDy37yIRwt76l3ywABnKpwfrqWfFbH+hEOi8bZR++mnzGwJ7+6cz2DF/g5c6B0Ez9+tjMlO2Bw9hkPCg58Afj0io1BkNFNko8By/gtJhx5OOk/
+  template:
+    metadata:
+      creationTimestamp: null
+      name: discourse-values
+      namespace: discourse

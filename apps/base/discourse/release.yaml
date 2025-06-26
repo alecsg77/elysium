@@ -1,0 +1,21 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: discourse
+  namespace: discourse
+spec:
+  interval: 12h
+  releaseName: discourse
+  chart:
+    spec:
+      chart: discourse
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: discourse-values
+    - kind: Secret
+      name: discourse-values
+      optional: true

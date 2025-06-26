@@ -1,0 +1,23 @@
+auth:
+  email: webmaster@${DOMAIN}
+  username: webmaster
+host: forum.${DOMAIN}
+ingress:
+  enabled: true
+  hostname: forum.${DOMAIN}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+smtp:
+  enabled: true
+  host: smtp.azurecomm.net
+  port: 587
+  protocol: tls
+discourse:
+  extraEnvVars:
+    - name: DISCOURSE_FIRST_NAME
+      value: web
+    - name: DISCOURSE_LAST_NAME
+      value: master
+    - name: DISCOURSE_EXTRA_CONF_CONTENT
+      value: |
+        smtp_domain = ${DOMAIN}
