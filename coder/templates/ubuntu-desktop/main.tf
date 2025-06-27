@@ -167,10 +167,11 @@ resource "coder_agent" "main" {
 # kasmvnc
 module "kasmvnc" {
   count               = data.coder_workspace.me.start_count
-  source              = "registry.coder.com/modules/kasmvnc/coder"
-  version             = "1.0.30"
+  source              = "registry.coder.com/coder/kasmvnc/coder"
+  version             = "1.1.0"
   agent_id            = coder_agent.main.id
   desktop_environment = "xfce"
+  subdomain           = false
 }
 
 resource "kubernetes_persistent_volume_claim" "home" {

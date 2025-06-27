@@ -344,8 +344,9 @@ resource "kubernetes_deployment" "main" {
 }
 
 module "jupyterlab" {
-  source   = "registry.coder.com/modules/jupyterlab/coder"
-  version  = ">=1.0.23"
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/jupyterlab/coder"
+  version  = "1.1.0"
   agent_id = coder_agent.main.id
   subdomain = false
 }

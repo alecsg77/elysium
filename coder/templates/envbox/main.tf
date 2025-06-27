@@ -98,7 +98,7 @@ resource "coder_agent" "main" {
   EOT
 }
 
-# See https://registry.coder.com/modules/coder/code-server
+# See https://registry.coder.com/coder/coder/code-server
 module "code-server" {
   count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/code-server/coder"
@@ -110,7 +110,7 @@ module "code-server" {
   order    = 1
 }
 
-# See https://registry.coder.com/modules/coder/jetbrains-gateway
+# See https://registry.coder.com/coder/coder/jetbrains-gateway
 module "jetbrains_gateway" {
   count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/jetbrains-gateway/coder"
@@ -322,7 +322,8 @@ resource "kubernetes_pod" "main" {
 }
 
 module "git-config" {
-  source   = "registry.coder.com/modules/git-config/coder"
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/git-config/coder"
   version  = "1.0.15"
   agent_id = coder_agent.main.id
   allow_email_change = true
