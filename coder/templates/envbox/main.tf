@@ -73,6 +73,24 @@ variable "min_memory" {
   description = "Minimum amount of memory to allocate the workspace (in GB)."
 }
 
+data "coder_parameter" "git_repo" {
+  name         = "git_repo"
+  display_name = "Git repository"
+  default      = ""
+  description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
+  icon         = "${data.coder_workspace.me.access_url}/icon/git.svg"
+  type         = "string"
+  validation {
+    regex = "^(https?|git|ssh)://.*|^git@.*|^$"
+    error = "Please enter a valid git repository URL."
+  }
+}
+
+data "coder_external_auth" "github" {
+  id = "github"
+  optional = true
+}
+
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
   config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
@@ -98,6 +116,23 @@ resource "coder_agent" "main" {
   EOT
 }
 
+module "github-upload-public-key" {
+  count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
+  source           = "registry.coder.com/coder/github-upload-public-key/coder"
+  version          = "1.0.15"
+  agent_id         = coder_agent.main.id
+  external_auth_id = data.coder_external_auth.github.id
+}
+
+module "git_clone" {
+  depends_on = [ module.github-upload-public-key ]
+  count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
+  source   = "registry.coder.com/coder/git-clone/coder"
+  version  = "1.0.18"
+  agent_id = coder_agent.main.id
+  url      = data.coder_parameter.git_repo.value
+}
+
 # See https://registry.coder.com/coder/coder/code-server
 module "code-server" {
   count  = data.coder_workspace.me.start_count
@@ -108,26 +143,7 @@ module "code-server" {
 
   agent_id = coder_agent.main.id
   order    = 1
-}
-
-# See https://registry.coder.com/coder/coder/jetbrains-gateway
-module "jetbrains_gateway" {
-  count  = data.coder_workspace.me.start_count
-  source = "registry.coder.com/coder/jetbrains-gateway/coder"
-
-  # JetBrains IDEs to make available for the user to select
-  jetbrains_ides = ["IU", "PY", "WS", "PS", "RD", "CL", "GO", "RM"]
-  default        = "IU"
-
-  # Default folder to open when starting a JetBrains IDE
-  folder = "/home/coder"
-
-  # This ensures that the latest non-breaking version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
-  version = "~> 1.0"
-
-  agent_id   = coder_agent.main.id
-  agent_name = "main"
-  order      = 2
+  folder   = data.coder_parameter.git_repo.value != "" ? "/home/coder/${module.git_clone[count.index].folder_name}" : "/home/coder"
 }
 
 resource "kubernetes_persistent_volume_claim" "home" {
