@@ -5,7 +5,14 @@ on:
     branches: [ main ]
     paths:
       - 'coder/templates/**'
+
   workflow_dispatch:
+    inputs:
+      before:
+        description: 'The SHA of the most recent commit to compare against. Defaults to the commit that triggered the workflow.'
+        required: true
+        default: "HEAD~1"
+        type: string
 
 jobs:
   init:
@@ -14,20 +21,32 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Get short commit SHA to use as template version name
-        id: name
-        run: echo "version_name=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Get changed Coder templates
+        id: changes
+        run: |
+          # For push events, only include changed template folders
+          {
+            echo "TEMPLATES<<EOF"
+            git diff --name-only ${{ inputs.before || github.event.before }}...${{ github.sha }} -- coder/templates | sed -r 's/^coder\/templates\/([^\/]+).*$/\1/' | sort | uniq
+            echo "EOF"
+          } >> $GITHUB_ENV
 
       - name: Get latest commit title to use as template version description
         id: message
         run:
           echo "pr_message=$(git log --format=%s -n 1 ${{ github.sha }})" >> $GITHUB_OUTPUT
 
-      - name: Define matrix
+      - name: Define matrix based on changed templates
         id: matrix
         run: |
-          echo "templates=$(find coder/templates -mindepth 1 -maxdepth 1 -type d -not -path "*/\.*" -printf "%f\n" | jq -c -R -s 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+          if [ -n "$TEMPLATES" ]; then
+            echo "templates=$(echo "$TEMPLATES" | jq -c -R -s 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+          else
+            echo "templates=[]" >> $GITHUB_OUTPUT
+          fi
 
       - name: Upload Coder templates
         uses: actions/upload-artifact@v4
@@ -36,13 +55,13 @@ jobs:
           path: coder/templates
     
     outputs:
-      version_name: ${{ steps.name.outputs.version_name }}
       version_message: ${{ steps.message.outputs.pr_message }}
       templates: ${{ steps.matrix.outputs.templates }}
 
   publish:
     runs-on: kyrion
     needs: init
+    if: needs.init.outputs.templates != '[]'
     strategy:
       fail-fast: false
       matrix:
@@ -76,4 +95,4 @@ jobs:
 
       - name: Push template to Coder
         run: |
-          coder templates push ${{ matrix.template }} -d ${{ matrix.template }} --name ${{ needs.init.outputs.version_name }} --message "${{ needs.init.outputs.version_message }}" --yes
+          coder templates push ${{ matrix.template }} -d ${{ matrix.template }} --message "${{ needs.init.outputs.version_message }}" --yes
