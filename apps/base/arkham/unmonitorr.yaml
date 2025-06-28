@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: shraymonks/unmonitorr # {"$imagepolicy": "flux-system:unmonitorr-policy:name"}
-      tag: "v1.1.2" # {"$imagepolicy": "flux-system:unmonitorr-policy:tag"}
+      tag: "v1.1.3" # {"$imagepolicy": "flux-system:unmonitorr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
