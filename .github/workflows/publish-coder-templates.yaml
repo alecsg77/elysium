@@ -96,3 +96,24 @@ jobs:
       - name: Push template to Coder
         run: |
           coder templates push ${{ matrix.template }} -d ${{ matrix.template }} --message "${{ needs.init.outputs.version_message }}" --yes
+
+      - name: Extract README frontmatter
+        id: frontmatter
+        uses: mheap/markdown-meta-action@v1
+        with:
+          file: ./${{ matrix.template }}/README.md
+
+      - name: Set template display name
+        if: steps.frontmatter.outputs.displayname != ''
+        run: 
+          coder templates edit ${{ matrix.template }} --display-name "${{ steps.frontmatter.outputs.displayname }}"
+
+      - name: Set template description
+        if: steps.frontmatter.outputs.description != ''
+        run: 
+          coder templates edit ${{ matrix.template }} --description "${{ steps.frontmatter.outputs.description }}"
+      
+      - name: Set template icon
+        if: steps.frontmatter.outputs.icon != ''
+        run: 
+            coder templates edit ${{ matrix.template }} --icon "${{ steps.frontmatter.outputs.icon }}"

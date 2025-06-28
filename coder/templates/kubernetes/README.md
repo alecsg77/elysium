@@ -1,10 +1,7 @@
 ---
 display_name: Kubernetes (Deployment)
 description: Provision Kubernetes Deployments as Coder workspaces
-icon: ../../../site/static/icon/k8s.png
-maintainer_github: coder
-verified: true
-tags: [kubernetes, container]
+icon: /icon/k8s.png
 ---
 
 # Remote Development on Kubernetes Pods

@@ -1,10 +1,7 @@
 ---
 display_name: Devcontainers (Kubernetes)
-description: Provision envbuilder pods as Coder workspaces
-icon: ../../../site/static/icon/k8s.png
-maintainer_github: coder
-verified: true
-tags: [container, kubernetes, devcontainer]
+description: Provision Kubernetes Deployments with a devcontainer as Coder workspaces
+icon: icon/k8s.png
 ---
 
 # Remote Development on Kubernetes Pods (with Devcontainers)
