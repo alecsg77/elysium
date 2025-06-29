@@ -8,10 +8,10 @@ on:
 
   workflow_dispatch:
     inputs:
-      before:
-        description: 'The SHA of the most recent commit to compare against. Defaults to the commit that triggered the workflow.'
+      since:
+        description: "Oldest commit SHA to compare against for changed templates. Defaults to the last commit on the main branch."
         required: true
-        default: "HEAD~1"
+        default: "HEAD"
         type: string
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
           # For push events, only include changed template folders
           {
             echo "TEMPLATES<<EOF"
-            git diff --name-only ${{ inputs.before || github.event.before }}...${{ github.sha }} -- coder/templates | sed -r 's/^coder\/templates\/([^\/]+).*$/\1/' | sort | uniq
+            git diff --name-only ${{ inputs.since || github.event.commits[0].id }}~1 ${{ github.sha }} -- coder/templates | xargs ls -d 2>/dev/null | sed -r 's/^coder\/templates\/([^\/]+).*$/\1/' | sort | uniq
             echo "EOF"
           } >> $GITHUB_ENV
 
