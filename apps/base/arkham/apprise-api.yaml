@@ -21,6 +21,8 @@ spec:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
       TZ: ${TZ:=Etc/UTC}
+    podSecurityContext:
+      fsGroup: ${PGID:=1000}
     volumes:
       - name: config
         size: "100Mi"

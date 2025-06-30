@@ -19,14 +19,15 @@ spec:
       tag: "1.13.5" # {"$imagepolicy": "flux-system:configarr-policy:tag"}
     schedule: "0 */24 * * *" # Runs every 24 hours
     overrideCommand: false
-    podSecurityContext:
-      runAsUser: ${PUID:=1000}
-      runAsGroup: ${PGID:=1000}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
       TZ: ${TZ:=Etc/UTC}
       ROOT_PATH: /config
+    podSecurityContext:
+      runAsUser: ${PUID:=1000}
+      runAsGroup: ${PGID:=1000}
+      fsGroup: ${PGID:=1000}
     volumes:
       - name: storage
         size: "100Mi"

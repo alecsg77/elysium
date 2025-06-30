@@ -29,6 +29,8 @@ spec:
       PGID: ${PGID:=1000}
       TZ: ${TZ:=Etc/UTC}
       TORRENTING_PORT: 51413
+    podSecurityContext:
+      fsGroup: ${PGID:=1000}
     volumes:
       - name: config
         size: "100Mi"
