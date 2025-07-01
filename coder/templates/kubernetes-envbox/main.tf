@@ -223,7 +223,7 @@ resource "kubernetes_pod" "main" {
 
       env {
         name  = "CODER_MOUNTS"
-        value = "/home/coder:/home/coder"
+        value = "/home/coder:/home/coder,/lib/modules:/lib/modules,/usr/src:/usr/src"
       }
 
       env {
