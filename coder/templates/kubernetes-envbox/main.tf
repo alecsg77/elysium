@@ -78,7 +78,7 @@ data "coder_parameter" "git_repo" {
   display_name = "Git repository"
   default      = ""
   description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
-  icon         = "${data.coder_workspace.me.access_url}/icon/git.svg"
+  icon         = "/icon/git.svg"
   type         = "string"
   validation {
     regex = "^(https?|git|ssh)://.*|^git@.*|^$"
@@ -124,8 +124,15 @@ module "github-upload-public-key" {
   external_auth_id = data.coder_external_auth.github.id
 }
 
+module "git-config" {
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/git-config/coder"
+  version  = "1.0.15"
+  agent_id = coder_agent.main.id
+  allow_email_change = true
+}
+
 module "git_clone" {
-  depends_on = [ module.github-upload-public-key ]
   count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
   source   = "registry.coder.com/coder/git-clone/coder"
   version  = "1.0.18"
@@ -335,12 +342,4 @@ resource "kubernetes_pod" "main" {
       }
     }
   }
-}
-
-module "git-config" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.15"
-  agent_id = coder_agent.main.id
-  allow_email_change = true
 }

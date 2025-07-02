@@ -101,6 +101,25 @@ data "coder_parameter" "home_disk_size" {
   }
 }
 
+data "coder_parameter" "git_repo" {
+  name         = "git_repo"
+  display_name = "Git repository"
+  default      = ""
+  description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
+  icon         = "/icon/git.svg"
+  type         = "string"
+  validation {
+    regex = "^(https?|git|ssh)://.*|^git@.*|^$"
+    error = "Please enter a valid git repository URL."
+  }
+}
+
+data "coder_external_auth" "github" {
+  id = "github"
+  optional = true
+}
+
+
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
   config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
@@ -178,6 +197,30 @@ resource "coder_agent" "main" {
     interval = 60
     timeout  = 1
   }
+}
+
+module "git-config" {
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/git-config/coder"
+  version  = "1.0.15"
+  agent_id = coder_agent.main.id
+  allow_email_change = true
+}
+
+module "github-upload-public-key" {
+  count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
+  source           = "registry.coder.com/coder/github-upload-public-key/coder"
+  version          = "1.0.15"
+  agent_id         = coder_agent.main.id
+  external_auth_id = data.coder_external_auth.github.id
+}
+
+module "git_clone" {
+  count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
+  source   = "registry.coder.com/coder/git-clone/coder"
+  version  = "1.0.18"
+  agent_id = coder_agent.main.id
+  url      = data.coder_parameter.git_repo.value
 }
 
 # code-server
