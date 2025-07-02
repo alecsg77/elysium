@@ -26,6 +26,12 @@ variable "use_kubeconfig" {
   default     = false
 }
 
+variable "enable_dind" {
+  type        = bool
+  description = "Enable Docker-in-Docker (dind) for workspaces."
+  default     = false
+}
+
 variable "namespace" {
   type        = string
   description = "The Kubernetes namespace to create workspaces in (must exist prior to creating workspaces). If the Coder host is itself running as a Pod on the same Kubernetes cluster as you are deploying workspaces to, set this to the same namespace."
@@ -295,6 +301,10 @@ resource "kubernetes_deployment" "main" {
             name  = "CODER_AGENT_TOKEN"
             value = coder_agent.main.token
           }
+          env {
+            name  = "DOCKER_HOST"
+            value = "unix:///var/run/docker.sock"
+          }
           resources {
             requests = {
               "cpu"    = "250m"
@@ -310,8 +320,56 @@ resource "kubernetes_deployment" "main" {
             name       = "home"
             read_only  = false
           }
+          dynamic "volume_mount" {
+            for_each = var.enable_dind == true ? [1] : []
+            content {
+              mount_path = "/var/run"
+              name       = "docker-sock"
+              read_only  = false
+            }
+          }
         }
 
+        dynamic "container" {
+          for_each = var.enable_dind == true ? [1] : []
+          content {
+            name  = "dind"
+            image = "docker:dind"
+            args = [
+              "dockerd",
+              "--host=unix:///var/run/docker.sock",
+              "--group=$(DOCKER_GROUP_GID)",
+            ]
+            env {
+              name  = "DOCKER_GROUP_GID"
+              value = "1000"
+            }
+            security_context {
+              privileged = true
+              run_as_non_root = false
+              run_as_user = 0
+              run_as_group = 0
+            }
+            startup_probe {
+              exec {
+                command = ["docker", "info"]
+              }
+              initial_delay_seconds = 0
+              failure_threshold     = 24
+              period_seconds        = 5
+            }
+            volume_mount {
+              mount_path = "/home/coder"
+              name       = "home"
+              read_only  = false
+            }
+            volume_mount {
+              mount_path = "/var/run"
+              name       = "docker-sock"
+              read_only  = false
+            }
+          }
+        }
         volume {
           name = "home"
           persistent_volume_claim {
@@ -320,6 +378,14 @@ resource "kubernetes_deployment" "main" {
           }
         }
 
+        dynamic "volume" {
+          for_each = var.enable_dind == true ? [1] : []
+          content {
+            name = "docker-sock"
+            empty_dir {}
+          }
+        }
+        
         affinity {
           // This affinity attempts to spread out all workspace pods evenly across
           // nodes.
