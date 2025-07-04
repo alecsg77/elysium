@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: coder
+  namespace: coder
+spec:
+  podMetricsEndpoints:
+    - port: prometheus-http
+  namespaceSelector:
+    matchNames:
+      - coder
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: coder

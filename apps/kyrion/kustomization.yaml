@@ -11,7 +11,7 @@ resources:
   - ../base/mediamtx
   - web-public.yaml
   - capacitor-ingress.yaml
-  - coder-prom.yaml
+  - coder-monitor.yaml
   - arc-runner-set.yaml
   - arkham-unmonitorr-sealed-secret.yaml
   - discourse

@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: workload-identity-webhook
+spec:
+  namespaceSelector:
+    matchNames:
+      - arc-workload-identity
+  selector:
+    matchLabels:
+      app: workload-identity-webhook
+  podMetricsEndpoints:
+    - port: metrics
