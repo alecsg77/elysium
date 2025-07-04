@@ -27,6 +27,8 @@ spec:
     alertmanager:
       ingress:
         enabled: true
+        hosts:
+          - alertmanager.${ts_net}
         ingressClassName: tailscale
         paths:
           - /
@@ -44,12 +46,12 @@ spec:
           requests:
             cpu: 200m
             memory: 200Mi
-        podMonitorNamespaceSelector: { }
-        podMonitorSelector:
-          matchLabels:
-            app.kubernetes.io/component: monitoring
+        podMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
       ingress:
         enabled: true
+        hosts:
+          - prometheus.${ts_net}
         ingressClassName: tailscale
         paths:
           - /
@@ -60,7 +62,15 @@ spec:
       defaultDashboardsTimezone: browser
       ingress:
         enabled: true
+        hosts:
+          - grafana.${ts_net}
         ingressClassName: tailscale
         tls:
           - hosts:
             -  grafana
+      persistence:
+        enabled: true
+      grafana.ini:
+        server:
+          domain: grafana.${ts_net}
+          root_url: https://grafana.${ts_net}
