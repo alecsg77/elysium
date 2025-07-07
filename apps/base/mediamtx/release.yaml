@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: bluenviron/mediamtx # {"$imagepolicy": "flux-system:mediamtx-policy:name"}
-      tag: "1.12.3-ffmpeg" # {"$imagepolicy": "flux-system:mediamtx-policy:tag"}
+      tag: "1.13.0-ffmpeg" # {"$imagepolicy": "flux-system:mediamtx-policy:tag"}
     volumes:
       - name: video0
         path: /dev/video0
