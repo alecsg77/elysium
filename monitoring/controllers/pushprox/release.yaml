@@ -1,0 +1,28 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pushprox-kube-proxy
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: rancher-pushprox
+      sourceRef:
+        kind: HelmRepository
+        name: rancher-charts
+      interval: 60m
+  values:
+    metricsPort: 10249
+    component: kube-proxy
+    serviceMonitor:
+      enabled: false
+    clients:
+      port: 10013
+      useLocalhost: true
+      https:
+        enabled: false
+      tolerations:
+        - effect: "NoExecute"
+          operator: "Exists"
+        - effect: "NoSchedule"
+          operator: "Exists"
