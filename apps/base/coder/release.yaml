@@ -74,8 +74,6 @@ spec:
             secretKeyRef:
               name: coder-oauth2-github
               key: clientSecret
-        - name: CODER_OAUTH2_GITHUB_DEVICE_FLOW 
-          value: "true"
         - name: CODER_EXTERNAL_AUTH_0_ID
           value: "github"
         - name: CODER_EXTERNAL_AUTH_0_TYPE
