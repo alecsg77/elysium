@@ -4,6 +4,7 @@ namespace: monitoring
 resources:
   - podmonitor.yaml
   - arc-workload-identity-monitor.yaml
+  - elasticsearch.yaml
   
 configMapGenerator:
   - name: flux-grafana-dashboards
