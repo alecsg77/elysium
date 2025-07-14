@@ -18,3 +18,12 @@ configMapGenerator:
         app.kubernetes.io/part-of: flux
         app.kubernetes.io/component: monitoring
         kustomize.toolkit.fluxcd.io/substitute: disabled
+  - name: flux-grafana-datasources
+    files:
+      - datasources/tempo.yaml
+    options:
+      labels:
+        grafana_datasource: "1"
+        app.kubernetes.io/part-of: flux
+        app.kubernetes.io/component: monitoring
+        kustomize.toolkit.fluxcd.io/substitute: disabled
