@@ -1,0 +1,85 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel
+spec:
+  managementState: managed
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest
+  config:
+    service:
+      extensions: [health_check, pprof, zpages]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp/tempo, spanmetrics]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlphttp/loki]
+        metrics/spanmetrics:
+          receivers: [spanmetrics]
+          exporters: [prometheus]
+      telemetry:
+        metrics:
+          level: detailed
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: 0.0.0.0
+                    port: 8888
+        traces:
+          processors:
+            - batch:
+                exporter:
+                  otlp:
+                    protocol: grpc
+                    endpoint: http://tempo:4317
+
+        logs:
+          processors:
+            - batch:
+                exporter:
+                  otlp:
+                    protocol: http/protobuf
+                    endpoint: http://loki:3100/otlp
+
+    connectors:
+      spanmetrics:
+
+    extensions:
+      health_check:
+      pprof:
+      zpages:
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+
+    exporters:
+      prometheus:
+        endpoint: "0.0.0.0:9090"
+      otlp/tempo:
+        endpoint: "tempo:4317"
+        tls:
+          insecure: true
+      otlphttp/loki:
+        endpoint: "https://loki:3100/otlp"
+        tls:
+          insecure: true
+
+  observability:
+    metrics:
+      enableMetrics: true

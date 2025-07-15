@@ -5,6 +5,7 @@ resources:
   - podmonitor.yaml
   - arc-workload-identity-monitor.yaml
   - elasticsearch.yaml
+  - otel.yaml
   
 configMapGenerator:
   - name: flux-grafana-dashboards
