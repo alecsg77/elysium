@@ -8,3 +8,20 @@ resources:
   - secret.yaml
   - sealed-secrets.yaml
   - coder-prom.yaml
+
+configMapGenerator:
+  - name: coder-grafana-dashboards
+    namespace: coder
+    files:
+      - dashboards/coderd.json
+      - dashboards/prebuilds.json
+      - dashboards/provisionerd.json
+      - dashboards/status.json
+      - dashboards/workspaces-detail.json
+      - dashboards/workspaces.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+        app.kubernetes.io/part-of: coder
+        app.kubernetes.io/component: monitoring
+        kustomize.toolkit.fluxcd.io/substitute: disabled
