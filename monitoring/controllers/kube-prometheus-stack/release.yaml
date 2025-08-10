@@ -38,10 +38,26 @@ spec:
       alertmanagerSpec:
         externalUrl: https://alertmanager.${ts_net}
         forceEnableClusterMode: true
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 10Gi
     prometheus:
       prometheusSpec:
         externalUrl: https://prometheus.${ts_net}
-        retention: 24h
+        retention: 30d
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 50Gi
         resources:
           requests:
             cpu: 200m
