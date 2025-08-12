@@ -9,5 +9,4 @@ resources:
   - cert-manager.yaml
   - nfd.yaml
   - inteldeviceplugins.yaml
-  - csi-rclone.yaml
   - arc.yaml
