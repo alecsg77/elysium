@@ -29,3 +29,51 @@ spec:
       tls:
         - hosts:
             - ollama
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: librechat
+  namespace: ollama
+spec:
+  releaseName: librechat
+  chart:
+    spec:
+      chart: helm/librechat
+      sourceRef:
+        kind: GitRepository
+        name: librechat
+  interval: 12h
+  values:
+    configYamlContent: |
+      version: 1.2.8
+ 
+      custom:
+        - name: "Ollama"
+          apiKey: "ollama"
+          # use 'host.docker.internal' instead of localhost if running LibreChat in a docker container
+          baseURL: "http://ollama.ollama.svc:11434/v1/"
+          models:
+            default: [
+              "gpt-oss",
+              "deepseek-r1"
+              ]
+            # fetching list of models is supported but the `name` field must start
+            # with `ollama` (case-insensitive), as it does in this example.
+            fetch: true
+          titleConvo: true
+          titleModel: "current_model"
+          summarize: false
+          summaryModel: "current_model"
+          forcePrompt: false
+          modelDisplayLabel: "Ollama"      
+    ingress:
+      enabled: true
+      className: tailscale
+      hosts:
+      - paths:
+          - path: /
+            pathType: Prefix
+      tls:
+        - hosts:
+            - chat

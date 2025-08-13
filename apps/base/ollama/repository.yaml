@@ -8,3 +8,17 @@ spec:
   type: default
   interval: 24h
   url: https://helm.otwld.com/
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: librechat
+  namespace: ollama
+spec:
+  interval: 24h
+  url: https://github.com/danny-avila/LibreChat.git
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/helm
