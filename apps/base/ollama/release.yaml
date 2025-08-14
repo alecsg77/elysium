@@ -45,28 +45,20 @@ spec:
         name: librechat
   interval: 12h
   values:
-    configYamlContent: |
-      version: 1.2.8
- 
-      custom:
-        - name: "Ollama"
-          apiKey: "ollama"
-          # use 'host.docker.internal' instead of localhost if running LibreChat in a docker container
-          baseURL: "http://ollama.ollama.svc:11434/v1/"
-          models:
-            default: [
-              "gpt-oss",
-              "deepseek-r1"
-              ]
-            # fetching list of models is supported but the `name` field must start
-            # with `ollama` (case-insensitive), as it does in this example.
-            fetch: true
-          titleConvo: true
-          titleModel: "current_model"
-          summarize: false
-          summaryModel: "current_model"
-          forcePrompt: false
-          modelDisplayLabel: "Ollama"      
+    librechat:
+      configEnv:
+        NO_INDEX: "true"
+        ALLOW_EMAIL_LOGIN: "false"
+        ALLOW_REGISTRATION: "false"
+        ALLOW_SOCIAL_LOGIN: "true"
+        ALLOW_SOCIAL_REGISTRATION: "true"
+        ALLOW_PASSWORD_RESET: "false"
+        ALLOW_ACCOUNT_DELETION: "true"
+        ALLOW_UNVERIFIED_EMAIL_LOGIN: "true"
+        DOMAIN_CLIENT: https://chat.${ts_net}
+        DOMAIN_SERVER: https://chat.${ts_net}
+        GITHUB_CALLBACK_URL: /oauth/github/callback
+      existingConfigYaml: librechat-config
     ingress:
       enabled: true
       className: tailscale
