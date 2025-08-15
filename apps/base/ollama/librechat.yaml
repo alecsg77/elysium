@@ -28,3 +28,15 @@ endpoints:
       summaryModel: "current_model"
       forcePrompt: false
       modelDisplayLabel: "Ollama"
+
+mcpServers:
+  copilot:
+    type: streamable-http
+    url: https://api.githubcopilot.com/mcp/
+    oauth:
+      authorization_url: https://github.com/login/oauth/authorize
+      token_url: https://github.com/login/oauth/access_token
+      client_id: $${GITHUB_CLIENT_ID}
+      client_secret: $${GITHUB_CLIENT_SECRET}
+      redirect_uri: https://chat.${ts_net}/oauth/github/callback
+      scope: "read execute"
