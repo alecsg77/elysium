@@ -20,7 +20,8 @@
 		"./features/fission-cli": {},
 		"ghcr.io/devcontainers/features/terraform": {},
 		"./features/coder-cli": {},
-		"ghcr.io/tailscale/codespace/tailscale": {}
+		"ghcr.io/tailscale/codespace/tailscale": {},
+		"ghcr.io/devcontainers/features/node:1": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
