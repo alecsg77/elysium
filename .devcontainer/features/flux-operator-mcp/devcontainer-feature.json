@@ -1,0 +1,21 @@
+{
+  "name": "Flux Operator MCP",
+  "id": "flux-operator-mcp",
+  "version": "1.0.0",
+  "description": "Installs the Flux Model Context Protocol (MCP) Server",
+  "options": {
+    "version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Select the version of Flux MCP to install. Use 'latest' for the latest version."
+    },
+    "architecture": {
+      "type": "string",
+      "default": "amd64",
+      "description": "Select the architecture for Flux MCP."
+    }
+  },
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}

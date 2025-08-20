@@ -21,7 +21,8 @@
 		"ghcr.io/devcontainers/features/terraform": {},
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale": {},
-		"ghcr.io/devcontainers/features/node:1": {}
+		"ghcr.io/devcontainers/features/node:1": {},
+		"./features/flux-operator-mcp": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
