@@ -3,15 +3,15 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - repository.yaml
-  - release.yaml
-  - sealed-secrets.yaml
+  - ollama.yaml
+  - librechat.yaml
+  - librechat-credentials-env-sealed-secret.yaml
 
 configMapGenerator:
   - name: librechat-config
-    namespace: ollama
+    namespace: ai
     files:
-      - librechat.yaml
+      - librechat.yaml=librechat-config.yaml
 
 configurations:
   - kustomizeconfig.yaml

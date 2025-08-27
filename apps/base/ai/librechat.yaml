@@ -1,40 +1,23 @@
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
 metadata:
-  name: ollama
-  namespace: ollama
+  name: librechat
+  namespace: ai
 spec:
-  releaseName: ollama
-  chart:
-    spec:
-      chart: ollama
-      sourceRef:
-        kind: HelmRepository
-        name: otwld
-  interval: 12h
-  values:
-    ollama:
-      models:
-        pull:
-          - gpt-oss
-          - deepseek-r1
-      
-    ingress:
-      enabled: true
-      className: tailscale
-      hosts:
-      - paths:
-          - path: /
-            pathType: Prefix
-      tls:
-        - hosts:
-            - ollama
+  interval: 24h
+  url: https://github.com/danny-avila/LibreChat.git
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/helm
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: librechat
-  namespace: ollama
+  namespace: ai
 spec:
   releaseName: librechat
   chart:
@@ -48,6 +31,7 @@ spec:
     librechat:
       configEnv:
         NO_INDEX: "true"
+        ENDPOINTS: agents,google,custom
         ALLOW_EMAIL_LOGIN: "false"
         ALLOW_REGISTRATION: "false"
         ALLOW_SOCIAL_LOGIN: "true"
@@ -57,7 +41,8 @@ spec:
         ALLOW_UNVERIFIED_EMAIL_LOGIN: "true"
         DOMAIN_CLIENT: https://chat.${ts_net}
         DOMAIN_SERVER: https://chat.${ts_net}
-        GITHUB_CALLBACK_URL: /oauth/github/callback
+        GOOGLE_CALLBACK_URL: /oauth/google/callback
+        GOOGLE_MODELS: gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.0-pro-001,gemini-1.0-pro-latest,gemini-1.0-pro-vision-latest,gemini-1.5-pro-latest,gemini-pro,gemini-pro-vision
       existingConfigYaml: librechat-config
     ingress:
       enabled: true

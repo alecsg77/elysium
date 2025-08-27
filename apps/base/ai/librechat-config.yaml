@@ -1,7 +1,7 @@
 version: 1.2.8
 
 registration:
-  socialLogins: ["github"]
+  socialLogins: ["google"]
 
 mcpServers:
   copilot:
@@ -16,7 +16,7 @@ endpoints:
     - name: "Ollama"
       apiKey: "ollama"
       # use 'host.docker.internal' instead of localhost if running LibreChat in a docker container
-      baseURL: "http://ollama.ollama.svc:11434/v1/"
+      baseURL: "http://ollama.ai.svc:11434/v1/"
       models:
         default: ["gpt-oss", "deepseek-r1"]
         # fetching list of models is supported but the `name` field must start
@@ -28,15 +28,3 @@ endpoints:
       summaryModel: "current_model"
       forcePrompt: false
       modelDisplayLabel: "Ollama"
-
-mcpServers:
-  copilot:
-    type: streamable-http
-    url: https://api.githubcopilot.com/mcp/
-    oauth:
-      authorization_url: https://github.com/login/oauth/authorize
-      token_url: https://github.com/login/oauth/access_token
-      client_id: $${GITHUB_CLIENT_ID}
-      client_secret: $${GITHUB_CLIENT_SECRET}
-      redirect_uri: https://chat.${ts_net}/oauth/github/callback
-      scope: "read execute"

@@ -9,7 +9,7 @@ resources:
   - ../base/arkham
   - ../base/fission
   - ../base/mediamtx
-  - ../base/ollama
+  - ../base/ai
   - web-public.yaml
   - capacitor-ingress.yaml
   - arc-runner-set.yaml
