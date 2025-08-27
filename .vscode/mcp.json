@@ -1,0 +1,20 @@
+{
+	"servers": {
+		"kubernetes": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"kubernetes-mcp-server@latest"
+			],
+			"type": "stdio"
+		},
+		"flux-operator-mcp": {
+			"command": "/usr/local/bin/flux-operator-mcp",
+			"args": ["serve"],
+			"env": {
+				"KUBECONFIG": "${workspaceFolder}/etc/kubeconfig"
+			}
+		}
+	},
+	"inputs": []
+}

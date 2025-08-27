@@ -4,5 +4,6 @@
             "${userHome}/.kube/config",
             "${workspaceFolder}/etc/kubeconfig"
         ]
-    }
+    },
+    "chat.mcp.enabled": true
 }
