@@ -10,9 +10,11 @@ resources:
   - ../base/fission
   - ../base/mediamtx
   - ../base/ai
+  - ../base/arc-runner-set.yaml
   - web-public.yaml
   - capacitor-ingress.yaml
-  - arc-runner-set.yaml
+  - fission-runner-set.yaml
+  - raiplaysoundrss-runner-set.yaml
   - arkham-unmonitorr-sealed-secret.yaml
   - discourse
 

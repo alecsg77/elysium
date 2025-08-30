@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: kyrion
+    runs-on: fission
     
     steps:
       - name: Checkout code
