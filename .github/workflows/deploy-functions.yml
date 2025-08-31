@@ -9,8 +9,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: fission
-    
+    runs-on: fission-runner-set
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

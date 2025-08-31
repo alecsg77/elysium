@@ -31,7 +31,6 @@ spec:
     namespace: arc-runners
   values:
     githubConfigUrl: https://github.com/alecsg77/elysium
-    runnerScaleSetName: "fission"
     githubConfigSecret: pre-defined-secret
     containerMode:
       type: "dind"

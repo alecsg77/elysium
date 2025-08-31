@@ -59,7 +59,7 @@ jobs:
       templates: ${{ steps.matrix.outputs.templates }}
 
   publish:
-    runs-on: kyrion
+    runs-on: coder-runner-set
     needs: init
     if: needs.init.outputs.templates != '[]'
     strategy:

@@ -14,6 +14,7 @@ resources:
   - web-public.yaml
   - capacitor-ingress.yaml
   - fission-runner-set.yaml
+  - coder-runner-set.yaml
   - raiplaysoundrss-runner-set.yaml
   - arkham-unmonitorr-sealed-secret.yaml
   - discourse
