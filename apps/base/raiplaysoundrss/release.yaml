@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: ghcr.io/alecsg77/raiplaysoundrss # {"$imagepolicy": "flux-system:raiplaysoundrss-policy:name"}
-      tag: "0.7.3" # {"$imagepolicy": "flux-system:raiplaysoundrss-policy:tag"}
+      tag: "0.7.4" # {"$imagepolicy": "flux-system:raiplaysoundrss-policy:tag"}
     imagePullSecrets:
       - regcred
     containerPort: 3000
