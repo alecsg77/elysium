@@ -28,10 +28,14 @@ spec:
         name: librechat
   interval: 12h
   values:
+    global:
+      librechat:
+        existingSecretApiKey: AZURE_API_KEY
+    
     librechat:
       configEnv:
         NO_INDEX: "true"
-        ENDPOINTS: agents,google,custom
+        ENDPOINTS: agents,google,azureAssistants,azureOpenAI,custom
         ALLOW_EMAIL_LOGIN: "false"
         ALLOW_REGISTRATION: "false"
         ALLOW_SOCIAL_LOGIN: "true"
@@ -43,6 +47,7 @@ spec:
         DOMAIN_SERVER: https://chat.${ts_net}
         GOOGLE_CALLBACK_URL: /oauth/google/callback
         GOOGLE_MODELS: gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.0-pro-001,gemini-1.0-pro-latest,gemini-1.0-pro-vision-latest,gemini-1.5-pro-latest,gemini-pro,gemini-pro-vision
+        GITHUB_CALLBACK_URL: /oauth/github/callback
       existingConfigYaml: librechat-config
     ingress:
       enabled: true

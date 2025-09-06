@@ -1,18 +1,69 @@
 version: 1.2.8
 
 registration:
-  socialLogins: ["google"]
+  socialLogins: ["google", "github"]
 
 mcpServers:
   copilot:
     type: streamable-http
     url: https://api.githubcopilot.com/mcp/
-    oauth:
-      authorization_url: https://github.com/login/oauth/authorize
-      token_url: https://github.com/login/oauth/access_token
+    headers:
+      Authorization: "Bearer {{GITHUB_PERSONAL_ACCESS_TOKEN}}"
+    customUserVars:
+      GITHUB_PERSONAL_ACCESS_TOKEN:
+        title: "GitHub Token"
+        description: "GitHub Personal Access Token"
 
 endpoints:
+  azureOpenAI:
+    titleModel: "gpt-4o-mini"
+    assistants: true
+    groups:
+      - group: "default" # arbitrary name
+        apiKey: "$${AZURE_API_KEY}"
+        instanceName: "$${AZURE_OPENAI_API_INSTANCE_NAME}" # name of the resource group or instance
+        assistants: true
+        version: "2025-04-01-preview"
+        models:
+          gpt-4o-mini: # Standard deployment
+            deploymentName: "gpt-4o-mini"
+          gpt-4o: # Standard deployment
+            deploymentName: "gpt-4o"
+          o4-mini: # Global standard deployment
+            deploymentName: "o4-mini"
   custom:
+    - name: "Github Models"
+      iconURL: https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png
+      apiKey: "$${GITHUB_TOKEN}"
+      baseURL: "https://models.inference.ai.azure.com"
+      models:
+        default:
+          - AI21-Jamba-Instruct
+          - Cohere-embed-v3-english
+          - Cohere-embed-v3-multilingual
+          - Meta-Llama-3-70B-Instruct
+          - Meta-Llama-3-8B-Instruct
+          - Meta-Llama-3.1-405B-Instruct
+          - Meta-Llama-3.1-70B-Instruct
+          - Meta-Llama-3.1-8B-Instruct
+          - Mistral-Nemo
+          - Mistral-large-2407
+          - Mistral-small
+          - Phi-3-medium-128k-instruct
+          - Phi-3-medium-4k-instruct
+          - Phi-3-mini-128k-instruct
+          - Phi-3-mini-4k-instruct
+          - Phi-3-small-128k-instruct
+          - Phi-3-small-8k-instruct
+          - Phi-3.5-mini-instruct
+          - gpt-4o
+          - gpt-4o-mini
+          - text-embedding-3-large
+          - text-embedding-3-small
+        fetch: false
+      titleConvo: true
+      titleModel: "gpt-4o-mini"
+
     - name: "Ollama"
       apiKey: "ollama"
       # use 'host.docker.internal' instead of localhost if running LibreChat in a docker container
