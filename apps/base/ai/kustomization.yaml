@@ -6,6 +6,8 @@ resources:
   - ollama.yaml
   - librechat.yaml
   - librechat-credentials-env-sealed-secret.yaml
+  - openwebui.yaml
+  - openwebui-credentials-env-sealed-secret.yaml
 
 configMapGenerator:
   - name: librechat-config

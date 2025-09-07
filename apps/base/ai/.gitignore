@@ -1,1 +1,2 @@
-librechat-credentials.env
+.env
+*.env
