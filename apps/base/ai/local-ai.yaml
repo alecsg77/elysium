@@ -1,0 +1,47 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: go-skynet
+  namespace: ai
+spec:
+  type: default
+  interval: 24h
+  url: https://go-skynet.github.io/helm-charts/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: local-ai
+  namespace: ai
+spec:
+  releaseName: local-ai
+  chart:
+    spec:
+      chart: local-ai
+      sourceRef:
+        kind: HelmRepository
+        name: go-skynet
+  interval: 12h
+  values:
+    deployment:
+      image:
+        tag: latest-gpu-intel
+    resources:
+      requests:
+        gpu.intel.com/i915: "1"
+      limits:
+        gpu.intel.com/i915: "1"
+    persistence:
+      models:
+        accessModes:
+          - ReadWriteOnce
+      output:
+        accessModes:
+          - ReadWriteOnce
+      ingress:
+        enabled: true
+        className: tailscale
+        tls:
+          - hosts:
+              - local-ai
