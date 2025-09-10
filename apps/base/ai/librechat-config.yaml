@@ -83,12 +83,16 @@ endpoints:
 speech:
   stt:
     openai:
-      url: 'http://local-ai.ai.svc/v1/audio/transcriptions'
+      url: "http://local-ai.ai.svc/v1/audio/transcriptions"
       apiKey: "EMPTY"
-      model: 'whisper'
+      model: "whisper-1"
   tts:
     localai:
-      url: 'http://local-ai.ai.svc/v1/audio/synthesize'
+      url: "http://local-ai.ai.svc/tts"
       apiKey: "EMPTY"
-      voices: ['tts_models/en/ljspeech/glow-tts', 'tts_models/en/ljspeech/tacotron2', 'tts_models/en/ljspeech/waveglow']
-      backend: 'coqui'
+      voices: 
+        - "paola"
+        - "riccardo"
+      backend: "piper"
+
+      
