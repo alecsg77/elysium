@@ -45,3 +45,11 @@ spec:
 
     persistentVolume:
       enabled: true
+    extraEnv:
+      - name: OLLAMA_INTEL_GPU
+        value: "1"
+    resources:
+      requests:
+        gpu.intel.com/i915: "1"
+      limits:
+        gpu.intel.com/i915: "1"
