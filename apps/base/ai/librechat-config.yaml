@@ -82,17 +82,16 @@ endpoints:
 
 speech:
   stt:
-    openai:
-      url: "http://local-ai.ai.svc/v1/audio/transcriptions"
-      apiKey: "EMPTY"
-      model: "whisper-1"
+    azureOpenAI:
+      instanceName: '$${AZURE_OPENAI_API_INSTANCE_NAME}'
+      apiKey: '$${AZURE_API_KEY}'
+      deploymentName: 'whisper'
+      apiVersion: '2024-06-01'
   tts:
-    localai:
-      url: "http://local-ai.ai.svc/tts"
-      apiKey: "EMPTY"
-      voices: 
-        - "paola"
-        - "riccardo"
-      backend: "piper"
-
-      
+    azureOpenAI:
+      instanceName: '$${AZURE_OPENAI_API_INSTANCE_NAME}'
+      apiKey: '$${AZURE_API_KEY}'
+      deploymentName: 'tts-hd'
+      apiVersion: '2025-03-01-preview'
+      model: 'tts-hd'
+      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
