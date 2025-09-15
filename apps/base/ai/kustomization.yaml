@@ -9,6 +9,8 @@ resources:
   - openwebui.yaml
   - openwebui-credentials-env-sealed-secret.yaml
   - local-ai.yaml
+  - searxng.yaml
+  - searxng-config-sealed-secret.yaml
 
 configMapGenerator:
   - name: librechat-config

@@ -1,2 +1,3 @@
 .env
 *.env
+searxng-config.yaml
