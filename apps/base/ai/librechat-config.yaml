@@ -95,3 +95,8 @@ speech:
       apiVersion: '2025-03-01-preview'
       model: 'tts-hd'
       voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+
+webSearch:
+  searxngInstanceUrl: "http://search.ai.svc"
+  searxngApiKey: "$${SEARXNG_API_KEY}"
+  searchProvider: "searxng"
