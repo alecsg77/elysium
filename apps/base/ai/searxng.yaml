@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: ghcr.io/searxng/searxng # {"$imagepolicy": "flux-system:searxng-policy:name"}
-      tag: "2025.9.14-23257bd" # {"$imagepolicy": "flux-system:searxng-policy:tag"}
+      tag: "2025.9.19-0ce0d95" # {"$imagepolicy": "flux-system:searxng-policy:tag"}
     resources:
       requests:
         cpu: "500m"
@@ -59,6 +59,6 @@ spec:
     extract: "$major.$minor.$patch"
   policy:
     semver:
-      range: "*"  # Match all semver tags 
+      range: "*" # Match all semver tags 
   digestReflectionPolicy: Always
   interval: 24h
