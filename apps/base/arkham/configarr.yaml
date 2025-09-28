@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "flux-system:configarr-policy:name"}
-      tag: "1.15.1" # {"$imagepolicy": "flux-system:configarr-policy:tag"}
+      tag: "1.16.0" # {"$imagepolicy": "flux-system:configarr-policy:tag"}
     schedule: "0 */24 * * *" # Runs every 24 hours
     overrideCommand: false
     vars:
