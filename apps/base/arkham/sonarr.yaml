@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/sonarr # {"$imagepolicy": "flux-system:sonarr-policy:name"}
-      tag: "4.0.15" # {"$imagepolicy": "flux-system:sonarr-policy:tag"}
+      tag: "4.0.16" # {"$imagepolicy": "flux-system:sonarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
