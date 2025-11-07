@@ -1,0 +1,112 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: copilot-agent
+  namespace: copilot-agent
+  labels:
+    app.kubernetes.io/name: copilot-agent
+    app.kubernetes.io/component: agent
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: copilot-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: copilot-agent
+        app.kubernetes.io/component: agent
+      annotations:
+        prometheus.io/scrape: "false"
+    spec:
+      serviceAccountName: copilot-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: agent
+          image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "GitHub Copilot Agent - Read-Only Cluster Access"
+              echo "================================================="
+              echo ""
+              echo "This pod has read-only access to cluster resources."
+              echo "Available tools:"
+              echo "  - kubectl (Kubernetes CLI)"
+              echo "  - bash (shell)"
+              echo ""
+              echo "Service Account: copilot-agent"
+              echo "Namespace: copilot-agent"
+              echo "Permissions: Read-only (get, list, watch)"
+              echo ""
+              echo "To use this agent, exec into the pod:"
+              echo "  kubectl exec -it -n copilot-agent deployment/copilot-agent -- bash"
+              echo ""
+              echo "Example commands:"
+              echo "  kubectl get pods -A"
+              echo "  kubectl get deployments -A"
+              echo "  kubectl get hr -A"
+              echo "  kubectl describe pod <pod-name> -n <namespace>"
+              echo "  kubectl logs <pod-name> -n <namespace>"
+              echo ""
+              echo "Agent is ready. Keeping container alive..."
+              # Keep container running
+              while true; do
+                sleep 3600
+              done
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /.kube
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "kubectl version --client"
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - "kubectl version --client"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
