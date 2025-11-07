@@ -1,1 +1,5 @@
 **/secrets
+
+# kubeseal binaries and downloads
+kubeseal
+kubeseal-*.tar.gz*

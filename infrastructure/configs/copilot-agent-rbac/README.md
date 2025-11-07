@@ -114,7 +114,7 @@ kubectl get clusterrolebinding copilot-agent-readonly
 
 ### 2. Deploy Copilot Runner Scale Set
 
-The runner scale set is defined in `apps/kyrion/copilot-runner-set.yaml` and automatically deployed via Flux CD.
+The runner scale set is defined in [`apps/kyrion/copilot-runner-set.yaml`](../../../apps/kyrion/copilot-runner-set.yaml) and automatically deployed via Flux CD.
 
 The runner pods are configured to:
 - Use the `copilot-agent-readonly` ServiceAccount
@@ -224,7 +224,7 @@ kubectl delete secret copilot-agent-readonly-token -n copilot-agent
 flux reconcile kustomization infra-configs
 ```
 
-Then update the `KUBE_TOKEN` secret in GitHub repository settings.
+The service account token is automatically mounted in runner pods, so no GitHub secrets need to be updated.
 
 ## Related Documentation
 

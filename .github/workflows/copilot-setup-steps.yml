@@ -140,9 +140,11 @@ jobs:
 
       - name: Install kubeseal
         run: |
+          cd /tmp
           wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.24.0/kubeseal-0.24.0-linux-amd64.tar.gz
           tar xfz kubeseal-0.24.0-linux-amd64.tar.gz
           sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+          rm -f kubeseal kubeseal-0.24.0-linux-amd64.tar.gz
 
       - name: Validate sealed secrets public key
         run: |
@@ -166,8 +168,8 @@ jobs:
           echo "✓ Kustomize builds validated"
           echo "✓ Flux CLI validated"
           echo "✓ Tools installed: kubectl, kustomize, flux, kubeseal"
-          if [ -n "${{ secrets.KUBE_TOKEN }}" ]; then
-            echo "✓ Cluster access configured (read-only)"
+          if [ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]; then
+            echo "✓ Cluster access configured (read-only, in-cluster)"
           fi
           echo ""
           echo "Environment ready for GitOps operations!"
