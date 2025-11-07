@@ -6,6 +6,12 @@
 
 This is a **GitOps-driven Kubernetes homelab** using Flux CD for declarative cluster management. The repository structure follows a layered approach with strict dependency ordering.
 
+### Network Architecture
+- **Private Network**: Kubernetes cluster is deployed in a private network with internet access
+- **Not Cloud-Accessible**: Cluster is not reachable from GitHub-hosted runners or public internet
+- **Self-Hosted Runners**: GitHub Copilot agent runs on self-hosted runners inside the cluster using ARC (Actions Runner Controller)
+- **Cluster Access**: Copilot agent has direct access to the Kubernetes API server from within the cluster network
+
 ### Technology Stack
 - **GitOps**: Flux CD v2 with image automation
 - **Orchestration**: Kubernetes (K3s)
@@ -15,6 +21,7 @@ This is a **GitOps-driven Kubernetes homelab** using Flux CD for declarative clu
 - **Networking**: Tailscale for private access
 - **Monitoring**: Prometheus, Grafana, Loki, Tempo
 - **Storage**: Local storage + rclone CSI for cloud
+- **CI/CD**: Actions Runner Controller (ARC) for self-hosted GitHub Actions runners
 
 ### Repository Structure
 - **`clusters/kyrion/`** - Flux configuration for the `kyrion` cluster (bootstrap entry point)

@@ -2,23 +2,48 @@
 
 ## Overview
 
-This configuration provides read-only Kubernetes cluster access for the GitHub Copilot coding agent. The Copilot agent runs in a GitHub Actions environment and can investigate cluster resources to assist with troubleshooting and development.
+This configuration provides read-only Kubernetes cluster access for the GitHub Copilot coding agent. The Copilot agent runs on **self-hosted GitHub Actions runners inside the cluster** using ARC (Actions Runner Controller) and can investigate cluster resources to assist with troubleshooting and development.
 
 ## Architecture
+
+Since the Kubernetes cluster is deployed in a **private network** and is **not reachable from GitHub-hosted runners**, this implementation uses:
+
+1. **Actions Runner Controller (ARC)**: Self-hosted runners running inside the cluster
+2. **In-Cluster ServiceAccount**: The runner pods use the `copilot-agent-readonly` ServiceAccount
+3. **Direct Cluster Access**: Runners have direct access to the Kubernetes API server from within the cluster network
+
+```
+GitHub Copilot Agent
+    │
+    │ Triggered via GitHub Actions
+    │
+    ↓
+Self-Hosted Runner (ARC) - Inside Cluster
+    │
+    │ Pod running with ServiceAccount: copilot-agent-readonly
+    │ Mounted service account token at /var/run/secrets/kubernetes.io/serviceaccount/
+    │
+    ↓
+Kubernetes API Server (In-Cluster)
+    │
+    └─ ClusterRole: copilot-agent-readonly (read-only permissions)
+```
 
 ### Components
 
 1. **Namespace**: `copilot-agent` - Dedicated namespace for RBAC resources
-2. **ServiceAccount**: `copilot-agent-readonly` - Identity for the Copilot agent
+2. **ServiceAccount**: `copilot-agent-readonly` - Identity for the Copilot agent runners
 3. **ClusterRole**: `copilot-agent-readonly` - Read-only permissions across all cluster resources
 4. **ClusterRoleBinding**: Binds the ServiceAccount to the ClusterRole
-5. **Secret**: `copilot-agent-readonly-token` - Service account token for authentication
+5. **Secret**: `copilot-agent-readonly-token` - Service account token (automatically mounted in runner pods)
+6. **Runner Scale Set**: `copilot-runner-set` - ARC runner scale set configured to use the ServiceAccount
 
 ### Security Model
 
 - **Read-only access**: Only `get`, `list`, and `watch` verbs
 - **No write permissions**: Cannot create, update, delete, or patch resources
 - **No Secret data access**: Can only view Secret metadata, not the actual secret values
+- **In-cluster only**: Runners operate within the cluster's private network
 - **Comprehensive visibility**: Access to all cluster resources for investigation
 
 ## Permissions Granted
@@ -36,19 +61,21 @@ The Copilot agent has read-only access to:
 
 ## GitHub Actions Integration
 
-The GitHub Copilot agent uses these credentials in the `copilot-setup-steps` workflow:
+The GitHub Copilot agent uses self-hosted runners via Actions Runner Controller (ARC):
 
-1. The workflow retrieves the service account token from the cluster
-2. Configures kubectl with the token and cluster CA certificate
-3. Copilot can now run kubectl commands with read-only access
+1. **Runner Scale Set**: `copilot-runner-set` deployed in the `arc-runners` namespace
+2. **In-Cluster Access**: Runner pods use the `copilot-agent-readonly` ServiceAccount
+3. **Automatic Configuration**: The workflow automatically configures kubectl using the mounted service account token
+4. **No External Secrets Needed**: All authentication happens via the in-cluster service account
 
 ### Workflow Configuration
 
-The `.github/workflows/copilot-setup-steps.yml` workflow includes:
+The `.github/workflows/copilot-setup-steps.yml` workflow:
 
-- **Cluster authentication**: Configures kubectl with the read-only service account
-- **Verification step**: Tests cluster access is working
-- **Security**: Uses encrypted secrets for cluster connection details
+- **Runs on**: `copilot-runner-set` (self-hosted runner inside the cluster)
+- **ServiceAccount**: Uses `copilot-agent-readonly` mounted by the runner pod
+- **Cluster Access**: Direct access to `https://kubernetes.default.svc` from within the cluster
+- **Verification**: Tests cluster access and confirms read-only permissions
 
 ## Usage
 
@@ -85,29 +112,36 @@ kubectl get clusterrole copilot-agent-readonly
 kubectl get clusterrolebinding copilot-agent-readonly
 ```
 
-### 2. Retrieve Service Account Token
+### 2. Deploy Copilot Runner Scale Set
 
-Get the service account token for GitHub Actions:
+The runner scale set is defined in `apps/kyrion/copilot-runner-set.yaml` and automatically deployed via Flux CD.
+
+The runner pods are configured to:
+- Use the `copilot-agent-readonly` ServiceAccount
+- Run with read-only cluster access
+- Have access to kubectl and other development tools
+
+### 3. Verify Runner Deployment
+
+Check that the runner scale set is deployed:
 
 ```bash
-# Get the token
-kubectl get secret copilot-agent-readonly-token -n copilot-agent -o jsonpath='{.data.token}' | base64 -d
+# Check the HelmRelease
+kubectl get hr -n arc-runners copilot-runner-set
 
-# Get the cluster CA certificate
-kubectl get secret copilot-agent-readonly-token -n copilot-agent -o jsonpath='{.data.ca\.crt}' | base64 -d
+# Check runner pods (when a workflow is running)
+kubectl get pods -n arc-runners -l actions.github.com/scale-set-name=copilot-runner-set
 ```
 
-### 3. Configure GitHub Secrets
+### 4. Test Workflow
 
-Add these secrets to your GitHub repository:
+The `copilot-setup-steps` workflow will automatically:
+1. Run on the self-hosted runner inside the cluster
+2. Configure kubectl using the mounted service account token
+3. Verify read-only cluster access
+4. Make cluster investigation capabilities available to Copilot
 
-- `KUBE_TOKEN`: The service account token from step 2
-- `KUBE_CA_CERT`: The cluster CA certificate from step 2
-- `KUBE_SERVER`: Your cluster API server URL (e.g., `https://your-cluster:6443`)
-
-### 4. Verify Access
-
-The `copilot-setup-steps` workflow will automatically configure and test the cluster access.
+No additional secrets or configuration are needed!
 
 ## Troubleshooting
 
@@ -137,6 +171,27 @@ kubectl auth can-i --list --as=system:serviceaccount:copilot-agent:copilot-agent
 kubectl auth can-i get pods --as=system:serviceaccount:copilot-agent:copilot-agent-readonly
 kubectl auth can-i create pods --as=system:serviceaccount:copilot-agent:copilot-agent-readonly
 ```
+
+## Architecture Benefits
+
+### Why Self-Hosted Runners with ARC?
+
+1. **Private Network Access**: The cluster is not reachable from GitHub-hosted runners
+2. **No External Secrets**: Service account tokens are automatically mounted in runner pods
+3. **Secure**: Runners operate within the cluster's security boundary
+4. **Cost Effective**: No need for VPNs or bastion hosts
+5. **Scalable**: ARC automatically scales runners based on demand
+
+### Comparison to Cloud-Based Approach
+
+| Aspect | Self-Hosted (ARC) | Cloud-Based |
+|--------|------------------|-------------|
+| Cluster Access | ✅ Direct in-cluster | ❌ Not possible (private network) |
+| Secret Management | ✅ Automatic (mounted SA token) | ❌ Requires external secrets |
+| Network Setup | ✅ None needed | ❌ VPN/bastion required |
+| Security | ✅ In-cluster security boundary | ⚠️ External access point |
+| Cost | ✅ Uses cluster resources | ❌ GitHub-hosted runner costs |
+| Scalability | ✅ Auto-scaling with ARC | ✅ Auto-scaling |
 
 ## Security Considerations
 

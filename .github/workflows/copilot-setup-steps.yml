@@ -12,7 +12,7 @@ on:
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
   copilot-setup-steps:
-    runs-on: ubuntu-latest
+    runs-on: copilot-runner-set
     permissions:
       contents: read
 
@@ -34,23 +34,29 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Configure kubectl for cluster access (read-only)
-        if: ${{ secrets.KUBE_TOKEN != '' }}
+      - name: Configure kubectl for in-cluster access (read-only)
         run: |
           echo "Configuring kubectl with read-only cluster access..."
+          
+          # The runner is inside the cluster, so we can use the in-cluster service account
+          # The ServiceAccount 'copilot-agent-readonly' is already mounted via the runner pod spec
           
           # Create kubeconfig directory
           mkdir -p $HOME/.kube
           
-          # Configure cluster
+          # Use the in-cluster configuration with the mounted service account token
+          KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          KUBE_CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          
+          # Configure cluster connection
           kubectl config set-cluster kyrion \
-            --server="${{ secrets.KUBE_SERVER || 'https://kubernetes.default.svc' }}" \
-            --certificate-authority=<(echo "${{ secrets.KUBE_CA_CERT }}" | base64 -d) \
+            --server=https://kubernetes.default.svc \
+            --certificate-authority=$KUBE_CA \
             --embed-certs=true
           
-          # Configure credentials
+          # Configure credentials using the mounted service account token
           kubectl config set-credentials copilot-agent-readonly \
-            --token="${{ secrets.KUBE_TOKEN }}"
+            --token=$KUBE_TOKEN
           
           # Configure context
           kubectl config set-context copilot-agent \
@@ -61,16 +67,15 @@ jobs:
           # Use the context
           kubectl config use-context copilot-agent
           
-          echo "✓ kubectl configured with read-only cluster access"
+          echo "✓ kubectl configured with read-only cluster access (in-cluster)"
 
       - name: Verify cluster access
-        if: ${{ secrets.KUBE_TOKEN != '' }}
         run: |
           echo "Testing cluster connectivity..."
           
           # Test basic connectivity
           if kubectl cluster-info &>/dev/null; then
-            echo "✓ Cluster connection successful"
+            echo "✓ Cluster connection successful (in-cluster)"
             
             # Test read permissions
             echo "Testing read permissions..."
@@ -95,14 +100,15 @@ jobs:
             fi
             
             echo ""
-            echo "Cluster access configured successfully!"
-            echo "You can now use kubectl commands to investigate cluster resources."
+            echo "✓ Cluster access configured successfully!"
+            echo "✓ Running on self-hosted runner inside the cluster"
+            echo "✓ Using ServiceAccount: copilot-agent-readonly"
+            echo ""
+            echo "Copilot can now use kubectl commands to investigate cluster resources."
           else
-            echo "⚠ Cluster connection not available (secrets not configured)"
-            echo "To enable cluster access, configure these repository secrets:"
-            echo "  - KUBE_TOKEN: Service account token"
-            echo "  - KUBE_CA_CERT: Cluster CA certificate (base64 encoded)"
-            echo "  - KUBE_SERVER: Cluster API server URL"
+            echo "❌ Cluster connection failed"
+            echo "This should not happen when running on self-hosted runners in the cluster"
+            exit 1
           fi
 
       - name: Install kustomize
