@@ -31,12 +31,11 @@ Kubernetes API Server (In-Cluster)
 
 ### Components
 
-1. **Namespace**: `copilot-agent` - Dedicated namespace for RBAC resources
-2. **ServiceAccount**: `copilot-agent-readonly` - Identity for the Copilot agent runners
-3. **ClusterRole**: `copilot-agent-readonly` - Read-only permissions across all cluster resources
-4. **ClusterRoleBinding**: Binds the ServiceAccount to the ClusterRole
-5. **Secret**: `copilot-agent-readonly-token` - Service account token (automatically mounted in runner pods)
-6. **Runner Scale Set**: `copilot-runner-set` - ARC runner scale set configured to use the ServiceAccount
+1. **ServiceAccount**: `copilot-agent-readonly` in `arc-runners` namespace - Identity for the Copilot agent runners
+2. **ClusterRole**: `copilot-agent-readonly` - Read-only permissions across all cluster resources
+3. **ClusterRoleBinding**: Binds the ServiceAccount to the ClusterRole
+4. **Secret**: `copilot-agent-readonly-token` in `arc-runners` namespace - Service account token (automatically mounted in runner pods)
+5. **Runner Scale Set**: `copilot-runner-set` in `arc-runners` namespace - ARC runner scale set configured to use the ServiceAccount
 
 ### Security Model
 
@@ -107,7 +106,7 @@ The RBAC resources are automatically deployed via Flux CD:
 
 ```bash
 # Verify resources are deployed
-kubectl get serviceaccount -n copilot-agent
+kubectl get serviceaccount -n arc-runners copilot-agent-readonly
 kubectl get clusterrole copilot-agent-readonly
 kubectl get clusterrolebinding copilot-agent-readonly
 ```
@@ -165,11 +164,11 @@ Test what the service account can access:
 
 ```bash
 # Check permissions
-kubectl auth can-i --list --as=system:serviceaccount:copilot-agent:copilot-agent-readonly
+kubectl auth can-i --list --as=system:serviceaccount:arc-runners:copilot-agent-readonly
 
 # Test specific permissions
-kubectl auth can-i get pods --as=system:serviceaccount:copilot-agent:copilot-agent-readonly
-kubectl auth can-i create pods --as=system:serviceaccount:copilot-agent:copilot-agent-readonly
+kubectl auth can-i get pods --as=system:serviceaccount:arc-runners:copilot-agent-readonly
+kubectl auth can-i create pods --as=system:serviceaccount:arc-runners:copilot-agent-readonly
 ```
 
 ## Architecture Benefits
@@ -218,7 +217,7 @@ To rotate the service account token:
 
 ```bash
 # Delete the secret
-kubectl delete secret copilot-agent-readonly-token -n copilot-agent
+kubectl delete secret copilot-agent-readonly-token -n arc-runners
 
 # Recreate it (Flux will sync from Git)
 flux reconcile kustomization infra-configs
