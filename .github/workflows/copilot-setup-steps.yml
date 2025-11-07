@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,6 +34,77 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Configure kubectl for cluster access (read-only)
+        if: ${{ secrets.KUBE_TOKEN != '' }}
+        run: |
+          echo "Configuring kubectl with read-only cluster access..."
+          
+          # Create kubeconfig directory
+          mkdir -p $HOME/.kube
+          
+          # Configure cluster
+          kubectl config set-cluster kyrion \
+            --server="${{ secrets.KUBE_SERVER || 'https://kubernetes.default.svc' }}" \
+            --certificate-authority=<(echo "${{ secrets.KUBE_CA_CERT }}" | base64 -d) \
+            --embed-certs=true
+          
+          # Configure credentials
+          kubectl config set-credentials copilot-agent-readonly \
+            --token="${{ secrets.KUBE_TOKEN }}"
+          
+          # Configure context
+          kubectl config set-context copilot-agent \
+            --cluster=kyrion \
+            --user=copilot-agent-readonly \
+            --namespace=default
+          
+          # Use the context
+          kubectl config use-context copilot-agent
+          
+          echo "✓ kubectl configured with read-only cluster access"
+
+      - name: Verify cluster access
+        if: ${{ secrets.KUBE_TOKEN != '' }}
+        run: |
+          echo "Testing cluster connectivity..."
+          
+          # Test basic connectivity
+          if kubectl cluster-info &>/dev/null; then
+            echo "✓ Cluster connection successful"
+            
+            # Test read permissions
+            echo "Testing read permissions..."
+            kubectl get namespaces &>/dev/null && echo "✓ Can list namespaces"
+            kubectl get pods -A --limit=5 &>/dev/null && echo "✓ Can list pods"
+            kubectl get deployments -A --limit=5 &>/dev/null && echo "✓ Can list deployments"
+            
+            # Test Flux resources
+            if kubectl get hr -A --limit=5 &>/dev/null; then
+              echo "✓ Can list Flux HelmReleases"
+            fi
+            
+            if kubectl get kustomizations -A --limit=5 &>/dev/null; then
+              echo "✓ Can list Flux Kustomizations"
+            fi
+            
+            # Verify no write access (should fail)
+            if ! kubectl auth can-i create pods -A &>/dev/null; then
+              echo "✓ Verified: No write access (as expected)"
+            else
+              echo "⚠ Warning: Write access detected (unexpected)"
+            fi
+            
+            echo ""
+            echo "Cluster access configured successfully!"
+            echo "You can now use kubectl commands to investigate cluster resources."
+          else
+            echo "⚠ Cluster connection not available (secrets not configured)"
+            echo "To enable cluster access, configure these repository secrets:"
+            echo "  - KUBE_TOKEN: Service account token"
+            echo "  - KUBE_CA_CERT: Cluster CA certificate (base64 encoded)"
+            echo "  - KUBE_SERVER: Cluster API server URL"
+          fi
+
       - name: Install kustomize
         run: |
           curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
@@ -51,7 +122,7 @@ jobs:
         run: |
           echo "Building apps Kustomization..."
           kustomize build apps/kyrion/ > /dev/null || echo "Apps build completed with warnings"
-          
+
           echo "Building infrastructure Kustomization..."
           kustomize build infrastructure/controllers/ > /dev/null || echo "Infrastructure build completed with warnings"
           kustomize build infrastructure/configs/ > /dev/null || echo "Infrastructure configs build completed with warnings"
@@ -89,5 +160,8 @@ jobs:
           echo "✓ Kustomize builds validated"
           echo "✓ Flux CLI validated"
           echo "✓ Tools installed: kubectl, kustomize, flux, kubeseal"
+          if [ -n "${{ secrets.KUBE_TOKEN }}" ]; then
+            echo "✓ Cluster access configured (read-only)"
+          fi
           echo ""
           echo "Environment ready for GitOps operations!"

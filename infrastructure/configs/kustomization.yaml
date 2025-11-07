@@ -10,6 +10,7 @@ resources:
   - imageupdateautomation.yaml
   - local-storage-class.yaml
   - ts-default-proxy-class.yaml
+  - copilot-agent-rbac
 
 
 configMapGenerator:

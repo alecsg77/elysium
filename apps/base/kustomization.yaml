@@ -4,5 +4,4 @@ kind: Kustomization
 resources:
   - repository.yaml
   - capacitor.yaml
-  - copilot-agent
   - error-pages.yaml
