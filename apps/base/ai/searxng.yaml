@@ -26,11 +26,11 @@ spec:
         memory: "4Gi"
     vars:
       SEARXNG_BASE_URL: https://search.${ts_net}/
-    volumes:
+    # Use existingFileSecrets to mount secret without triggering PVC creation in onechart
+    existingFileSecrets:
       - name: searxng-config
         path: "/etc/searxng/settings.yml"
         subPath: "settings.yml"
-        existingSecret: searxng-config
     containerPort: 8080
     ingress:
       tlsEnabled: true
