@@ -65,6 +65,13 @@ spec:
             index:
               prefix: loki_index_
               period: 24h
+      storage:
+        # Loki 6.46+ requires explicit bucket names when using object storage backends
+        type: s3
+        bucketNames:
+          chunks: chunks
+          ruler: ruler
+          admin: admin
       pattern_ingester:
         enabled: true
       ruler:
