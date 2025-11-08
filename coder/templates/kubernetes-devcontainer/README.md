@@ -1,7 +1,10 @@
 ---
-display_name: Devcontainers (Kubernetes)
-description: Provision Kubernetes Deployments with a devcontainer as Coder workspaces
-icon: icon/k8s.png
+display_name: Kubernetes (Devcontainer)
+description: Provision envbuilder pods as Coder workspaces
+icon: /icon/k8s.png
+maintainer_github: coder
+verified: true
+tags: [container, kubernetes, devcontainer]
 ---
 
 # Remote Development on Kubernetes Pods (with Devcontainers)
@@ -49,6 +52,7 @@ When creating the template, set the parameter `cache_repo`.
 
 See the [Envbuilder Terraform Provider Examples](https://github.com/coder/terraform-provider-envbuilder/blob/main/examples/resources/envbuilder_cached_image/envbuilder_cached_image_resource.tf/) for a more complete example of how the provider works.
 
-> [!NOTE] We recommend using a registry cache with authentication enabled.
+> [!NOTE]
+> We recommend using a registry cache with authentication enabled.
 > To allow Envbuilder to authenticate with the registry cache, specify the variable `cache_repo_dockerconfig_secret`
 > with the name of a Kubernetes secret in the same namespace as Coder. The secret must contain the key `.dockerconfigjson`.

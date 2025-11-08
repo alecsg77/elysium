@@ -140,7 +140,7 @@ module "git_clone" {
   url      = data.coder_parameter.git_repo.value
 }
 
-# See https://registry.coder.com/coder/coder/code-server
+# See https://registry.coder.com/modules/coder/code-server
 module "code-server" {
   count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/code-server/coder"
@@ -148,9 +148,18 @@ module "code-server" {
   # This ensures that the latest non-breaking version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
   version = "~> 1.0"
 
-  agent_id = coder_agent.main.id
-  order    = 1
-  folder   = data.coder_parameter.git_repo.value != "" ? "/home/coder/${module.git_clone[count.index].folder_name}" : "/home/coder"
+  agent_id   = coder_agent.main.id
+  order      = 1
+}
+
+# See https://registry.coder.com/modules/coder/jetbrains
+module "jetbrains" {
+  count      = data.coder_workspace.me.start_count
+  source     = "registry.coder.com/coder/jetbrains/coder"
+  version    = "~> 1.0"
+  agent_id   = coder_agent.main.id
+  agent_name = "main"
+  folder     = "/home/coder"
 }
 
 resource "kubernetes_persistent_volume_claim" "home" {
@@ -184,7 +193,7 @@ resource "kubernetes_pod" "main" {
       name = "dev"
       # We highly recommend pinning this to a specific release of envbox, as the latest tag may change.
       image             = "ghcr.io/coder/envbox:latest"
-      image_pull_policy = "Always"
+      image_pull_policy = "IfNotPresent"
       command           = ["/envbox", "docker"]
 
       security_context {
