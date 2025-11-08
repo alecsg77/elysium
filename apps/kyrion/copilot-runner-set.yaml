@@ -14,30 +14,6 @@ spec:
     githubConfigUrl: https://github.com/alecsg77/elysium
     githubConfigSecret: pre-defined-secret
     runnerScaleSetName: copilot-runner-set
-    minRunners: 0
-    maxRunners: 3
-    containerMode:
-      type: "kubernetes"
-      kubernetesModeWorkVolumeClaim:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: "local-path"
-        resources:
-          requests:
-            storage: 1Gi
     template:
       spec:
         serviceAccountName: copilot-agent-readonly
-        containers:
-          - name: runner
-            image: ghcr.io/actions/actions-runner:2.321.0
-            command: ["/home/runner/run.sh"]
-            env:
-              - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
-                value: "false"
-            resources:
-              requests:
-                cpu: 500m
-                memory: 512Mi
-              limits:
-                cpu: 2000m
-                memory: 2Gi
