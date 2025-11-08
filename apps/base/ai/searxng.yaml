@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: ghcr.io/searxng/searxng # {"$imagepolicy": "flux-system:searxng-policy:name"}
-      tag: "2025.11.6-7af922c9d" # {"$imagepolicy": "flux-system:searxng-policy:tag"}
+      tag: "2025.11.7-1cfbd32a1" # {"$imagepolicy": "flux-system:searxng-policy:tag"}
     resources:
       requests:
         cpu: "500m"
