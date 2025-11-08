@@ -8,6 +8,11 @@ on:
 
   workflow_dispatch:
     inputs:
+      publish_all:
+        description: "Publish all templates regardless of changes"
+        required: false
+        default: false
+        type: boolean
       since:
         description: "Oldest commit SHA to compare against for changed templates. Defaults to the last commit on the main branch."
         required: true
@@ -27,10 +32,15 @@ jobs:
       - name: Get changed Coder templates
         id: changes
         run: |
-          # For push events, only include changed template folders
           {
             echo "TEMPLATES<<EOF"
-            git diff --name-only ${{ inputs.since || github.event.commits[0].id }}~1 ${{ github.sha }} -- coder/templates | xargs ls -d 2>/dev/null | sed -r 's/^coder\/templates\/([^\/]+).*$/\1/' | sort | uniq
+            if [ "${{ inputs.publish_all }}" == "true" ]; then
+              # Publish all templates
+              find coder/templates -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
+            else
+              # Only changed templates
+              git diff --name-only ${{ inputs.since || github.event.commits[0].id }}~1 ${{ github.sha }} -- coder/templates | xargs ls -d 2>/dev/null | sed -r 's/^coder\/templates\/([^\/]+).*$/\1/' | sort | uniq
+            fi
             echo "EOF"
           } >> $GITHUB_ENV
 
