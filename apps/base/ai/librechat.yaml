@@ -1,17 +1,13 @@
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: GitRepository
+kind: HelmRepository
 metadata:
   name: librechat
   namespace: ai
 spec:
+  type: oci
+  url: oci://ghcr.io/danny-avila/librechat-chart
   interval: 24h
-  url: https://github.com/danny-avila/LibreChat.git
-  ref:
-    branch: main
-  ignore: |
-    /*
-    !/helm
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -22,11 +18,14 @@ spec:
   releaseName: librechat
   chart:
     spec:
-      chart: helm/librechat
+      chart: librechat
+      version: '*'
       sourceRef:
-        kind: GitRepository
+        kind: HelmRepository
         name: librechat
-  interval: 12h
+        namespace: ai
+      interval: 12h
+  interval: 30m
   values:
     global:
       librechat:
@@ -59,3 +58,27 @@ spec:
       tls:
         - hosts:
             - chat
+
+    # Persistence configuration aligned with upstream chart defaults
+    # Pin storageClass to the K3s local-path provisioner to avoid unbound PVCs
+    meilisearch:
+      persistence:
+        enabled: true
+        storageClass: local-path
+
+    mongodb:
+      enabled: true
+      auth:
+        enabled: false
+      persistence:
+        enabled: true
+        size: 8Gi
+        storageClass: local-path
+      image:
+        tag: latest
+    # Store uploaded images on persistent volume; use local-path by default
+    imageVolume:
+      enabled: true
+      size: 10G
+      accessModes: ReadWriteOnce
+      storageClassName: local-path
