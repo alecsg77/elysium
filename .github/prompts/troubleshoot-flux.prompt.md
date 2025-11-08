@@ -1,7 +1,7 @@
 ---
 mode: 'agent'
-model: Claude Sonnet 4
-tools: ['codebase', 'fetch']
+model: Claude Sonnet 4.5
+tools: ['search/codebase', 'kubernetes/configuration_view', 'kubernetes/events_list', 'kubernetes/helm_list', 'kubernetes/namespaces_list', 'kubernetes/pods_get', 'kubernetes/pods_list', 'kubernetes/pods_list_in_namespace', 'kubernetes/pods_log', 'kubernetes/resources_get', 'kubernetes/resources_list', 'flux-operator-mcp/get_flux_instance', 'flux-operator-mcp/get_kubeconfig_contexts', 'flux-operator-mcp/get_kubernetes_api_versions', 'flux-operator-mcp/get_kubernetes_logs', 'flux-operator-mcp/get_kubernetes_metrics', 'flux-operator-mcp/get_kubernetes_resources', 'flux-operator-mcp/search_flux_docs', 'fetch']
 description: 'Troubleshoot Flux GitOps deployment issues'
 ---
 
