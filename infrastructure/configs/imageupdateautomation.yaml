@@ -15,7 +15,7 @@ spec:
         name: fluxcdbot
       messageTemplate: |
         build(deps): Automated image update
-        
+
         Automation name: {{ .AutomationObject }}
 
         Files:
@@ -30,7 +30,8 @@ spec:
         {{- range $_, $change := $changes }}
             - {{ $change.OldValue }} -> {{ $change.NewValue }}
         {{ end -}}
-        {{ end -}}   
+        {{ end -}}
   update:
     strategy: Setters
     path: ./
+

@@ -3,127 +3,135 @@ kind: ClusterRole
 metadata:
   name: fission-user
 rules:
-# Function - create,update, run-container,update-container
-# Spec -apply, destroy
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  verbs:
-  - get
+  # Function - create,update, run-container,update-container
+  # Spec -apply, destroy
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
 
-# functions - log, pod 
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - pods/log
-  verbs:
-  - list
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - list
+  # functions - log, pod
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+    verbs:
+      - list
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - list
 
-# Fission -version
-# function - test, create, update
-# archive - download, geturl, list, upload, delete
-# package - create, update
-# timetrigger - create, update, test
-- apiGroups:
-  - ""
-  resources:
-  - pods/portforward
-  verbs:
-  - list
-  - create 
+  # Fission -version
+  # function - test, create, update
+  # archive - download, geturl, list, upload, delete
+  # package - create, update
+  # timetrigger - create, update, test
+  - apiGroups:
+      - ""
+    resources:
+      - pods/portforward
+    verbs:
+      - list
+      - create
 
-- apiGroups:
-  - fission.io
-  resources:
-  - canaryconfigs 
-  verbs:
-  - list # canary -list
-  - get # canary - get, update
-  - create # canary - create
-  - update # canary - update
-  - delete #canary - delete
+  - apiGroups:
+      - fission.io
+    resources:
+      - canaryconfigs
+    verbs:
+      - list  # canary -list
+      - get  # canary - get, update
+      - create  # canary - create
+      - update  # canary - update
+      - delete  # canary - delete
 
-- apiGroups:
-  - fission.io
-  resources:
-  - environments
-  verbs:
-  - list # environments -list, create;spec-list,apply,destroy ;fission dump
-  - get # environments - get, update, pod; function - create
-  - create # environments - create;spec-apply,destroy
-  - update # environments - update;spec-apply,destroy
-  - delete # environments - delete;spec-apply,destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - environments
+    verbs:
+      # environments -list, create;spec-list,apply,destroy ;fission dump
+      - list
+      - get  # environments - get, update, pod; function - create
+      - create  # environments - create;spec-apply,destroy
+      - update  # environments - update;spec-apply,destroy
+      - delete  # environments - delete;spec-apply,destroy
 
-- apiGroups:
-  - fission.io
-  resources:
-  - functions
-  verbs:
-  - list #  function- list, update; environement - delete;package-list, update, delete;spec-list,apply,destroy ;fission dump
-  - get # function- get, create, getmeta, log, pod, run-container, update-container, update; httptrigger- create, update; mqtrigger - create, update
-  - create # function - create, run-container; spec-apply,destroy
-  - update # function- update-container, update; package-update;spec-apply,destroy
-  - delete # function -delete; spec-apply,destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - functions
+    verbs:
+      # function- list, update; environement - delete;
+      # package-list, update, delete;spec-list,apply,destroy ;fission dump
+      - list
+      # function- get, create, getmeta, log, pod, run-container,
+      # update-container, update; httptrigger- create, update; mqtrigger - create, update
+      - get
+      - create  # function - create, run-container; spec-apply,destroy
+      - update  # function- update-container, update; package-update;spec-apply,destroy
+      - delete  # function -delete; spec-apply,destroy
 
-- apiGroups:
-  - fission.io
-  resources:
-  - packages
-  verbs:
-  - list # canary -list; package-delete,list; spec-list,apply,destroy; fission dump
-  - get # function - create, get,update; package-delete,get,info,rebuild,update; spec-apply,destroy
-  - create # canary - create;function-create; package-create;spec-apply,destroy
-  - update # canary - update; function - update; package- rebuild,update;spec-apply,destroy
-  - delete #canary - delete;package-delete;spec-apply,destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - packages
+    verbs:
+      # canary -list; package-delete,list; spec-list,apply,destroy; fission dump
+      - list
+      # function - create, get,update; package-delete,get,info,rebuild,update; spec-apply,destroy
+      - get
+      - create  # canary - create;function-create; package-create;spec-apply,destroy
+      - update  # canary - update; function - update; package- rebuild,update;spec-apply,destroy
+      - delete  # canary - delete;package-delete;spec-apply,destroy
 
-- apiGroups:
-  - fission.io
-  resources:
-  - httptriggers
-  verbs:
-  - list # httptrigger- create,delete,list,update; spec-list,apply,destroy; fission dump
-  - get # canary - get; httptrigger- create,get,list,update, 
-  - create # function -create;httptrigger- create; spec-apply,destroy
-  - update # httptrigger- update; spec-apply,destroy
-  - delete # httptrigger-delete; spec-apply,destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - httptriggers
+    verbs:
+      # httptrigger- create,delete,list,update; spec-list,apply,destroy; fission dump
+      - list
+      - get  # canary - get; httptrigger- create,get,list,update
+      - create  # function -create;httptrigger- create; spec-apply,destroy
+      - update  # httptrigger- update; spec-apply,destroy
+      - delete  # httptrigger-delete; spec-apply,destroy
 
-- apiGroups:
-  - fission.io
-  resources:
-  - kuberneteswatchtriggers
-  verbs:
-  - list # watch -list; spec-list,apply,destroy; fission dump
-  - create # watch - create; spec-apply,destroy
-  - delete # watch - delete; spec-apply,destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - kuberneteswatchtriggers
+    verbs:
+      - list  # watch -list; spec-list,apply,destroy; fission dump
+      - create  # watch - create; spec-apply,destroy
+      - delete  # watch - delete; spec-apply,destroy
 
-- apiGroups:
-  - fission.io
-  resources:
-  - messagequeuetriggers
-  verbs:
-  - list # mqtrigger -list; spec-list, apply, destroy; fission dump
-  - get # mqtrigger - get, update
-  - create # mqtrigger - create; spec-apply,destroy
-  - update # mqtrigger - update; spec-apply,destroy
-  - delete # mqtrigger - delete; spec-apply,destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - messagequeuetriggers
+    verbs:
+      - list  # mqtrigger -list; spec-list, apply, destroy; fission dump
+      - get  # mqtrigger - get, update
+      - create  # mqtrigger - create; spec-apply,destroy
+      - update  # mqtrigger - update; spec-apply,destroy
+      - delete  # mqtrigger - delete; spec-apply,destroy
 
-- apiGroups:
-  - fission.io
-  resources:
-  - timetriggers
-  verbs:
-  - list # timetrigger -list; spec-list, apply, destroy; fission dump
-  - get # timetrigger - get, update; spec-list, apply, destroy
-  - create # timetrigger - create; spec-list, apply, destroy
-  - update # timetrigger - update; spec-list, apply, destroy
-  - delete #timetrigger - delete; spec-list, apply, destroy
+  - apiGroups:
+      - fission.io
+    resources:
+      - timetriggers
+    verbs:
+      - list  # timetrigger -list; spec-list, apply, destroy; fission dump
+      - get  # timetrigger - get, update; spec-list, apply, destroy
+      - create  # timetrigger - create; spec-list, apply, destroy
+      - update  # timetrigger - update; spec-list, apply, destroy
+      - delete  # timetrigger - delete; spec-list, apply, destroy

@@ -13,19 +13,19 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-azure
     solvers:
-    - dns01:
-        azureDNS:
-          clientID: ${dns_azure_clientID}
-          clientSecretSecretRef:
-            name: dns-azure-secret
-            key: clientSecret
-          subscriptionID: ${dns_azure_subscriptionID}
-          tenantID: ${dns_azure_tenantID}
-          resourceGroupName: ${dns_azure_resourceGroupName}
-          hostedZoneName: ${DOMAIN}
-      selector:
-        dnsZones:
-        - '${DOMAIN}'
+      - dns01:
+          azureDNS:
+            clientID: ${dns_azure_clientID}
+            clientSecretSecretRef:
+              name: dns-azure-secret
+              key: clientSecret
+            subscriptionID: ${dns_azure_subscriptionID}
+            tenantID: ${dns_azure_tenantID}
+            resourceGroupName: ${dns_azure_resourceGroupName}
+            hostedZoneName: ${DOMAIN}
+        selector:
+          dnsZones:
+            - '${DOMAIN}'
 ---
 apiVersion: v1
 kind: Secret

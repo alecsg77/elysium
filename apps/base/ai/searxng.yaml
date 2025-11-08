@@ -59,6 +59,6 @@ spec:
     extract: "$major.$minor.$patch"
   policy:
     semver:
-      range: "*" # Match all semver tags 
+      range: "*"  # Match all semver tags
   digestReflectionPolicy: Always
   interval: 24h

@@ -27,7 +27,7 @@ spec:
       scrapeTimeout: 10s
   namespaceSelector:
     matchNames:
-    - coder
+      - coder
   selector:
     matchLabels:
       app.kubernetes.io/name: coder

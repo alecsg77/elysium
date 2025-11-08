@@ -31,7 +31,7 @@ spec:
     global:
       librechat:
         existingSecretApiKey: AZURE_API_KEY
-    
+
     librechat:
       configEnv:
         NO_INDEX: "true"
@@ -53,9 +53,9 @@ spec:
       enabled: true
       className: tailscale
       hosts:
-      - paths:
-          - path: /
-            pathType: Prefix
+        - paths:
+            - path: /
+              pathType: Prefix
       tls:
         - hosts:
             - chat
