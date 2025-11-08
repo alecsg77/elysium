@@ -23,4 +23,4 @@ ignore: |
   .github/
   node_modules/
   *.md
-  clusters/kyrion/flux-system/gotk-components.yaml
+  clusters/*/flux-system/
