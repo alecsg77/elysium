@@ -10,7 +10,7 @@ resources:
   - ../base/fission
   - ../base/mediamtx
   - ../base/ai
-  - ../base/arc-runner-set.yaml
+  - arc-runner-set.yaml
   - web-public.yaml
   - capacitor-ingress.yaml
   - fission-runner-set.yaml
