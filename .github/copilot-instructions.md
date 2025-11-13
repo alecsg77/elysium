@@ -1136,7 +1136,7 @@ When modifying this codebase, always follow these GitOps principles:
 1. **Git as Single Source of Truth**: All cluster state defined in this repository
 2. **Declarative Configuration**: Use YAML manifests, not imperative commands
 3. **Automated Deployment**: Flux automatically syncs Git to cluster
-4. **Version Control**: All changes tracked via Git commits
+4. **Version Control**: All changes tracked via Git commits following [Conventional Commits](https://www.conventionalcommits.org/)
 5. **Auditability**: Git history provides complete audit trail
 6. **Rollback Capability**: Revert Git commits to rollback changes
 7. **Environment Separation**: Use Kustomize overlays for environment-specific config

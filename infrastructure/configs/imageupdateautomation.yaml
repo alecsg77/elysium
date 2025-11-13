@@ -14,9 +14,10 @@ spec:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
       messageTemplate: |
-        build(deps): Automated image update
+        build(deps): update container images
 
-        Automation name: {{ .AutomationObject }}
+        Automated image update by Flux ImageUpdateAutomation.
+        Automation: {{ .AutomationObject }}
 
         Files:
         {{ range $filename, $_ := .Changed.FileChanges -}}

@@ -31,5 +31,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ./clusters/kyrion/flux-system/gotk-components.yaml
-          git commit -m "Update flux to ${{ steps.update.outputs.flux_version }}"
+          git commit -m "chore(flux): update to ${{ steps.update.outputs.flux_version }}"
           git push

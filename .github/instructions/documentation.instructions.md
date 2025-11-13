@@ -48,11 +48,86 @@ Maintain high-level architecture documentation:
 - Disaster recovery procedures
 
 ## Change Documentation
-- Use descriptive Git commit messages
-- Follow conventional commits format
+
+### Conventional Commits Specification
+All commit messages MUST follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/).
+
+**Format**:
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types**:
+- `feat`: New feature or capability
+- `fix`: Bug fix or correction
+- `docs`: Documentation changes only
+- `style`: Code style changes (formatting, missing semicolons, etc.)
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `perf`: Performance improvement
+- `test`: Adding or updating tests
+- `build`: Changes to build system or dependencies
+- `ci`: Changes to CI/CD configuration
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
+
+**Scopes** (for this repository):
+- `flux`: Flux CD configuration changes
+- `apps`: Application deployments
+- `infra`: Infrastructure components
+- `monitoring`: Monitoring stack changes
+- `secrets`: Secret management changes
+- `helm`: Helm chart configurations
+- `kustomize`: Kustomize overlays
+- `ci`: CI/CD workflows
+- `docs`: Documentation updates
+- `cluster`: Cluster-wide configuration
+
+**Breaking Changes**:
+- Add `!` after type/scope: `feat(apps)!: migrate to new chart version`
+- Include `BREAKING CHANGE:` in footer with description
+
+**Examples**:
+```
+feat(apps): add librechat AI chat application
+
+Add LibreChat with MongoDB backend for multi-model LLM conversations.
+Includes sealed secrets for API keys and Tailscale ingress.
+
+Closes #123
+
+---
+
+fix(monitoring): resolve Prometheus scrape timeout
+
+Increase scrape interval from 30s to 60s to prevent timeout errors
+on high-cardinality endpoints.
+
+---
+
+docs(flux): add troubleshooting runbook for failed HelmReleases
+
+---
+
+feat(infra)!: upgrade cert-manager to v1.15
+
+BREAKING CHANGE: cert-manager v1.15 removes support for deprecated
+v1alpha2 API. All Certificate resources must be migrated to v1.
+Migration guide: docs/cert-manager-migration.md
+```
+
+**General Guidelines**:
+- Use imperative mood in description ("add" not "added")
+- Keep description under 72 characters
+- Capitalize first letter of description
+- No period at end of description
+- Use body to explain what and why, not how
+- Reference issues/PRs in footer
 - Document breaking changes prominently
 - Include migration guides for major changes
-- Link commits to related issues or PRs
 - Tag releases with comprehensive changelogs
 
 ## Runbook Documentation
