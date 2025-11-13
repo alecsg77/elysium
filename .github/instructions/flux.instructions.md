@@ -98,10 +98,79 @@ Use variables in manifests: `${VARIABLE_NAME}`
 - Use `--wait` flags judiciously in workflows
 
 ## Error Handling
-- Configure retry intervals with exponential backoff
-- Set appropriate timeout values for large deployments
-- Use health checks and status conditions
-- Monitor Flux controller logs for issues
+
+### Retry and Timeout Configuration
+- Configure retry intervals with exponential backoff: `retryInterval: 2m`
+- Set appropriate timeout values for large deployments: `timeout: 10m`
+- Use health checks and status conditions: `wait: true`
+- Monitor Flux controller logs for issues: `kubectl logs -n flux-system deploy/kustomize-controller`
+
+### Common Error Patterns
+
+#### Kustomization Failures
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `Path not found` | Invalid `spec.path` | Verify directory exists in Git repository |
+| `YAML parse error` | Syntax error in manifests | Run `yamllint` on affected files |
+| `Variable substitution failed` | Missing ConfigMap/Secret | Ensure substituteFrom references exist |
+| `Dependency not ready` | Blocking dependency failed | Fix dependency first, then reconcile |
+| `Resource conflict` | Resource already exists | Check for conflicting resources, adjust configuration |
+
+#### HelmRelease Failures
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `Install timeout` | Slow pod startup | Increase timeout, check pod logs |
+| `Chart not found` | Invalid chart reference | Verify HelmRepository, chart name, version |
+| `Values validation` | Invalid values structure | Compare with chart schema, fix values |
+| `CRD not found` | Missing prerequisites | Install CRDs first, use dependsOn |
+| `Upgrade failed` | Breaking changes | Review chart CHANGELOG, adjust values, or rollback |
+
+### Recovery Procedures
+
+#### Force Reconciliation
+```bash
+# Reconcile Git source
+flux reconcile source git flux-system
+
+# Reconcile Kustomization
+flux reconcile kustomization <name>
+
+# Reconcile HelmRelease
+flux reconcile helmrelease <name> -n <namespace>
+```
+
+#### Suspend for Investigation
+```bash
+# Pause reconciliation
+flux suspend kustomization <name>
+
+# Fix issues, test locally
+kustomize build <path>
+
+# Resume when ready
+flux resume kustomization <name>
+```
+
+#### Dependency Chain Troubleshooting
+```bash
+# Check dependency status
+kubectl get kustomization -n flux-system
+
+# Visualize dependencies
+kubectl get kustomization <name> -o yaml | yq '.spec.dependsOn'
+
+# Reconcile from root
+flux reconcile source git flux-system
+flux reconcile kustomization infra-controllers
+flux reconcile kustomization infra-configs
+flux reconcile kustomization apps
+```
+
+### Health Check Best Practices
+- Set `wait: true` to ensure readiness before marking success
+- Configure `healthChecks` for critical Deployments/StatefulSets
+- Use appropriate timeouts based on historical deployment times
+- Monitor `status.conditions` for detailed health information
 
 ## Best Practices
 - Keep Flux components up to date

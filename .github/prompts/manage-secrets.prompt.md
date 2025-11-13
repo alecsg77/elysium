@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
+agent: 'agent'
 model: Claude Sonnet 4
-tools: ['codebase']
+tools: ['search']
 description: 'Create or rotate sealed secrets securely'
 ---
 

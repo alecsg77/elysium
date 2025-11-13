@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
+agent: 'agent'
 model: Claude Sonnet 4
-tools: ['codebase', 'fetch']
+tools: ['search', 'fetch']
 description: 'Generate comprehensive documentation for applications and infrastructure'
 ---
 

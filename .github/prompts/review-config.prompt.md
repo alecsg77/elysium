@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
+agent: reviewer
 model: Claude Sonnet 4
-tools: ['codebase', 'search']
+tools: ['search']
 description: 'Review Kubernetes manifests and Flux configurations for best practices'
 ---
 

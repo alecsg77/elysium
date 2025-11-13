@@ -1,7 +1,8 @@
 ---
 description: 'Perform thorough code review of GitOps configurations and manifests'
-tools: ['codebase', 'search', 'grep']
+tools: ['search']
 model: Claude Sonnet 4
+target: vscode
 ---
 
 # Code Review Mode

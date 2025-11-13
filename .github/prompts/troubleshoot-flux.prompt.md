@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
+agent: 'agent'
 model: Claude Sonnet 4.5
-tools: ['search/codebase', 'kubernetes/configuration_view', 'kubernetes/events_list', 'kubernetes/helm_list', 'kubernetes/namespaces_list', 'kubernetes/pods_get', 'kubernetes/pods_list', 'kubernetes/pods_list_in_namespace', 'kubernetes/pods_log', 'kubernetes/resources_get', 'kubernetes/resources_list', 'flux-operator-mcp/get_flux_instance', 'flux-operator-mcp/get_kubeconfig_contexts', 'flux-operator-mcp/get_kubernetes_api_versions', 'flux-operator-mcp/get_kubernetes_logs', 'flux-operator-mcp/get_kubernetes_metrics', 'flux-operator-mcp/get_kubernetes_resources', 'flux-operator-mcp/search_flux_docs', 'fetch']
+tools: ['runCommands', 'search', 'flux-operator-mcp/get_flux_instance', 'flux-operator-mcp/get_kubernetes_api_versions', 'flux-operator-mcp/get_kubernetes_logs', 'flux-operator-mcp/get_kubernetes_metrics', 'flux-operator-mcp/get_kubernetes_resources', 'flux-operator-mcp/search_flux_docs', 'kubernetes/configuration_view', 'kubernetes/events_list', 'kubernetes/helm_list', 'kubernetes/namespaces_list', 'kubernetes/pods_get', 'kubernetes/pods_list', 'kubernetes/pods_list_in_namespace', 'kubernetes/pods_log', 'kubernetes/resources_get', 'kubernetes/resources_list', 'todos', 'runSubagent', 'fetch', 'githubRepo']
 description: 'Troubleshoot Flux GitOps deployment issues'
 ---
 
@@ -10,6 +10,40 @@ description: 'Troubleshoot Flux GitOps deployment issues'
 You are helping diagnose and fix Flux CD GitOps deployment issues in the Elysium Kubernetes homelab.
 
 ## Diagnostic Process
+
+### Step 0: Verify Flux Installation (Detection Issues)
+
+**Note**: Some tools may report "No Flux instance found" even when Flux is operational. This is a detection limitation.
+
+**Verify Flux is Running**:
+```bash
+# 1. Check Flux controllers are running
+kubectl get pods -n flux-system
+# Expected: source-controller, kustomize-controller, helm-controller, 
+#          image-reflector-controller, image-automation-controller, 
+#          notification-controller
+
+# 2. Check Flux resources exist
+flux get all -A
+# Should show Kustomizations, HelmReleases, GitRepositories, etc.
+
+# 3. Check Git synchronization
+kubectl get gitrepositories -n flux-system
+# flux-system GitRepository should show Ready with recent commit SHA
+
+# 4. Check resource management
+kubectl get kustomizations -A
+kubectl get hr -A
+# Should show your deployed resources with status
+```
+
+**If all commands show healthy resources, Flux is working correctly** despite detection warnings.
+
+**Common False Positives**:
+- Non-standard Flux installation (manual manifests vs. flux bootstrap)
+- Flux resources in unexpected namespaces
+- Flux version incompatibility with detection tools
+- Custom component names or labels
 
 ### Step 1: Check Flux System Health
 ```bash

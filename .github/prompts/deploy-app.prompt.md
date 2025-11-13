@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
+agent: 'agent'
 model: Claude Sonnet 4
-tools: ['codebase', 'findTestFiles']
+tools: ['search']
 description: 'Deploy a new application to the Kubernetes cluster using Flux GitOps'
 ---
 

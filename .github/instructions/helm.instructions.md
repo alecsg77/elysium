@@ -116,8 +116,110 @@ spec:
 ```
 
 ## Troubleshooting
-- Check HelmRelease status: `kubectl get hr -A`
-- View release history: `flux get helmreleases`
-- Examine Helm Controller logs for errors
-- Use `helm get values <release>` to debug values
-- Verify chart repository accessibility
+
+### Diagnostic Commands
+```bash
+# Check HelmRelease status
+kubectl get hr -A
+
+# Detailed HelmRelease information
+kubectl describe hr <name> -n <namespace>
+
+# View release history
+flux get helmreleases -A
+helm history <name> -n <namespace>
+
+# Examine Helm Controller logs
+kubectl logs -n flux-system deploy/helm-controller | grep <namespace>/<name>
+
+# Debug values
+helm get values <name> -n <namespace>
+
+# Verify chart repository
+flux get sources helm -A
+kubectl describe helmrepository <repo> -n flux-system
+```
+
+### Failed HelmRelease Recovery
+
+#### Step 1: Identify Root Cause
+1. Check `status.conditions` in HelmRelease for error messages
+2. Review Helm controller logs for detailed errors
+3. Verify chart source (HelmRepository) is Ready
+4. Check valuesFrom references exist (ConfigMaps/Secrets)
+5. Examine deployed pod status and logs
+
+#### Step 2: Recovery Strategies
+
+**Reconcile (for transient failures)**
+```bash
+flux reconcile helmrelease <name> -n <namespace>
+```
+
+**Suspend and Fix (for persistent issues)**
+```bash
+# Suspend to stop retry loop
+flux suspend helmrelease <name> -n <namespace>
+
+# Fix configuration in Git
+# Commit changes
+
+# Resume after fix
+flux resume helmrelease <name> -n <namespace>
+```
+
+**Manual Rollback (for failed upgrades)**
+```bash
+# View history
+helm history <name> -n <namespace>
+
+# Rollback to working version
+helm rollback <name> <revision> -n <namespace>
+
+# Update HelmRelease in Git to match rolled-back version
+```
+
+**Delete and Recreate (last resort)**
+```bash
+# Delete HelmRelease resource
+kubectl delete hr <name> -n <namespace>
+
+# Optionally uninstall Helm release
+helm uninstall <name> -n <namespace>
+
+# Fix configuration in Git, commit
+# Flux will recreate on next reconciliation
+```
+
+#### Step 3: Common Issue Resolutions
+
+**Timeout Errors**
+- Increase `spec.timeout` in HelmRelease (default 5m)
+- Check pod startup logs for slow initialization
+- Verify resource availability (CPU, memory, storage)
+- Check init containers and volume mounts
+
+**Values Validation Errors**
+- Test locally: `helm template <chart> -f values.yaml`
+- Compare values structure with chart's `values.schema.json`
+- Verify all required values are provided
+- Check data types match schema expectations
+
+**CRD Not Found**
+- Install CRDs first via separate HelmRelease with dependency
+- Use `spec.install.crds: CreateReplace` in HelmRelease
+- Ensure CRD-providing operator is installed and Ready
+
+**Image Pull Failures**
+- Verify image exists: `docker pull <image>:<tag>`
+- Check image pull secrets are configured
+- Test registry access from cluster
+- Verify image tag is correct
+
+### Prevention Best Practices
+- **Pin versions**: Use explicit chart versions, avoid `latest`
+- **Test values**: Validate with `helm template` before deploying
+- **Set timeouts**: Base on historical deployment times + buffer
+- **Configure retries**: `spec.install.remediation.retries: 3`
+- **Enable rollback**: `spec.upgrade.remediation.remediateLastFailure: true`
+- **Monitor proactively**: Set up alerts for failed HelmReleases

@@ -1,7 +1,8 @@
 ---
 description: 'Debug and troubleshoot Flux GitOps and Kubernetes issues'
-tools: ['codebase', 'search', 'grep']
-model: Claude Sonnet 4
+tools: ['runCommands', 'search', 'flux-operator-mcp/get_flux_instance', 'flux-operator-mcp/get_kubernetes_api_versions', 'flux-operator-mcp/get_kubernetes_logs', 'flux-operator-mcp/get_kubernetes_metrics', 'flux-operator-mcp/get_kubernetes_resources', 'flux-operator-mcp/search_flux_docs', 'kubernetes/configuration_view', 'kubernetes/events_list', 'kubernetes/helm_list', 'kubernetes/namespaces_list', 'kubernetes/pods_get', 'kubernetes/pods_list', 'kubernetes/pods_list_in_namespace', 'kubernetes/pods_log', 'kubernetes/resources_get', 'kubernetes/resources_list', 'todos', 'runSubagent', 'fetch', 'githubRepo']
+target: github-copilot
+mcp-servers: ['flux-operator-mcp', 'kubernetes']
 ---
 
 # Troubleshooter Mode

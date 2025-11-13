@@ -1,6 +1,6 @@
 # Elysium: GitOps-Managed Kubernetes Homelab
 
-> **Note**: This repository has specialized Copilot instructions, prompts, and chat modes. See [README-COPILOT.md](README-COPILOT.md) for usage guide.
+Welcome to the Elysium Kubernetes homelab! This document serves as a comprehensive guide for understanding, developing, and maintaining the GitOps-managed Kubernetes cluster using Flux CD.
 
 ## Architecture Overview
 
@@ -12,6 +12,28 @@ This is a **GitOps-driven Kubernetes homelab** using Flux CD for declarative clu
 - **Self-Hosted Runners**: GitHub Copilot agent runs on self-hosted runners inside the cluster using ARC (Actions Runner Controller)
 - **Cluster Access**: Copilot agent has direct access to the Kubernetes API server from within the cluster network
 
+#### Network Integration Components
+- **Tailscale Mesh**: Private overlay network for secure cluster access
+  - Ingress class: `tailscale`
+  - Domain suffix: `*.ts.net`
+  - DNS configuration via `ts-dns` resource
+  - Default proxy class: `ts-default-proxy-class`
+- **Traefik Ingress**: HTTP/HTTPS routing and TLS termination
+  - IngressRoute resources for HTTP routing
+  - TLSOption resources for TLS configuration
+  - cert-manager integration for automatic certificate provisioning
+  - Traefik Hub features enabled
+- **Azure Arc Integration**: Hybrid cloud management (optional)
+  - Namespaces: `azure-arc`, `azure-arc-release`
+  - Arc Workload Identity for Azure service authentication
+  - Namespace: `arc-workload-identity`
+  - Monitoring integration via `arc-workload-identity-monitor`
+- **Actions Runner Controller (ARC)**: GitHub Actions self-hosted runners
+  - Namespaces: `arc-runners`, `arc-system`
+  - Runner sets: `coder`, `copilot`, `fission`, `raiplaysoundrss`
+  - Scales runners based on GitHub Actions job demand
+  - Kubernetes-native runner lifecycle management
+
 ### Technology Stack
 - **GitOps**: Flux CD v2 with image automation
 - **Orchestration**: Kubernetes (K3s)
@@ -19,7 +41,7 @@ This is a **GitOps-driven Kubernetes homelab** using Flux CD for declarative clu
 - **Secrets**: Bitnami Sealed Secrets
 - **Ingress**: Traefik with cert-manager
 - **Networking**: Tailscale for private access
-- **Monitoring**: Prometheus, Grafana, Loki, Tempo
+- **Monitoring**: Prometheus, Grafana, Loki, Tempo, OpenTelemetry, Elasticsearch, Jaeger, Minio
 - **Storage**: Local storage + rclone CSI for cloud
 - **CI/CD**: Actions Runner Controller (ARC) for self-hosted GitHub Actions runners
 
@@ -36,11 +58,71 @@ This is a **GitOps-driven Kubernetes homelab** using Flux CD for declarative clu
 - **`infrastructure/`** - Core cluster infrastructure (ordered deployment)
   - `controllers/` - Kubernetes operators and controllers
   - `configs/` - Cluster-wide configurations and policies
-- **`monitoring/`** - Observability stack (Prometheus, Grafana, Loki, Tempo, Jaeger)
+- **`monitoring/`** - Observability stack (Prometheus, Grafana, Loki, Tempo, Jaeger, Elasticsearch, OpenTelemetry)
   - `controllers/` - Monitoring operators and CRDs
+    - `kube-prometheus-stack/` - Prometheus Operator, Grafana, Alertmanager
+    - `loki-stack/` - Log aggregation with Loki and Promtail
+    - `tempo-stack/` - Distributed tracing backend
+    - `opentelemetry/` - OpenTelemetry Operator and Collector
+    - `elastic/` - Elasticsearch for log indexing and Jaeger storage
+    - `pushprox/` - Prometheus proxy for metrics behind firewalls
   - `configs/` - Dashboards, datasources, and monitoring configs
+    - `dashboards/` - Grafana dashboards for cluster and application metrics
+    - `datasources/` - Prometheus, Loki, Tempo, Jaeger data source configurations
+    - `podmonitor.yaml` - PodMonitor resources for application metrics
+    - `otel.yaml` - OpenTelemetry pipeline configuration
+    - `elasticsearch.yaml` - Elasticsearch cluster and index configurations
+
+**Monitoring Architecture**:
+- **Metrics**: Prometheus scrapes metrics, Grafana visualizes, Alertmanager handles alerts
+- **Logs**: Promtail ships logs to Loki, Elasticsearch indexes for Jaeger
+- **Traces**: OpenTelemetry Collector receives traces, forwards to Tempo and Jaeger
+- **Storage**: Minio provides S3-compatible storage for Loki and Tempo blocks
 - **`coder/`** - Development workspace templates for Coder.com platform
 - **`functions/`** - Serverless functions using Fission framework
+
+### AI/ML Workload Stack (apps/base/ai/)
+The cluster hosts a comprehensive AI/ML infrastructure in the `ai` namespace:
+
+| Application | Purpose | Key Features |
+|------------|---------|-------------|
+| **Ollama** | LLM inference server | Local model hosting, GPU acceleration |
+| **Open WebUI** | Web interface for LLMs | Chat interface, prompt management |
+| **LibreChat** | Multi-model chat platform | OpenAI-compatible API, conversation management |
+| **LocalAI** | OpenAI-compatible API | Local model inference, multiple backends |
+| **SearXNG** | Privacy-focused metasearch | AI context gathering, web search integration |
+
+**Hardware Acceleration**: AI workloads utilize Intel GPU resources (`gpu.intel.com/i915`) for inference acceleration.
+
+**Common Issues**:
+- **LibreChat MongoDB**: Historically fails with container verification errors - check MongoDB pod logs and persistent volume integrity
+- **GPU allocation**: Ensure Intel GPU device plugin is running and devices are available
+- **Model downloads**: Large models may cause slow startup - check init container logs
+
+### Namespace Organization
+
+The cluster uses 25+ namespaces for logical separation:
+
+| Category | Namespaces | Purpose |
+|----------|------------|---------|
+| **System** | `kube-system`, `kube-public`, `kube-node-lease`, `default` | Kubernetes core components |
+| **Flux** | `flux-system`, `capacitor` | GitOps controllers and image automation |
+| **Infrastructure** | `cert-manager`, `tailscale`, `sealed-secrets-system` | Core infrastructure services |
+| **Networking** | `traefik`, `ingress` | Ingress and traffic management |
+| **Storage** | `csi-rclone` | Storage provisioners and drivers |
+| **Monitoring** | `monitoring`, `elastic-system`, `opentelemetry-operator-system` | Observability stack |
+| **CI/CD** | `arc-system`, `arc-runners` | GitHub Actions runner infrastructure |
+| **Azure** | `azure-arc`, `azure-arc-release`, `arc-workload-identity` | Azure Arc hybrid management (optional) |
+| **Applications** | `ai`, `arkham`, `coder`, `fission`, `n8n`, `discourse`, `registry`, `romm`, `mediamtx`, `raiplaysoundrss` | User workloads |
+| **Development** | `airflow`, `error-pages` | Development and utility applications |
+| **Upgrades** | `system-upgrade` | K3s automatic upgrade controller |
+| **Device Plugins** | `intel-device-plugins-system` | Hardware device management |
+
+**Namespace Conventions**:
+- System namespaces: Reserved by Kubernetes
+- Infrastructure: Cluster-wide services with elevated privileges
+- Application: Isolated workloads with specific RBAC
+- Monitoring: Read-only access to cluster metrics and logs
 
 ### Flux CD Components
 The cluster uses Flux CD v2 with **image-reflector-controller** and **image-automation-controller** for automated image updates:
@@ -53,6 +135,30 @@ The cluster uses Flux CD v2 with **image-reflector-controller** and **image-auto
 | **Image Reflector** | Scans registries | Image tag discovery, policy evaluation |
 | **Image Automation** | Updates Git | Automated commits for image updates |
 | **Notification Controller** | Alerting | Webhooks, events, receivers |
+
+### Flux Status Detection
+
+**Note on Flux Instance Detection**: Some Flux tooling may report "No Flux instance found" even when Flux is fully operational. This is a detection limitation, not an actual failure.
+
+**How to Verify Flux is Actually Running**:
+1. **Check Flux controllers**: `kubectl get pods -n flux-system`
+   - Should show: source-controller, kustomize-controller, helm-controller, image-reflector-controller, image-automation-controller, notification-controller
+2. **Check Flux resources**: `kubectl get kustomizations -A` and `kubectl get hr -A`
+   - Should show your Kustomizations and HelmReleases with status
+3. **Check Git synchronization**: `kubectl get gitrepositories -n flux-system`
+   - Should show flux-system GitRepository with Ready status and recent commit SHA
+4. **Use Flux CLI**: `flux get all -A`
+   - Should display all Flux resources across namespaces
+
+**If these commands show healthy resources, Flux is working correctly** despite detection tool warnings.
+
+**Common False Positive Scenarios**:
+- Flux installed via non-standard methods (manual manifests vs. flux bootstrap)
+- Flux resources in unexpected namespaces
+- Flux version incompatibility with detection tools
+- Custom Flux component names or labels
+
+See the [Flux Troubleshooting Runbook](#flux-troubleshooting-runbook) for detailed diagnostic procedures.
 
 ## Key Patterns and Best Practices
 
@@ -112,6 +218,129 @@ When analyzing or troubleshooting Flux resources:
   image: 
     tag: "1.0.0" # {"$imagepolicy": "namespace:image-policy"}
   ```
+
+### Image Update Automation Patterns
+
+The cluster uses Flux image automation to keep container images up-to-date:
+
+#### Image Update Architecture
+- **ImageRepository**: Scans container registries for available tags (10m interval)
+- **ImagePolicy**: Defines version selection rules (semver, regex, alphabetical)
+- **ImageUpdateAutomation**: Commits image tag updates to Git repository
+
+#### Common ImagePolicy Patterns
+
+**Semantic Versioning (Recommended)**:
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: app-policy
+  namespace: app-namespace
+spec:
+  imageRepositoryRef:
+    name: app-image
+  policy:
+    semver:
+      range: '>=1.0.0 <2.0.0'  # Major version 1.x
+```
+
+**Numeric Ordering** (for date-based tags):
+```yaml
+spec:
+  policy:
+    numerical:
+      order: asc  # or desc for latest
+```
+
+**Alphabetical Ordering** (for branch tags):
+```yaml
+spec:
+  policy:
+    alphabetical:
+      order: asc
+```
+
+**Regex Filtering** (for complex tag patterns):
+```yaml
+spec:
+  filterTags:
+    pattern: '^main-[a-f0-9]+-(?P<ts>[0-9]+)$'
+    extract: '$ts'
+  policy:
+    numerical:
+      order: asc
+```
+
+#### Image Policy Marker in Manifests
+
+Add policy marker comments to image tags in HelmRelease values:
+```yaml
+spec:
+  values:
+    image:
+      repository: ghcr.io/org/app
+      tag: 1.0.0 # {"$imagepolicy": "app-namespace:app-policy"}
+```
+
+**ImageUpdateAutomation will**:
+1. Scan ImageRepository for new tags matching ImagePolicy
+2. Update the tag value in the manifest
+3. Commit the change to Git with message like: `Update image tag to 1.0.1`
+4. Push to main branch (or configured branch)
+5. Flux reconciles and deploys the new image
+
+#### Controlling Update Behavior
+
+**Suspend Automation Temporarily**:
+```bash
+flux suspend image update flux-system
+# Make manual changes
+flux resume image update flux-system
+```
+
+**Pin Specific Version** (remove policy marker):
+```yaml
+image:
+  tag: 1.2.3  # Pinned - no policy marker
+```
+
+**Change Update Branch**:
+```yaml
+# In ImageUpdateAutomation resource
+spec:
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: flux@example.com
+    push:
+      branch: auto-updates  # Push to different branch for PR workflow
+```
+
+#### Best Practices
+- **Use semver policies** for production workloads to avoid breaking changes
+- **Test in dev environment** before enabling auto-updates in production
+- **Monitor update commits** in Git history for unexpected changes
+- **Set up Flux notifications** for failed image updates
+- **Document policy decisions** in ImagePolicy annotations
+
+#### Troubleshooting Image Updates
+
+**Issue: Images not updating**
+1. Check ImageRepository status: `kubectl get imagerepositories -A`
+2. Check ImagePolicy status: `kubectl get imagepolicies -A`
+3. Check ImageUpdateAutomation status: `kubectl get imageupdateautomations -A`
+4. Verify policy marker syntax in manifest
+5. Check image-automation-controller logs: `kubectl logs -n flux-system deploy/image-automation-controller`
+
+**Issue: Wrong image version selected**
+1. Review ImagePolicy rules (semver range, regex pattern)
+2. Check available tags: `kubectl get imagerepository <name> -o yaml | yq '.status.lastScanResult'`
+3. Adjust policy constraints as needed
 
 ### Secret Management Best Practices
 
@@ -177,6 +406,54 @@ spec:
 - **Permission denied**: Check RBAC for service account
 
 > **Tip**: Use `@workspace #file:manage-secrets.prompt.md` for guided secret creation
+
+#### Sealed Secrets Key Backup and Recovery
+
+**CRITICAL**: The sealed-secrets private key is required to decrypt all SealedSecret resources. Loss of this key means permanent loss of all encrypted secrets.
+
+**Backup Procedure** (Quarterly Recommended):
+```bash
+# Export sealed-secrets keys (TLS cert and key)
+kubectl get secret -n sealed-secrets-system sealed-secrets-key -o yaml > sealed-secrets-backup.yaml
+
+# Store securely (encrypted, off-cluster location)
+# Options: password manager, encrypted USB drive, secure cloud storage
+```
+
+**Recovery Procedure** (Disaster Recovery):
+```bash
+# Restore sealed-secrets key in new cluster
+kubectl apply -f sealed-secrets-backup.yaml
+
+# Restart sealed-secrets controller to load key
+kubectl rollout restart deployment -n sealed-secrets-system sealed-secrets-controller
+
+# Verify unsealing works
+kubectl get sealedsecrets -A
+kubectl get secrets -A | grep sealed
+```
+
+**Key Rotation** (Annual Recommended):
+```bash
+# Generate new key pair
+kubectl create secret tls sealed-secrets-new-key \
+  --cert=new-cert.pem \
+  --key=new-key.pem \
+  -n sealed-secrets-system
+
+# Sealed-secrets controller automatically picks up new key
+# Old key remains for decrypting existing secrets
+# Re-seal all secrets with new key over time
+```
+
+**Public Key Location**: `etc/certs/pub-sealed-secrets.pem` (safe to commit to Git)
+
+**Security Considerations**:
+- **NEVER** commit unsealed secrets or the private key to Git
+- **Store backups encrypted** with strong encryption (GPG, age, etc.)
+- **Test recovery procedure** annually to ensure backups are valid
+- **Document key custodians** who have access to backups
+- **Use separate keys per cluster** in multi-cluster environments
 
 ### Development Workflows
 
@@ -266,6 +543,139 @@ When things go wrong:
 4. **Examine resources**: `kubectl describe <resource> <name> -n <namespace>`
 5. **View events**: `kubectl get events -n <namespace> --sort-by='.lastTimestamp'`
 6. **Root cause**: Document findings for future reference
+
+#### Failed HelmRelease Recovery Procedures
+
+When HelmReleases fail, follow this systematic recovery process:
+
+**Step 1: Identify Failure Cause**
+```bash
+# Check HelmRelease status
+kubectl get hr -A
+
+# Get detailed information
+kubectl describe hr <name> -n <namespace>
+
+# Check Helm release history
+helm history <name> -n <namespace>
+
+# View Helm controller logs
+kubectl logs -n flux-system deploy/helm-controller | grep <namespace>/<name>
+```
+
+**Step 2: Common Failure Patterns and Solutions**
+
+| Failure Type | Symptoms | Resolution Steps |
+|--------------|----------|------------------|
+| **Timeout** | `Install/Upgrade timeout` | 1. Increase `spec.timeout` in HelmRelease<br>2. Check pod startup logs<br>3. Verify resource availability<br>4. Check init containers |
+| **Values Error** | `Values validation failed` | 1. Validate values structure: `helm template <chart> -f values.yaml`<br>2. Check valuesFrom references exist<br>3. Compare with chart schema<br>4. Fix values and commit |
+| **Chart Not Found** | `Chart not found` | 1. Verify HelmRepository is Ready<br>2. Check chart name spelling<br>3. Verify chart version exists<br>4. Update HelmRepository: `flux reconcile source helm <repo>` |
+| **CRD Missing** | `CRD not found` | 1. Identify required CRDs<br>2. Install CRDs first via separate HelmRelease<br>3. Add `dependsOn` to main HelmRelease<br>4. Use `spec.install.crds: CreateReplace` |
+| **Dependency Not Ready** | `Dependency not ready` | 1. Check dependency status<br>2. Fix dependency first<br>3. Wait for Ready condition<br>4. Flux will auto-retry |
+| **Image Pull Error** | Pods in `ImagePullBackOff` | 1. Verify image exists in registry<br>2. Check image pull secrets<br>3. Test registry access from cluster<br>4. Verify image tag |
+
+**Step 3: Force Remediation**
+
+**Option A: Reconcile HelmRelease**
+```bash
+# Force immediate reconciliation
+flux reconcile helmrelease <name> -n <namespace>
+
+# Watch status
+watch kubectl get hr <name> -n <namespace>
+```
+
+**Option B: Suspend and Resume** (for persistent failures)
+```bash
+# Suspend to prevent retry loops
+flux suspend helmrelease <name> -n <namespace>
+
+# Fix underlying issue (update values, fix dependencies, etc.)
+# Commit changes to Git
+
+# Resume after fix
+flux resume helmrelease <name> -n <namespace>
+```
+
+**Option C: Manual Rollback**
+```bash
+# View Helm release history
+helm history <name> -n <namespace>
+
+# Rollback to previous working version
+helm rollback <name> <revision> -n <namespace>
+
+# Update HelmRelease in Git to prevent re-upgrade
+```
+
+**Option D: Delete and Recreate** (last resort)
+```bash
+# Remove HelmRelease (keeps deployed resources)
+kubectl delete hr <name> -n <namespace>
+
+# Uninstall Helm release if needed
+helm uninstall <name> -n <namespace>
+
+# Fix configuration in Git
+# Commit changes
+
+# Recreate HelmRelease
+flux reconcile kustomization apps
+```
+
+**Step 4: Persistent MongoDB Failures (LibreChat Example)**
+
+The `ai/librechat` HelmRelease historically fails with MongoDB container verification errors:
+
+```bash
+# Check MongoDB pod status
+kubectl get pods -n ai -l app=mongodb
+
+# View MongoDB logs
+kubectl logs -n ai <mongodb-pod> --previous
+
+# Common fixes:
+# 1. Check persistent volume integrity
+kubectl get pvc -n ai
+kubectl describe pvc <mongodb-pvc> -n ai
+
+# 2. Delete pod to force restart
+kubectl delete pod -n ai <mongodb-pod>
+
+# 3. If PV corrupted, delete PVC and recreate
+kubectl delete pvc <mongodb-pvc> -n ai
+# HelmRelease will recreate PVC automatically
+
+# 4. Check MongoDB container image
+# Verify image exists and is pullable
+```
+
+**Step 5: Validation After Recovery**
+```bash
+# Verify HelmRelease is Ready
+kubectl get hr <name> -n <namespace>
+
+# Check deployed resources
+kubectl get all -n <namespace>
+
+# Check pod status
+kubectl get pods -n <namespace>
+
+# View application logs
+kubectl logs -n <namespace> <pod-name>
+
+# Test application endpoints
+curl https://<app-url>
+```
+
+**Step 6: Prevention**
+
+- **Set appropriate timeouts**: Base on historical deployment times + 50% buffer
+- **Configure retry limits**: `spec.install.remediation.retries: 3`
+- **Enable automatic rollback**: `spec.upgrade.remediation.remediateLastFailure: true`
+- **Test in dev first**: Deploy to dev namespace before production
+- **Pin chart versions**: Avoid `latest` tags
+- **Monitor continuously**: Set up alerts for failed HelmReleases
 
 #### Coder Development Environment
 - Templates in `coder/templates/` for different dev environments
@@ -393,12 +803,282 @@ kubectl get events -n flux-system --sort-by='.lastTimestamp'
 5. **Resource limits**: Controllers OOMKilled or throttled
 6. **API versions**: Deprecated APIs used in manifests
 
+### Error Handling and Dependency Chain Management
+
+#### Dependency Chain Overview
+
+The cluster enforces strict dependency ordering:
+
+```
+flux-system (GitRepository)
+    ↓
+┌───────────────────┬─────────────────────┐
+│                   │                     │
+infra-controllers   monitoring-controllers  capacitor
+    ↓                    ↓                     ↓
+infra-configs       monitoring-configs    (standalone)
+    ↓                    ↓
+  apps           (standalone monitoring)
+```
+
+#### Dependency Chain Best Practices
+
+**Rule 1: CRDs Before Resources**
+- Install operators/controllers (which install CRDs) before resources that use those CRDs
+- Example: sealed-secrets controller before SealedSecret resources
+
+**Rule 2: Infrastructure Before Applications**
+- Core services (cert-manager, ingress, storage) before apps that use them
+- Example: cert-manager before apps with TLS certificates
+
+**Rule 3: Secrets Before Consumers**
+- Ensure SealedSecrets are created and unsealed before apps reference them
+- Use `dependsOn` to enforce ordering
+
+**Rule 4: Parallel When Possible**
+- Independent resources can deploy in parallel
+- Example: monitoring-controllers and infra-controllers are independent
+
+#### Troubleshooting Dependency Issues
+
+**Symptom: "Dependency not ready" error**
+
+1. **Identify the dependency chain**:
+```bash
+# Check Kustomization dependencies
+kubectl get kustomization -n flux-system -o yaml | yq '.items[] | {"name": .metadata.name, "dependsOn": .spec.dependsOn}'
+
+# Visualize status
+flux get kustomizations -A
+```
+
+2. **Check dependency status**:
+```bash
+# Get detailed status of blocking dependency
+kubectl describe kustomization <dependency-name> -n flux-system
+
+# Check resources in dependency
+kubectl get all -n <dependency-namespace>
+```
+
+3. **Common dependency failure causes**:
+
+| Cause | Detection | Resolution |
+|-------|-----------|------------|
+| **CRDs not installed** | `no matches for kind` errors | Install CRD-providing operator first |
+| **Namespace missing** | `namespace not found` | Create namespace in dependency Kustomization |
+| **Resource conflict** | `resource already exists` | Remove conflicting resource or change name |
+| **Health check timeout** | Dependency shows `Progressing` | Increase timeout or fix unhealthy resources |
+| **Circular dependency** | Both resources waiting | Remove circular `dependsOn`, redesign |
+
+4. **Force dependency reconciliation**:
+```bash
+# Reconcile dependency first
+flux reconcile kustomization <dependency-name>
+
+# Wait for Ready status
+watch kubectl get kustomization <dependency-name> -n flux-system
+
+# Then reconcile dependent
+flux reconcile kustomization <dependent-name>
+```
+
+#### Error Recovery Strategies
+
+**Strategy 1: Cascading Reconciliation** (for dependency chain failures)
+```bash
+# Reconcile from root to leaf
+flux reconcile source git flux-system
+flux reconcile kustomization infra-controllers
+flux reconcile kustomization infra-configs
+flux reconcile kustomization apps
+```
+
+**Strategy 2: Suspend and Debug** (for persistent issues)
+```bash
+# Suspend auto-reconciliation
+flux suspend kustomization apps
+
+# Debug and fix issues
+# Test fixes locally: kustomize build apps/kyrion/
+
+# Resume when ready
+flux resume kustomization apps
+```
+
+**Strategy 3: Partial Deployment** (for isolating failures)
+```bash
+# Temporarily remove failing app from kustomization
+# Edit apps/kyrion/kustomization.yaml, comment out failing resource
+# Commit and push
+
+# Fix failing app separately
+# Uncomment and redeploy when fixed
+```
+
+**Strategy 4: Fresh Start** (for corrupted state)
+```bash
+# Delete Kustomization (keeps deployed resources)
+kubectl delete kustomization <name> -n flux-system
+
+# Reconcile parent to recreate
+flux reconcile kustomization flux-system
+```
+
+#### Health Check Configuration
+
+Configure appropriate health checks to prevent false positives:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  # Wait up to 10 minutes for resources to be ready
+  timeout: 10m
+  
+  # Check every 30 seconds during reconciliation
+  interval: 5m
+  
+  # Retry failed reconciliation after 2 minutes
+  retryInterval: 2m
+  
+  # Health check configuration
+  wait: true  # Wait for resources to be ready
+  
+  # Specific health checks for resources
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: critical-app
+      namespace: production
+```
+
+#### Monitoring Flux Health
+
+**Real-time Monitoring**:
+```bash
+# Watch all Kustomizations
+watch -n 5 'flux get kustomizations -A'
+
+# Watch all HelmReleases
+watch -n 5 'kubectl get hr -A'
+
+# Monitor Flux events
+kubectl get events -n flux-system --watch
+```
+
+**Alerts and Notifications**:
+- Configure Flux Alert resources for Slack/Discord/email notifications
+- Monitor Prometheus metrics: `gotk_reconcile_condition`
+- Set up Grafana dashboards for Flux controller metrics
+
+**Automated Recovery**:
+- Flux automatically retries failed reconciliations per `retryInterval`
+- Configure `remediation` strategies in HelmReleases for automatic rollback
+- Use `prune: true` to clean up orphaned resources
+
 ### Critical File References
 - **Flux entry point**: `clusters/kyrion/apps.yaml`
 - **App definitions**: `apps/kyrion/kustomization.yaml` 
 - **Infrastructure config**: `infrastructure/configs/kustomization.yaml`
 - **Cluster secrets**: `clusters/kyrion/sealed-secrets.yaml`
 - **Image policies**: Search for `imageupdateautomation.yaml`
+
+### HelmRepository Inventory
+
+The cluster uses 18 HelmRepository sources for chart distribution:
+
+| Repository | Type | URL/OCI Path | Charts Used | Notes |
+|------------|------|--------------|-------------|-------|
+| **onechart** | Standard | https://chart.onechart.dev | Most applications | Primary chart repository for apps |
+| **bitnami** | OCI | oci://registry-1.docker.io/bitnamicharts | MongoDB, PostgreSQL, Redis | Bitnami application charts |
+| **sealed-secrets** | Standard | https://bitnami-labs.github.io/sealed-secrets | sealed-secrets | Secret encryption |
+| **cert-manager** | Standard | https://charts.jetstack.io | cert-manager | Certificate management |
+| **traefik** | Standard | https://traefik.github.io/charts | traefik | Ingress controller |
+| **tailscale** | Standard | https://pkgs.tailscale.com/helmcharts | tailscale-operator | Private networking |
+| **kube-prometheus-stack** | OCI | oci://ghcr.io/prometheus-community/charts | kube-prometheus-stack | Monitoring stack |
+| **grafana-charts** | Standard | https://grafana.github.io/helm-charts | loki, tempo, promtail | Log and trace backends |
+| **elastic** | Standard | https://helm.elastic.co | elasticsearch, kibana | Log indexing |
+| **coder-v2** | Standard | https://helm.coder.com/v2 | coder | Development workspaces |
+| **fission-charts** | Standard | https://fission.github.io/fission-charts | fission-all | Serverless functions |
+| **gha-runner-scale-set** | OCI | oci://ghcr.io/actions/actions-runner-controller-charts | gha-runner-scale-set | ARC runner sets |
+| **capacitor** | OCI | oci://ghcr.io/gimlet-io/capacitor | capacitor | Image update dashboard |
+| **intel** | Standard | https://intel.github.io/helm-charts | intel-device-plugins-operator | GPU device plugin |
+| **rancher-charts** | Standard | https://releases.rancher.com/server-charts/latest | system-upgrade-controller | K3s upgrades |
+| **go-skynet** | Standard | https://go-skynet.github.io/helm-charts | local-ai | Local AI inference |
+| **open-webui** | Standard | https://helm.openwebui.com | open-webui | LLM web interface |
+| **otwld** | Standard | https://otwld.github.io/ollama-helm | ollama | Ollama LLM server |
+
+**Update Intervals**:
+- Most repositories: 1h (balance between freshness and load)
+- Critical infrastructure: 24h (cert-manager, sealed-secrets)
+- Development tools: 30m (coder, fission)
+
+**Adding New HelmRepositories**:
+
+**Standard Repository**:
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: my-charts
+  namespace: flux-system
+spec:
+  url: https://charts.example.com
+  interval: 1h
+  timeout: 1m
+```
+
+**OCI Repository**:
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: my-oci-charts
+  namespace: flux-system
+spec:
+  type: oci
+  url: oci://registry.example.com/charts
+  interval: 1h
+```
+
+**Private Repository** (with authentication):
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: private-charts
+  namespace: flux-system
+spec:
+  url: https://private-charts.example.com
+  interval: 1h
+  secretRef:
+    name: helm-repo-secret  # Secret with username/password
+```
+
+**Troubleshooting HelmRepositories**:
+```bash
+# Check repository status
+flux get sources helm -A
+
+# Verify repository is accessible
+kubectl describe helmrepository <name> -n flux-system
+
+# Force repository update
+flux reconcile source helm <name>
+
+# Check source-controller logs
+kubectl logs -n flux-system deploy/source-controller | grep HelmRepository/<name>
+```
+
+**Common Issues**:
+- **Repository timeout**: Increase `spec.timeout` or check network access
+- **Authentication failed**: Verify credentials in `secretRef`
+- **Chart not found**: Verify chart name and version exist in repository index
+- **OCI registry errors**: Verify OCI URL format and registry authentication
 
 ## Flux Custom Resource Definitions (CRDs)
 

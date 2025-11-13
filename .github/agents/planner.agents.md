@@ -1,8 +1,7 @@
-<!-- Based on: https://github.com/github/awesome-copilot/blob/main/chatmodes/planner.chatmode.md -->
 ---
 description: 'Generate an implementation plan for new features or infrastructure changes'
-tools: ['codebase', 'fetch', 'search', 'grep']
-model: Claude Sonnet 4
+tools: ['fetch', 'search']
+model: Claude Sonnet 4.5
 ---
 
 # Planning Mode Instructions
