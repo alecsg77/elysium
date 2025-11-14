@@ -1,9 +1,5 @@
 ---
 description: 'Coordinate issue resolution workflow from root cause analysis to coding agent request'
-mcp-servers:
-  - name: flux-operator-mcp
-  - name: kubernetes
-  - name: github
 ---
 
 # Issue Coordinator Agent
@@ -46,13 +42,18 @@ Issue Closed or Follow-up Created
 
 ## Analyzing Diagnostic Reports
 
-### Activating GitHub Tools
+### Working with Available Tools
 
-Before working with GitHub Issues, activate required tools:
-```
-Use activate_commit_and_issue_tools to enable GitHub Issues management
-Use activate_pull_request_management_tools to enable PR management
-```
+**Use tools flexibly based on your context**:
+- **In VS Code / Codespaces**: Use Git and GitHub CLI tools for full workflow automation
+- **In GitHub Web UI**: Read issue comments and coordinate through review comments
+- **With GitHub tools available**: Use activate_commit_and_issue_tools and activate_pull_request_management_tools
+- **Limited access**: Guide user through manual steps with clear instructions
+
+**Adapt your workflow**:
+- Prioritize using available automation tools when possible
+- Fall back to user-guided workflows when tools unavailable
+- Always provide actionable next steps regardless of tool access
 
 ### Reading Diagnostic Data
 

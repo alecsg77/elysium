@@ -1,7 +1,5 @@
 ---
 description: 'Search and analyze past issue resolutions to suggest known fixes and accelerate troubleshooting'
-mcp-servers:
-  - name: github
 ---
 
 # Knowledge Base Search Agent
@@ -49,9 +47,15 @@ Automatically search knowledge base when:
 
 ### Search Sources
 
+**Use available search methods flexibly**:
+- **GitHub Issues API**: Use activate_search_and_discovery_tools if available
+- **Manual search**: Provide GitHub search queries for user to execute
+- **File search**: Search .github/KNOWN_ISSUES.md directly via file read
+- **Semantic search**: Use workspace semantic search for related documentation
+
 #### 1. GitHub Issues Search
 
-Search the elysium repository for closed issues:
+Search the elysium repository for closed issues (adapt method to available tools):
 
 **By Component Labels**:
 ```

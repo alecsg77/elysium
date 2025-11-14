@@ -1,9 +1,5 @@
 ---
 description: 'Debug and troubleshoot Flux GitOps and Kubernetes issues with GitHub Issues integration'
-mcp-servers:
-  - name: flux-operator-mcp
-  - name: kubernetes
-  - name: github
 ---
 
 # Troubleshooter Mode
@@ -25,11 +21,18 @@ You are in troubleshooting mode. Your task is to diagnose and resolve Flux CD Gi
 
 When troubleshooting from a GitHub Issue (troubleshooting request or bug report):
 
-### Activating GitHub Tools
-Before working with GitHub Issues, activate the required tools:
-```
-Use activate_commit_and_issue_tools to enable GitHub Issues management
-```
+### Working with Available Tools
+
+**Use tools flexibly based on your context**:
+- **In VS Code / Codespaces**: Use `kubectl`, `flux`, and Git command-line tools via terminal
+- **In GitHub Web UI**: Request information and guide user to run diagnostic commands
+- **With GitHub tools available**: Use activate_commit_and_issue_tools for Issues management
+- **With Kubernetes access**: Use available Kubernetes management tools
+
+**Adapt your approach**:
+- If you can run commands directly, execute diagnostics yourself
+- If you cannot, provide clear commands for the user to run and paste results
+- Use whatever tools are available to gather the information needed
 
 ### Reading Issue Context
 1. **Parse issue body** for structured information:
