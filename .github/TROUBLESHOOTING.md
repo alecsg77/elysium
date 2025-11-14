@@ -54,7 +54,7 @@ You (via GitHub) → Copilot Agents → Diagnosis → Bug Issues → Approval �
 1. **On the issue page**, open GitHub Copilot Chat (icon in bottom-right)
 2. **Start conversation**:
    ```
-   @workspace #file:.github/agents/troubleshooter.agents.md
+   #file:.github/agents/troubleshooter.agents.md
    Please investigate this issue and run diagnostics
    ```
 3. **Copilot will**:
@@ -116,7 +116,7 @@ After issue creation, invoke troubleshooter:
 1. Open Copilot Chat on the issue page
 2. Reference the troubleshooter agent:
    ```
-   @workspace #file:.github/agents/troubleshooter.agents.md
+   #file:.github/agents/troubleshooter.agents.md
    
    Please investigate issue #[number] and provide comprehensive diagnostics
    ```
@@ -212,7 +212,7 @@ See root cause analysis in comment above for details.
 Invoke the issue coordinator agent:
 
 ```
-@workspace #file:.github/agents/issue-coordinator.agents.md
+#file:.github/agents/issue-coordinator.agents.md
 
 Please generate resolution plans for all child issues
 ```
@@ -468,7 +468,7 @@ This resets attempt counter and removes circuit breaker label.
 
 **Solutions**:
 - Ensure you're using GitHub Copilot Chat in browser
-- Reference agent exactly: `@workspace #file:.github/agents/troubleshooter.agents.md`
+- Reference agent exactly: `#file:.github/agents/troubleshooter.agents.md`
 - Check you have write access to repository
 
 ### Issue: Diagnostics Incomplete
@@ -547,7 +547,7 @@ If automated troubleshooting isn't working:
 You can ask Copilot to run specific checks:
 
 ```
-@workspace #file:.github/agents/troubleshooter.agents.md
+#file:.github/agents/troubleshooter.agents.md
 
 Please check:
 - Flux reconciliation status for ai namespace
@@ -561,7 +561,7 @@ Please check:
 Before creating an issue:
 
 ```
-@workspace #file:.github/agents/knowledge-base.agents.md
+#file:.github/agents/knowledge-base.agents.md
 
 Has anyone seen "MongoDB connection failed" errors with LibreChat before?
 ```
@@ -584,7 +584,7 @@ The resolution plan looks good, but please also:
 For low-risk, urgent fixes, you might request:
 
 ```
-@workspace #file:.github/agents/issue-coordinator.agents.md
+#file:.github/agents/issue-coordinator.agents.md
 
 This is urgent and low-risk. Please submit to coding agent immediately after generating plan.
 ```

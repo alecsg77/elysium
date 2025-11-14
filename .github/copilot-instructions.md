@@ -405,7 +405,7 @@ spec:
 - **Variable not substituted**: Verify ConfigMap/Secret exists and key name matches
 - **Permission denied**: Check RBAC for service account
 
-> **Tip**: Use `@workspace #file:manage-secrets.prompt.md` for guided secret creation
+> **Tip**: Use `#file:manage-secrets.prompt.md` for guided secret creation
 
 #### Sealed Secrets Key Backup and Recovery
 
@@ -497,7 +497,7 @@ kubectl create secret docker-registry regcred \
   kubeseal --cert etc/certs/pub-sealed-secrets.pem -o yaml > sealed-secret.yaml
 ```
 
-> **Guided workflow**: `@workspace #file:manage-secrets.prompt.md create secret`
+> **Guided workflow**: `#file:manage-secrets.prompt.md create secret`
 
 #### Advanced Flux Operations
 | Operation | Command | Use Case |
@@ -720,7 +720,7 @@ curl https://<app-url>
 
 ### Troubleshooting Workflows
 
-> **Quick Help**: Switch to troubleshooter chat mode or use `@workspace #file:troubleshoot-flux.prompt.md`
+> **Quick Help**: Switch to troubleshooter chat mode or use `#file:troubleshoot-flux.prompt.md`
 
 #### Troubleshooting Decision Tree
 ```
@@ -1229,7 +1229,7 @@ GitHub Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Co
 
 2. **Invoke Copilot**: In GitHub Copilot Chat on issue page
    ```
-   @workspace #file:.github/agents/troubleshooter.agents.md
+   #file:.github/agents/troubleshooter.agents.md
    Please investigate this issue and run diagnostics
    ```
 
@@ -1412,11 +1412,11 @@ grep -i "error pattern" .github/KNOWN_ISSUES.md
 ### Support and Resources
 
 #### Quick Help
-- **Deploy app**: `@workspace #file:deploy-app.prompt.md`
+- **Deploy app**: `#file:deploy-app.prompt.md`
 - **Debug issue**: Switch to troubleshooter chat mode
-- **Review config**: `@workspace #file:review-config.prompt.md`
-- **Manage secrets**: `@workspace #file:manage-secrets.prompt.md`
-- **Generate docs**: `@workspace #file:generate-docs.prompt.md`
+- **Review config**: `#file:review-config.prompt.md`
+- **Manage secrets**: `#file:manage-secrets.prompt.md`
+- **Generate docs**: `#file:generate-docs.prompt.md`
 
 #### Documentation
 - **Copilot Guide**: `.github/README-COPILOT.md`

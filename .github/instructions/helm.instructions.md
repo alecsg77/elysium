@@ -236,7 +236,7 @@ For comprehensive HelmRelease diagnostics and automated resolution, use the GitH
 
 2. **Invoke Diagnostics**: In GitHub Copilot Chat on issue page
    ```
-   @workspace #file:.github/agents/troubleshooter.agents.md
+   #file:.github/agents/troubleshooter.agents.md
    Please investigate this HelmRelease failure
    ```
 

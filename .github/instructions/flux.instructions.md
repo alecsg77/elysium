@@ -185,7 +185,7 @@ For cluster issues, use GitHub Issues with structured templates instead of manua
 
 2. **Invoke Copilot Diagnostics**: In GitHub Copilot Chat on issue page
    ```
-   @workspace #file:.github/agents/troubleshooter.agents.md
+   #file:.github/agents/troubleshooter.agents.md
    Please run comprehensive Flux diagnostics
    ```
 
@@ -293,7 +293,7 @@ grep -A 20 "HelmRelease" .github/KNOWN_ISSUES.md
 Or use knowledge-base agent in Copilot Chat:
 
 ```
-@workspace #file:.github/agents/knowledge-base.agents.md
+#file:.github/agents/knowledge-base.agents.md
 Search for issues with "HelmRelease timeout"
 ```
 

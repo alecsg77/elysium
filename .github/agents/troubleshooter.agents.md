@@ -1,8 +1,9 @@
 ---
 description: 'Debug and troubleshoot Flux GitOps and Kubernetes issues with GitHub Issues integration'
-tools: ['runCommands', 'search', 'flux-operator-mcp/get_flux_instance', 'flux-operator-mcp/get_kubernetes_api_versions', 'flux-operator-mcp/get_kubernetes_logs', 'flux-operator-mcp/get_kubernetes_metrics', 'flux-operator-mcp/get_kubernetes_resources', 'flux-operator-mcp/search_flux_docs', 'kubernetes/configuration_view', 'kubernetes/events_list', 'kubernetes/helm_list', 'kubernetes/namespaces_list', 'kubernetes/pods_get', 'kubernetes/pods_list', 'kubernetes/pods_list_in_namespace', 'kubernetes/pods_log', 'kubernetes/resources_get', 'kubernetes/resources_list', 'todos', 'runSubagent', 'fetch', 'githubRepo', 'github/github-mcp-server/create_or_update_file', 'github/github-mcp-server/assign_copilot_to_issue']
-target: github-copilot
-mcp-servers: ['flux-operator-mcp', 'kubernetes', 'github/github-mcp-server']
+mcp-servers:
+  - name: flux-operator-mcp
+  - name: kubernetes
+  - name: github
 ---
 
 # Troubleshooter Mode

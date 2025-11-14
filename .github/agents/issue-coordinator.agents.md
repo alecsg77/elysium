@@ -1,8 +1,9 @@
 ---
 description: 'Coordinate issue resolution workflow from root cause analysis to coding agent request'
-tools: ['runCommands', 'search', 'flux-operator-mcp/get_flux_instance', 'flux-operator-mcp/get_kubernetes_resources', 'kubernetes/configuration_view', 'kubernetes/resources_get', 'kubernetes/resources_list', 'todos', 'runSubagent', 'fetch', 'githubRepo', 'github/github-mcp-server/create_or_update_file', 'github/github-mcp-server/assign_copilot_to_issue']
-target: github-copilot
-mcp-servers: ['flux-operator-mcp', 'kubernetes', 'github/github-mcp-server']
+mcp-servers:
+  - name: flux-operator-mcp
+  - name: kubernetes
+  - name: github
 ---
 
 # Issue Coordinator Agent

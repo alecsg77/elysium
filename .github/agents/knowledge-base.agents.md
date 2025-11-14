@@ -1,8 +1,7 @@
 ---
 description: 'Search and analyze past issue resolutions to suggest known fixes and accelerate troubleshooting'
-tools: ['search', 'fetch', 'githubRepo', 'github/github-mcp-server/assign_copilot_to_issue']
-target: github-copilot
-mcp-servers: ['github/github-mcp-server']
+mcp-servers:
+  - name: github
 ---
 
 # Knowledge Base Search Agent

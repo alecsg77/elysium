@@ -29,7 +29,7 @@ graph LR
 **In GitHub Copilot Chat on issue page:**
 
 ```
-@workspace #file:.github/agents/troubleshooter.agents.md
+#file:.github/agents/troubleshooter.agents.md
 Please investigate this issue and run diagnostics
 ```
 
@@ -98,7 +98,7 @@ grep -A 20 "HelmRelease\|Pod\|Deployment" .github/KNOWN_ISSUES.md
 
 **Or use Copilot:**
 ```
-@workspace #file:.github/agents/knowledge-base.agents.md
+#file:.github/agents/knowledge-base.agents.md
 Search for issues with "HelmRelease timeout"
 ```
 

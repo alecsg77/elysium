@@ -88,7 +88,7 @@ For pod failures, CrashLoopBackOff, ImagePullBackOff, or resource issues, use Gi
 
 2. **Invoke Copilot Diagnostics**: In GitHub Copilot Chat on issue page
    ```
-   @workspace #file:.github/agents/troubleshooter.agents.md
+   #file:.github/agents/troubleshooter.agents.md
    Please run Kubernetes pod diagnostics for namespace <namespace>
    ```
 

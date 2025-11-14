@@ -96,7 +96,7 @@ User mentioned "applied some other fixes" after the tool corrections. Current fi
 ### Workflow Overview
 ```
 1. User creates GitHub Issue (bug report or troubleshooting request)
-2. Invokes Copilot: @workspace #file:.github/agents/troubleshooter.agents.md
+2. Invokes Copilot: #file:.github/agents/troubleshooter.agents.md
 3. Troubleshooter runs 5-phase diagnostics (2-5 min)
 4. Knowledge base searched (if >80% match, suggest fix immediately)
 5. Root cause analysis → creates child bugs (one per distinct cause)
