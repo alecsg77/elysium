@@ -74,3 +74,143 @@ description: "Kubernetes manifest best practices for GitOps"
 - Order fields logically: metadata, spec, status
 - Use `---` document separator between multiple resources
 - Validate YAML syntax before committing
+
+## Web-Based Troubleshooting
+
+### Issue-Based Diagnostic Workflow
+
+For pod failures, CrashLoopBackOff, ImagePullBackOff, or resource issues, use GitHub Issues with structured templates:
+
+1. **Create Bug Report**: https://github.com/alecsg77/elysium/issues/new/choose
+   - Select "🐛 Bug Report" template for known issues
+   - Select "🔍 Troubleshooting Request" for investigation
+   - Provide pod name, namespace, error messages, recent changes
+
+2. **Invoke Copilot Diagnostics**: In GitHub Copilot Chat on issue page
+   ```
+   @workspace #file:.github/agents/troubleshooter.agents.md
+   Please run Kubernetes pod diagnostics for namespace <namespace>
+   ```
+
+3. **Automated Diagnostic Collection**:
+   - **Pod Status**: Get pod conditions, phase, container states
+   - **Logs**: Extract recent logs and error patterns from containers
+   - **Events**: Timeline of Kubernetes events for pod lifecycle
+   - **Resource Status**: CPU/memory requests, limits, and actual usage
+   - **Configuration**: ConfigMap/Secret references, volume mounts
+   - **Network**: Service endpoints, ingress routes, network policies
+
+4. **Root Cause Categories**:
+   - **Image Issues**: ImagePullBackOff, invalid image tag, registry authentication
+   - **Configuration Errors**: Missing ConfigMap/Secret, invalid volume mounts
+   - **Resource Constraints**: OOMKilled, CPU throttling, node pressure
+   - **Health Check Failures**: Liveness/readiness probe timeouts or failures
+   - **Networking**: DNS resolution, service discovery, network policy blocks
+   - **Dependencies**: Database unavailable, external API unreachable
+
+5. **Automated Resolution**: After approval, coding agent fixes issues and coordinator validates
+
+### Common Kubernetes Issue Patterns (from Knowledge Base)
+
+**Pod CrashLoopBackOff (Missing ConfigMap)**:
+- **Symptom**: `CreateContainerConfigError`, pod restarting
+- **Root Cause**: Referenced ConfigMap doesn't exist in namespace
+- **Resolution**: Create missing ConfigMap in `apps/base/<app>/` or `clusters/kyrion/config-map.yaml`
+- **Validation**: `kubectl get pods -n <namespace>` shows Running status
+
+**ImagePullBackOff**:
+- **Symptom**: `ErrImagePull` or `ImagePullBackOff` status
+- **Root Cause**: Image doesn't exist, wrong tag, or registry authentication failure
+- **Resolution**: Verify image exists, check image pull secrets, test registry access
+- **Validation**: Pod enters Running state
+
+**OOMKilled (Out of Memory)**:
+- **Symptom**: Pod restarting with `OOMKilled` reason
+- **Root Cause**: Memory usage exceeds container limit
+- **Resolution**: Increase `resources.limits.memory` in HelmRelease values or manifest
+- **Validation**: Pod runs without restarts, `kubectl top pod` shows memory under limit
+
+**GPU Allocation Failure**:
+- **Symptom**: Pod pending with `Insufficient gpu.intel.com/i915`
+- **Root Cause**: No GPU-enabled nodes or GPU already allocated
+- **Resolution**: Verify GPU device plugin running, check node GPU capacity
+- **Validation**: Pod scheduled and running with GPU allocated
+
+**Persistent Volume Claim Pending**:
+- **Symptom**: PVC stuck in Pending state
+- **Root Cause**: No StorageClass available or insufficient capacity
+- **Resolution**: Create StorageClass or provision storage on nodes
+- **Validation**: `kubectl get pvc -n <namespace>` shows Bound status
+
+### Diagnostic Commands Reference
+
+Quick commands for manual troubleshooting:
+
+```bash
+# Pod status and events
+kubectl get pods -n <namespace>
+kubectl describe pod <pod-name> -n <namespace>
+kubectl get events -n <namespace> --sort-by='.lastTimestamp'
+
+# Container logs
+kubectl logs <pod-name> -n <namespace>
+kubectl logs <pod-name> -c <container-name> -n <namespace>
+kubectl logs <pod-name> -n <namespace> --previous  # Previous container instance
+
+# Resource usage
+kubectl top pods -n <namespace>
+kubectl top nodes
+
+# Configuration inspection
+kubectl get configmaps -n <namespace>
+kubectl get secrets -n <namespace>
+kubectl describe cm <configmap-name> -n <namespace>
+
+# Service and networking
+kubectl get svc -n <namespace>
+kubectl get endpoints -n <namespace>
+kubectl get ingress -n <namespace>
+kubectl describe ingress <ingress-name> -n <namespace>
+
+# Debugging with ephemeral containers
+kubectl debug <pod-name> -n <namespace> -it --image=busybox
+```
+
+### Integration with Automated Resolution
+
+**Circuit Breaker Protection**:
+- Prevents infinite retry loops with 3-attempt limit per bug
+- Tracks attempts via `resolution-attempt:N` labels
+- Triggers manual intervention after 3 failures
+- Reset with `/reset-attempts` command after manual fixes
+
+**Validation Workflow**:
+- After PR merge, coordinator monitors pod status for 10 minutes
+- Checks pod phase, container readiness, restart count, events
+- **Success**: Marks issue resolved, updates knowledge base
+- **Failure**: Generates new resolution plan (if < 3 attempts) or escalates
+
+### Knowledge Base Search
+
+Search for known fixes before creating issues:
+
+```bash
+# Search by component
+grep -A 20 "## Component: Kubernetes" .github/KNOWN_ISSUES.md
+
+# Search by error pattern
+grep -i "crashloopbackoff" .github/KNOWN_ISSUES.md
+grep -i "imagepullbackoff" .github/KNOWN_ISSUES.md
+grep -i "oomkilled" .github/KNOWN_ISSUES.md
+
+# Search by resource type
+grep -A 20 "Pod\|Deployment\|StatefulSet" .github/KNOWN_ISSUES.md
+```
+
+### Additional Resources
+
+- **Troubleshooting Guide**: `.github/TROUBLESHOOTING.md` - Complete workflow examples
+- **Known Issues**: `.github/KNOWN_ISSUES.md` - Searchable database of past resolutions
+- **Troubleshooter Agent**: `.github/agents/troubleshooter.agents.md` - Diagnostic collection
+- **Issue Coordinator**: `.github/agents/issue-coordinator.agents.md` - Resolution orchestration
+- **Knowledge Base Agent**: `.github/agents/knowledge-base.agents.md` - Pattern matching

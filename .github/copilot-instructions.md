@@ -1203,6 +1203,212 @@ Use reviewer chat mode or `#file:review-config.prompt.md` to verify:
 - Review and update documentation
 - Backup sealed-secrets private key
 
+### Web-Based Troubleshooting Workflow
+
+The cluster supports **complete troubleshooting and resolution through GitHub web interface** - no local IDE or Codespaces required.
+
+#### Overview
+
+```
+GitHub Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Coding Agent → Fix → Validation
+```
+
+**Key Components**:
+- **GitHub Issues**: Structured templates for bug reports and troubleshooting requests
+- **GitHub Copilot Chat**: AI-powered diagnostics in browser
+- **Copilot Agents**: Specialized agents for investigation, coordination, and knowledge base
+- **Coding Agent**: Automated PR creation for fixes
+- **Circuit Breaker**: Protection against infinite retry loops (3 attempts max)
+- **Knowledge Base**: Searchable history of past issues and resolutions
+
+#### Quick Start
+
+1. **Create Issue**: https://github.com/alecsg77/elysium/issues/new/choose
+   - Select template: 🔍 Troubleshooting Request or 🐛 Bug Report
+   - Fill out structured form with symptoms and context
+
+2. **Invoke Copilot**: In GitHub Copilot Chat on issue page
+   ```
+   @workspace #file:.github/agents/troubleshooter.agents.md
+   Please investigate this issue and run diagnostics
+   ```
+
+3. **Review Analysis**: Copilot posts diagnostic reports in phases:
+   - Health Check → Resource Status → Logs → Events → Configuration → Root Causes
+
+4. **Approve Resolution**: After plans generated, approve with:
+   ```
+   /approve-plan
+   ```
+
+5. **Monitor Progress**: Coding agent creates PR, coordinator validates deployment
+
+#### Agents
+
+**Troubleshooter** (`.github/agents/troubleshooter.agents.md`):
+- Searches knowledge base for known fixes
+- Runs comprehensive diagnostics (Flux, Kubernetes, apps)
+- Identifies distinct root causes vs symptoms
+- Creates child bug issues per root cause
+- Posts phase-based diagnostic reports
+
+**Issue Coordinator** (`.github/agents/issue-coordinator.agents.md`):
+- Generates GitOps-compliant resolution plans
+- Manages approval workflow
+- Submits token-optimized requests to coding agent
+- Validates deployments via Flux reconciliation
+- Implements circuit breaker (3 attempts → manual intervention)
+
+**Knowledge Base** (`.github/agents/knowledge-base.agents.md`):
+- Searches closed issues for similar problems
+- Extracts resolution patterns
+- Suggests known fixes with confidence scores
+- Accelerates troubleshooting for repeat issues
+
+#### Workflow Phases
+
+**Phase 1: Issue Creation**
+- Use structured templates capturing component, severity, symptoms, errors
+- Include recent changes and attempted fixes
+- Link to related issues if known
+
+**Phase 2: Knowledge Base Search**
+- Automatic search for similar past issues
+- If high-confidence match found (>80%), suggest known fix immediately
+- If no match, proceed to full diagnostics
+
+**Phase 3: Diagnostics**
+- Copilot runs commands via in-cluster runners (read-only access)
+- Collects Flux status, resource conditions, logs, events, configurations
+- Posts results as sequential comments (50k char limit per comment)
+- Uses collapsible sections for verbose output
+
+**Phase 4: Root Cause Analysis**
+- Analyzes diagnostic data to identify distinct root causes
+- Separates causes from symptoms and cascading failures
+- Creates one child bug issue per independent root cause
+- Updates parent issue with task list linking children
+
+**Phase 5: Resolution Planning**
+- Generates GitOps-compliant plans for each child issue
+- Specifies exact file changes, validation steps, rollback procedures
+- Posts consolidated review comment on parent issue
+- Awaits `/approve-plan` command
+
+**Phase 6: Implementation**
+- Submits token-optimized requests to coding agent
+- Coding agent creates PR with conventional commit messages
+- Tracks resolution attempts with labels (`resolution-attempt:1`, `resolution-attempt:2`, etc.)
+
+**Phase 7: Validation**
+- After PR merge, coordinator monitors Flux reconciliation (10-minute window)
+- Checks Kustomization/HelmRelease status, pod health, events
+- **Success**: Closes issue, triggers knowledge base update
+- **Failure**: Generates new plan (if < 3 attempts) or triggers circuit breaker
+
+#### Circuit Breaker System
+
+Prevents infinite retry loops:
+
+| Attempts | Status | Action |
+|----------|--------|--------|
+| 1 | First try | Submit to coding agent |
+| 2 | Retry | Adjust plan based on first failure |
+| 3 | Final attempt | Last automated try |
+| 3+ | **Circuit breaker triggered** | Manual intervention required, label: `circuit-breaker:triggered` |
+
+**Reset circuit breaker** after manual fix:
+```
+/reset-attempts
+Manually fixed [underlying issue]. Ready to retry.
+```
+
+#### Approval Commands
+
+| Command | Effect |
+|---------|--------|
+| `/approve-plan` | Approve all resolution plans in review |
+| `/reject` | Reject plans, request alternative approach |
+| `/reset-attempts` | Reset circuit breaker after manual intervention |
+| Comment with feedback | Request specific changes to plans |
+
+#### Token Optimization
+
+Coding agent requests are optimized for token efficiency:
+- **Inline critical context**: Full error message + stack trace (max 2000 chars)
+- **Reference full details**: Link to diagnostic reports for complete context
+- **Semantic completeness**: Include essential meaning, remove verbosity
+- **Target**: 1500-2000 tokens per request for best results
+
+#### Knowledge Base
+
+**Automatic Updates**:
+1. Issue closed with `status:resolved` label
+2. Workflow extracts root cause, resolution, and learnings
+3. PR created updating `.github/KNOWN_ISSUES.md`
+4. Auto-merged after validation
+5. Future searches benefit from documented pattern
+
+**Manual Search**:
+```bash
+# By component
+grep -A 20 "## Component: Flux CD" .github/KNOWN_ISSUES.md
+
+# By error message
+grep -i "error pattern" .github/KNOWN_ISSUES.md
+```
+
+#### Example Workflow
+
+```markdown
+1. User creates troubleshooting request: "LibreChat pods crashing"
+2. Knowledge base search finds similar MongoDB issue (#123)
+3. Suggests known fix: Delete and recreate PVC
+4. User tries fix → doesn't work (different root cause)
+5. Copilot runs full diagnostics
+6. Identifies root cause: Missing API key in sealed secret
+7. Creates child bug issue with details
+8. Generates resolution plan: Add sealed secret key
+9. User approves: /approve-plan
+10. Coding agent creates PR with fix
+11. PR merged → Flux reconciles
+12. Coordinator validates: Pods Running
+13. Issue closed → Knowledge base updated
+```
+
+#### Best Practices
+
+**Reporting Issues**:
+- ✅ Provide exact error messages
+- ✅ Note when problem started
+- ✅ List recent changes
+- ✅ Include attempted fixes
+- ❌ Don't be vague ("it's broken")
+- ❌ Don't report multiple unrelated issues in one
+
+**During Investigation**:
+- ✅ Review diagnostic reports carefully
+- ✅ Check if similar issues exist
+- ✅ Be patient (diagnostics take 2-5 minutes)
+- ❌ Don't make manual changes during investigation
+- ❌ Don't submit duplicate requests
+
+**Approving Plans**:
+- ✅ Read resolution plans completely
+- ✅ Verify changes match root cause
+- ✅ Consider impact and timing
+- ✅ Ask questions if unsure
+- ❌ Don't auto-approve without review
+- ❌ Don't approve changes you don't understand
+
+#### Troubleshooting Resources
+
+- **User Guide**: `.github/TROUBLESHOOTING.md` - Complete workflow examples
+- **Known Issues**: `.github/KNOWN_ISSUES.md` - Past resolutions by component
+- **Root Cause Analysis**: `.github/prompts/analyze-root-cause.prompt.md` - Analysis methodology
+- **Resolution Requests**: `.github/prompts/request-resolution.prompt.md` - Token optimization guide
+- **Issue Templates**: `.github/ISSUE_TEMPLATE/` - Structured reporting forms
+
 ### Support and Resources
 
 #### Quick Help

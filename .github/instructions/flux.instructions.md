@@ -172,6 +172,131 @@ flux reconcile kustomization apps
 - Use appropriate timeouts based on historical deployment times
 - Monitor `status.conditions` for detailed health information
 
+## Web-Based Troubleshooting
+
+### Issue-Based Diagnostic Workflow
+
+For cluster issues, use GitHub Issues with structured templates instead of manual debugging:
+
+1. **Create Troubleshooting Request**: https://github.com/alecsg77/elysium/issues/new/choose
+   - Select "🔍 Troubleshooting Request" template
+   - Fill in symptoms, component, impact level
+   - Include error messages and recent changes
+
+2. **Invoke Copilot Diagnostics**: In GitHub Copilot Chat on issue page
+   ```
+   @workspace #file:.github/agents/troubleshooter.agents.md
+   Please run comprehensive Flux diagnostics
+   ```
+
+3. **Review Diagnostic Phases**:
+   - **Health Check**: Flux controller status, Git sync, reconciliation state
+   - **Resource Status**: Kustomization/HelmRelease conditions and inventory
+   - **Logs**: Controller logs with error extraction
+   - **Events**: Timeline of Flux and Kubernetes events
+   - **Configuration**: Resource manifests and variable substitution
+
+4. **Root Cause Identification**: Copilot analyzes data and creates bug issues per root cause
+
+5. **Approve Resolution**: Review proposed fixes and approve with `/approve-plan`
+
+6. **Automated Implementation**: Coding agent creates PR, coordinator validates deployment
+
+### Common Flux Issue Patterns (from Knowledge Base)
+
+**HelmRelease Timeout**:
+- **Symptom**: `install retries exhausted`
+- **Root Cause**: Default timeout insufficient for large images
+- **Resolution**: Increase `spec.timeout` in HelmRelease
+- **Validation**: `flux get hr <name> -n <namespace>` shows Ready=True
+
+**Variable Substitution Failed**:
+- **Symptom**: `failed to substitute variables`
+- **Root Cause**: ConfigMap/Secret missing or key name mismatch
+- **Resolution**: Create missing ConfigMap in `clusters/kyrion/config-map.yaml`
+- **Validation**: `flux get kustomization <name>` shows Ready=True
+
+**Dependency Not Ready**:
+- **Symptom**: Kustomization waiting on `dependsOn`
+- **Root Cause**: Upstream Kustomization failed or still reconciling
+- **Resolution**: Fix upstream issue first, check dependency chain
+- **Validation**: All dependencies show Ready=True
+
+**GitRepository Sync Failed**:
+- **Symptom**: `failed to checkout` or old commit SHA
+- **Root Cause**: Network issue, SSH key problem, or branch doesn't exist
+- **Resolution**: Check SSH key, verify branch, test network connectivity
+- **Validation**: Recent commit SHA, Ready=True status
+
+### Diagnostic Commands Reference
+
+Quick commands for manual troubleshooting (when not using automated workflow):
+
+```bash
+# Overall Flux health
+flux check
+
+# View all Flux resources
+flux get all -A
+
+# Check specific resource type
+flux get kustomizations -A
+flux get hr -A
+flux get sources git -A
+flux get sources helm -A
+
+# Detailed status
+kubectl describe kustomization <name> -n flux-system
+kubectl describe helmrelease <name> -n <namespace>
+
+# Controller logs
+kubectl logs -n flux-system deploy/source-controller --tail=100
+kubectl logs -n flux-system deploy/kustomize-controller --tail=100
+kubectl logs -n flux-system deploy/helm-controller --tail=100
+
+# Force reconciliation
+flux reconcile source git flux-system
+flux reconcile kustomization <name>
+flux reconcile hr <name> -n <namespace>
+
+# View events
+flux events --for Kustomization/<name>
+kubectl get events -n flux-system --sort-by='.lastTimestamp'
+```
+
+### Integration with Circuit Breaker
+
+When using automated resolution:
+
+- **Attempt 1**: Initial fix based on root cause analysis
+- **Attempt 2**: Adjusted plan if first attempt fails validation
+- **Attempt 3**: Final automated attempt with refined approach
+- **Circuit Breaker**: After 3 failures, manual intervention required
+
+Reset with `/reset-attempts` after manual fixes.
+
+### Knowledge Base Search
+
+Before creating issues, search for known fixes:
+
+```bash
+# Search by component
+grep -A 20 "## Component: Flux CD" .github/KNOWN_ISSUES.md
+
+# Search by error
+grep -i "timeout" .github/KNOWN_ISSUES.md
+
+# Search by resource type
+grep -A 20 "HelmRelease" .github/KNOWN_ISSUES.md
+```
+
+Or use knowledge-base agent in Copilot Chat:
+
+```
+@workspace #file:.github/agents/knowledge-base.agents.md
+Search for issues with "HelmRelease timeout"
+```
+
 ## Best Practices
 - Keep Flux components up to date
 - Use separate Kustomizations for logical component groups

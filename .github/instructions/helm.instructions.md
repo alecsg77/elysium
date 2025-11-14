@@ -223,3 +223,54 @@ helm uninstall <name> -n <namespace>
 - **Configure retries**: `spec.install.remediation.retries: 3`
 - **Enable rollback**: `spec.upgrade.remediation.remediateLastFailure: true`
 - **Monitor proactively**: Set up alerts for failed HelmReleases
+
+## Web-Based Troubleshooting for HelmReleases
+
+For comprehensive HelmRelease diagnostics and automated resolution, use the GitHub Issues-based workflow:
+
+### Quick Start
+
+1. **Create Issue**: https://github.com/alecsg77/elysium/issues/new/choose
+   - Select "🐛 Bug Report" for known HelmRelease failures
+   - Provide HelmRelease name, namespace, error message from `kubectl describe hr`
+
+2. **Invoke Diagnostics**: In GitHub Copilot Chat on issue page
+   ```
+   @workspace #file:.github/agents/troubleshooter.agents.md
+   Please investigate this HelmRelease failure
+   ```
+
+3. **Automated Diagnostic Collection**:
+   - HelmRelease status conditions and inventory
+   - Helm controller logs filtered by namespace/release
+   - Chart source (HelmRepository) status
+   - Values from ConfigMaps/Secrets
+   - Deployed pod status and logs
+   - Kubernetes events timeline
+
+4. **Root Cause Analysis**: Copilot identifies distinct issues and creates bug per root cause
+
+5. **Approve Resolution**: Review proposed fixes (file changes, validation steps) and approve
+
+6. **Automated Implementation**: Coding agent creates PR, coordinator validates via Flux reconciliation
+
+### Common HelmRelease Patterns in Knowledge Base
+
+- **HelmRelease Timeout**: Increase spec.timeout, check pod startup
+- **Chart Not Found**: Verify HelmRepository status, chart name/version
+- **Values Validation Failed**: Template locally, check schema compatibility
+- **CRD Missing**: Install CRDs first, add dependency ordering
+- **Image Pull Error**: Verify registry access, image tag exists
+
+### Circuit Breaker Protection
+
+- Automatic retry with adjusted plans (up to 3 attempts)
+- Tracks attempts with `resolution-attempt:N` labels
+- Manual intervention after 3 failures
+- Reset with `/reset-attempts` after manual fixes
+
+### Additional Resources
+
+- **Troubleshooting Guide**: `.github/TROUBLESHOOTING.md`
+- **Known Issues Database**: `.github/KNOWN_ISSUES.md`
+- **Copilot Instructions**: `.github/copilot-instructions.md` - See "Web-Based Troubleshooting Workflow"

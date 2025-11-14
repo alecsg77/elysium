@@ -1,0 +1,176 @@
+name: 🐛 Bug Report
+description: Report a bug or issue in the Elysium cluster
+title: "[Bug]: "
+labels: ["bug", "status:investigating"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+        
+        Thanks for taking the time to report a bug! This information helps us diagnose and fix issues efficiently.
+        
+        **Note**: This template is for confirmed bugs. If you need help troubleshooting, use the "Troubleshooting Request" template instead.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Flux CD (GitOps)
+        - Kubernetes (Core)
+        - Helm (Charts)
+        - Kustomize (Overlays)
+        - Networking (Traefik/Tailscale)
+        - Storage (PVC/CSI)
+        - Monitoring (Prometheus/Grafana/Loki)
+        - Security (Sealed Secrets/Cert Manager)
+        - CI/CD (Actions Runner Controller)
+        - Application (Specific App)
+        - Infrastructure (Controllers/CRDs)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this issue?
+      options:
+        - Critical (Cluster down, data loss risk)
+        - High (Service unavailable, major functionality broken)
+        - Medium (Degraded performance, workaround available)
+        - Low (Minor issue, cosmetic problem)
+    validations:
+      required: true
+
+  - type: input
+    id: namespace
+    attributes:
+      label: Namespace
+      description: Which namespace is affected?
+      placeholder: "e.g., flux-system, ai, arkham, monitoring"
+    validations:
+      required: false
+
+  - type: input
+    id: resource_name
+    attributes:
+      label: Resource Name
+      description: Name of the affected Kubernetes resource
+      placeholder: "e.g., HelmRelease/librechat, Kustomization/apps, Pod/ollama-xyz"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of the bug
+      placeholder: What is happening that shouldn't be happening?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error_messages
+    attributes:
+      label: Error Messages
+      description: Exact error messages from logs, events, or status conditions
+      placeholder: |
+        Paste error messages here. Include:
+        - kubectl describe output
+        - Pod logs
+        - Flux events
+        - Error conditions from resource status
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can this bug be reproduced?
+      placeholder: |
+        1. Deploy resource X
+        2. Wait for reconciliation
+        3. Observe error Y
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: Describe the expected correct behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: What is actually happening?
+      placeholder: Describe what's actually happening instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: recent_changes
+    attributes:
+      label: Recent Changes
+      description: Were there any recent changes before this issue started?
+      placeholder: |
+        - Git commits
+        - Configuration changes
+        - Cluster upgrades
+        - Application deployments
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Relevant environment information
+      placeholder: |
+        - Kubernetes version:
+        - Flux version:
+        - Helm chart version:
+        - Node information:
+      render: yaml
+    validations:
+      required: false
+
+  - type: input
+    id: related_issues
+    attributes:
+      label: Related Issues
+      description: Links to related issues or parent investigation
+      placeholder: "#123, #456"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or information
+      placeholder: Add any other relevant information here
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: diagnostics_attached
+    attributes:
+      label: Diagnostics Checklist
+      description: Have you attached relevant diagnostic information?
+      options:
+        - label: Resource status (kubectl get/describe output)
+        - label: Error logs (pod logs, controller logs)
+        - label: Recent events (kubectl get events)
+        - label: Resource configuration (YAML manifests)
+        - label: Flux reconciliation status

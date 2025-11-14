@@ -1,0 +1,289 @@
+name: Update Knowledge Base
+
+on:
+  issues:
+    types: [closed, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to extract learnings from'
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  update-knowledge-base:
+    runs-on: copilot-runner-set
+    # Only run when issue is closed with status:resolved label
+    if: |
+      (github.event_name == 'issues' && github.event.action == 'closed' && contains(github.event.issue.labels.*.name, 'status:resolved')) ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'status:resolved' && github.event.issue.state == 'closed') ||
+      github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get issue details
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER="${{ github.event.issue.number || inputs.issue_number }}"
+          echo "issue_number=${ISSUE_NUMBER}" >> $GITHUB_OUTPUT
+          
+          # Fetch issue details
+          gh issue view ${ISSUE_NUMBER} --json title,body,labels,comments,closedAt \
+            --jq '{
+              title: .title,
+              body: .body,
+              labels: [.labels[].name],
+              comments: [.comments[] | {author: .author.login, body: .body, createdAt: .createdAt}],
+              closedAt: .closedAt
+            }' > /tmp/issue_data.json
+          
+          echo "Issue data collected"
+          cat /tmp/issue_data.json
+
+      - name: Extract knowledge base entry
+        id: extract
+        run: |
+          # Parse issue data with Python for complex extraction
+          python3 << 'EOF' > /tmp/kb_entry.md
+          import json
+          import re
+          from datetime import datetime
+          
+          with open('/tmp/issue_data.json', 'r') as f:
+              issue = json.load(f)
+          
+          # Extract component from labels
+          components = [l for l in issue['labels'] if l.startswith('component:')]
+          component = components[0].replace('component:', '').title() if components else 'Other'
+          
+          # Extract root cause from labels
+          root_causes = [l for l in issue['labels'] if l.startswith('root-cause:')]
+          root_cause_label = root_causes[0].replace('root-cause:', '').replace('-', ' ').title() if root_causes else 'Unknown'
+          
+          # Extract error patterns from body and comments
+          def extract_code_blocks(text):
+              return re.findall(r'```(?:\w+)?\n(.*?)\n```', text, re.DOTALL)
+          
+          error_blocks = []
+          if issue['body']:
+              error_blocks.extend(extract_code_blocks(issue['body']))
+          
+          # Look for resolution in comments
+          resolution = ""
+          root_cause_analysis = ""
+          pr_link = ""
+          
+          for comment in issue['comments']:
+              body = comment['body']
+              
+              # Look for root cause analysis
+              if '## 🎯 Root Cause Analysis' in body or '## Root Cause' in body:
+                  root_cause_analysis = body
+              
+              # Look for resolution confirmation
+              if '## ✅ Resolution' in body or 'Resolution Validated' in body:
+                  resolution = body
+              
+              # Extract PR links
+              pr_matches = re.findall(r'#(\d+)', body)
+              if pr_matches and 'PR' in body.upper():
+                  pr_link = f"#{pr_matches[0]}"
+          
+          # Extract key error message (first code block or error mention)
+          key_error = ""
+          for block in error_blocks[:3]:  # First 3 code blocks
+              if any(word in block.lower() for word in ['error', 'failed', 'timeout', 'crash']):
+                  key_error = block.strip()[:500]  # Limit to 500 chars
+                  break
+          
+          # Generate knowledge base entry
+          title = issue['title'].replace('[Bug]: ', '').replace('[Troubleshoot]: ', '')
+          closed_date = datetime.fromisoformat(issue['closedAt'].replace('Z', '+00:00')).strftime('%Y-%m-%d')
+          
+          # Extract resolution summary from resolution comment
+          resolution_summary = "See issue for full resolution details"
+          if resolution:
+              lines = resolution.split('\n')
+              for i, line in enumerate(lines):
+                  if 'resolution:' in line.lower() and i + 1 < len(lines):
+                      resolution_summary = lines[i + 1].strip('- ').strip()
+                      break
+          
+          # Build entry
+          entry = f"""
+          ### Issue: {title}
+          
+          **Symptoms**: 
+          {key_error if key_error else 'See issue for symptoms'}
+          
+          **Root Cause**: {root_cause_label}
+          {root_cause_analysis[:300] if root_cause_analysis else ''}
+          
+          **Resolution**: {resolution_summary}
+          
+          **Related Issues**: #{issue_number}
+          {f"**PR**: {pr_link}" if pr_link else ""}
+          
+          **Last Seen**: {closed_date}
+          
+          **Labels**: {', '.join([l for l in issue['labels'] if not l.startswith('status:')])}
+          
+          ---
+          """
+          
+          print(entry)
+          
+          # Output component for workflow
+          with open('/tmp/component.txt', 'w') as f:
+              f.write(component)
+          EOF
+          
+          COMPONENT=$(cat /tmp/component.txt)
+          echo "component=${COMPONENT}" >> $GITHUB_OUTPUT
+          echo "entry_file=/tmp/kb_entry.md" >> $GITHUB_OUTPUT
+
+      - name: Update KNOWN_ISSUES.md
+        id: update
+        run: |
+          COMPONENT="${{ steps.extract.outputs.component }}"
+          ENTRY_FILE="${{ steps.extract.outputs.entry_file }}"
+          KB_FILE=".github/KNOWN_ISSUES.md"
+          
+          # Create file if doesn't exist
+          if [ ! -f "${KB_FILE}" ]; then
+            cat > "${KB_FILE}" << 'KBEOF'
+          # Known Issues and Resolutions
+          
+          This knowledge base is automatically updated from resolved GitHub Issues. It provides quick reference for common cluster problems and their solutions.
+          
+          **Last Updated**: $(date +%Y-%m-%d)
+          
+          ## How to Use
+          
+          1. Search for your issue by component or error message
+          2. Check the symptoms and root cause
+          3. Try the documented resolution
+          4. If resolution doesn't work, create a new troubleshooting request
+          
+          ---
+          KBEOF
+          fi
+          
+          # Check if component section exists
+          if ! grep -q "## Component: ${COMPONENT}" "${KB_FILE}"; then
+            echo "" >> "${KB_FILE}"
+            echo "## Component: ${COMPONENT}" >> "${KB_FILE}"
+            echo "" >> "${KB_FILE}"
+          fi
+          
+          # Insert entry under component section
+          # Find line number of component section
+          SECTION_LINE=$(grep -n "## Component: ${COMPONENT}" "${KB_FILE}" | cut -d: -f1)
+          NEXT_SECTION_LINE=$(tail -n +$((SECTION_LINE + 1)) "${KB_FILE}" | grep -n "## Component:" | head -1 | cut -d: -f1)
+          
+          if [ -n "${NEXT_SECTION_LINE}" ]; then
+            # Insert before next section
+            INSERT_LINE=$((SECTION_LINE + NEXT_SECTION_LINE))
+          else
+            # Append at end
+            INSERT_LINE=$(wc -l < "${KB_FILE}")
+            INSERT_LINE=$((INSERT_LINE + 1))
+          fi
+          
+          # Create temp file with new entry inserted
+          head -n $((SECTION_LINE)) "${KB_FILE}" > /tmp/kb_temp.md
+          cat "${ENTRY_FILE}" >> /tmp/kb_temp.md
+          tail -n +$((SECTION_LINE + 1)) "${KB_FILE}" >> /tmp/kb_temp.md
+          
+          # Replace original file
+          mv /tmp/kb_temp.md "${KB_FILE}"
+          
+          # Update last updated date
+          sed -i "s/\*\*Last Updated\*\*: .*/\*\*Last Updated\*\*: $(date +%Y-%m-%d)/" "${KB_FILE}"
+          
+          echo "updated=true" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.update.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER="${{ steps.issue.outputs.issue_number }}"
+          COMPONENT="${{ steps.extract.outputs.component }}"
+          BRANCH_NAME="kb-update-issue-${ISSUE_NUMBER}"
+          
+          # Create branch
+          git checkout -b "${BRANCH_NAME}"
+          
+          # Stage changes
+          git add .github/KNOWN_ISSUES.md
+          
+          # Commit with conventional commit format
+          git commit -m "docs: update knowledge base from issue #${ISSUE_NUMBER}
+
+          Add resolved issue to ${COMPONENT} section of knowledge base.
+          
+          Closes #${ISSUE_NUMBER}"
+          
+          # Push branch
+          git push origin "${BRANCH_NAME}"
+          
+          # Create PR
+          gh pr create \
+            --title "docs: Update knowledge base from issue #${ISSUE_NUMBER}" \
+            --body "## Knowledge Base Update
+
+          Automatically extracted learnings from resolved issue #${ISSUE_NUMBER}.
+
+          ### Component: ${COMPONENT}
+
+          ### Changes
+          - Added issue resolution to \`.github/KNOWN_ISSUES.md\`
+          - Updated last modified date
+
+          ### Review
+          Please verify the extracted information is accurate and complete.
+
+          ---
+
+          🤖 This PR was automatically created by the knowledge base update workflow." \
+            --label "documentation" \
+            --label "automated" \
+            --base main \
+            --head "${BRANCH_NAME}"
+          
+          # Auto-merge if all checks pass
+          PR_NUMBER=$(gh pr view "${BRANCH_NAME}" --json number -q .number)
+          gh pr merge "${PR_NUMBER}" --auto --squash
+
+      - name: Post comment on issue
+        if: steps.update.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER="${{ steps.issue.outputs.issue_number }}"
+          
+          gh issue comment ${ISSUE_NUMBER} --body "## 📚 Knowledge Base Updated
+
+          This issue's resolution has been added to the knowledge base.
+
+          **Location**: \`.github/KNOWN_ISSUES.md\` (Component: ${{ steps.extract.outputs.component }})
+
+          Future similar issues will benefit from this documentation. Thank you for contributing to the knowledge base! 🎉"

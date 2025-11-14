@@ -1,0 +1,176 @@
+name: 🔍 Troubleshooting Request
+description: Request investigation of a cluster issue or unexpected behavior
+title: "[Troubleshoot]: "
+labels: ["troubleshooting", "status:investigating"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Troubleshooting Request
+        
+        Use this template to request help investigating an issue when the root cause is unclear.
+        
+        **Workflow**:
+        1. Submit this request with symptom details
+        2. Use GitHub Copilot Chat to analyze and diagnose
+        3. Agent will create child bug issues for identified root causes
+        4. Review and approve resolution plans
+        5. GitHub Coding Agent implements fixes
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which area is experiencing issues?
+      options:
+        - Flux CD (GitOps)
+        - Kubernetes (Core)
+        - Helm (Charts)
+        - Networking (Traefik/Tailscale/Ingress)
+        - Storage (PVC/CSI/Volumes)
+        - Monitoring (Prometheus/Grafana/Loki/Tempo)
+        - Security (Sealed Secrets/Certificates)
+        - CI/CD (Actions Runners)
+        - Application (Specific App)
+        - Infrastructure (Controllers/Operators)
+        - Multiple Components
+        - Unknown/Not Sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact Level
+      description: How is this affecting operations?
+      options:
+        - Critical (Production down, blocking operations)
+        - High (Major functionality unavailable)
+        - Medium (Degraded performance, partial functionality)
+        - Low (Minor issue, minimal impact)
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptoms
+    attributes:
+      label: Symptoms
+      description: What are you observing? What's not working as expected?
+      placeholder: |
+        Describe what you're seeing:
+        - Services not responding
+        - Pods restarting
+        - Errors in logs
+        - Performance issues
+        - Configuration not applying
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_services
+    attributes:
+      label: Affected Services/Resources
+      description: Which services, pods, or resources are impacted?
+      placeholder: |
+        List affected resources:
+        - Namespaces: ai, arkham
+        - HelmReleases: librechat, ollama
+        - Pods: librechat-mongodb-xyz
+        - Services: specific service names
+    validations:
+      required: false
+
+  - type: textarea
+    id: when_started
+    attributes:
+      label: When Did This Start?
+      description: When did you first notice this issue?
+      placeholder: |
+        - Specific date/time if known
+        - After specific deployment or change
+        - Gradually over time
+        - Unclear/unknown
+    validations:
+      required: false
+
+  - type: textarea
+    id: recent_changes
+    attributes:
+      label: Recent Changes
+      description: Any changes made before the issue appeared?
+      placeholder: |
+        - Git commits (include commit SHAs if known)
+        - Manual kubectl commands
+        - Cluster upgrades
+        - Configuration changes
+        - Nothing changed (issue appeared spontaneously)
+    validations:
+      required: false
+
+  - type: textarea
+    id: attempted_fixes
+    attributes:
+      label: Attempted Fixes
+      description: What have you tried so far?
+      placeholder: |
+        - Flux reconciliation
+        - Pod restarts
+        - Configuration rollbacks
+        - Nothing yet
+    validations:
+      required: false
+
+  - type: textarea
+    id: error_snippets
+    attributes:
+      label: Error Messages (if any)
+      description: Any error messages you've observed?
+      placeholder: |
+        Paste relevant error messages here.
+        Don't worry if incomplete - diagnostics will gather full details.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should be happening?
+      placeholder: Describe the correct/expected state
+    validations:
+      required: true
+
+  - type: input
+    id: related_issues
+    attributes:
+      label: Related Issues
+      description: Links to similar issues or related investigations
+      placeholder: "#123, #456"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Pre-Investigation Checklist
+      description: Basic checks before requesting troubleshooting
+      options:
+        - label: Checked recent Git commits for related changes
+        - label: Reviewed pod/controller logs for obvious errors
+        - label: Verified Flux is reconciling (flux get all -A)
+        - label: Checked for similar past issues
+        - label: Issue persists after waiting 5-10 minutes
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+      placeholder: |
+        - Business impact
+        - Urgency/deadlines
+        - Constraints or preferences for resolution
+        - Relevant documentation or references
+    validations:
+      required: false
