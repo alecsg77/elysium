@@ -1245,9 +1245,14 @@ GitHub Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Co
 
 #### Agents
 
+**Agents are flexible and adapt to available tools**:
+- In VS Code/Codespaces: Can run kubectl, flux, and Git commands directly
+- In GitHub Web UI: Provides commands for user to run and paste results
+- All environments: Uses GitHub Issues for tracking and coordination
+
 **Troubleshooter** (`.github/agents/troubleshooter.agents.md`):
 - Searches knowledge base for known fixes
-- Runs comprehensive diagnostics (Flux, Kubernetes, apps)
+- Runs comprehensive diagnostics (adapts to available tools)
 - Identifies distinct root causes vs symptoms
 - Creates child bug issues per root cause
 - Posts phase-based diagnostic reports
@@ -1278,7 +1283,7 @@ GitHub Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Co
 - If no match, proceed to full diagnostics
 
 **Phase 3: Diagnostics**
-- Copilot runs commands via in-cluster runners (read-only access)
+- Agent adapts to available tools (direct kubectl access vs guided user commands)
 - Collects Flux status, resource conditions, logs, events, configurations
 - Posts results as sequential comments (50k char limit per comment)
 - Uses collapsible sections for verbose output
