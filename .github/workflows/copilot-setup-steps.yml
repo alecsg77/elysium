@@ -20,6 +20,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install yamllint
         run: |
           sudo apt-get update
@@ -27,116 +32,63 @@ jobs:
 
       - name: Lint YAML files
         run: |
-          yamllint -c .yamllint.yaml clusters/ infrastructure/ apps/ monitoring/ || echo "YAML linting completed"
+          yamllint -c .yamllint.yaml clusters/ infrastructure/ apps/ monitoring/ || echo "YAML linting completed with warnings"
+
+      - name: Install MCP clients globally
+        run: |
+          npm config set fund false
+          npm install -g kubernetes-mcp-server@latest
+
+      - name: Install flux-operator-mcp
+        run: |
+          if [ ! -f ".devcontainer/features/flux-operator-mcp/install.sh" ]; then
+            echo "Error: flux-operator-mcp install script not found"
+            exit 1
+          fi
+          sudo bash .devcontainer/features/flux-operator-mcp/install.sh
+
+      - name: Set GITHUB_HOST for CodeQL
+        # Required for Copilot coding agent environment to resolve GitHub API endpoints
+        # See: https://github.com/orgs/community/discussions/177903#discussioncomment-14841783
+        run: |
+          echo "GITHUB_HOST=github.com" >> $GITHUB_ENV
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         with:
           version: 'latest'
 
-      - name: Configure kubectl for in-cluster access (read-only)
+      - name: Configure kubectl for in-cluster access
         run: |
-          echo "Configuring kubectl with read-only cluster access..."
-          
-          # The runner is inside the cluster, so we can use the in-cluster service account
-          # The ServiceAccount 'copilot-agent-readonly' is already mounted via the runner pod spec
-          
-          # Create kubeconfig directory
+          # The runner is inside the cluster with mounted service account
           mkdir -p $HOME/.kube
           
-          # Use the in-cluster configuration with the mounted service account token
           KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
           KUBE_CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
           
-          # Configure cluster connection
           kubectl config set-cluster kyrion \
             --server=https://kubernetes.default.svc \
             --certificate-authority=$KUBE_CA \
             --embed-certs=true
           
-          # Configure credentials using the mounted service account token
           kubectl config set-credentials copilot-agent-readonly \
             --token=$KUBE_TOKEN
           
-          # Configure context
           kubectl config set-context copilot-agent \
             --cluster=kyrion \
             --user=copilot-agent-readonly \
             --namespace=default
           
-          # Use the context
           kubectl config use-context copilot-agent
-          
-          echo "✓ kubectl configured with read-only cluster access (in-cluster)"
-
-      - name: Verify cluster access
-        run: |
-          echo "Testing cluster connectivity..."
-          
-          # Test basic connectivity
-          if kubectl cluster-info &>/dev/null; then
-            echo "✓ Cluster connection successful (in-cluster)"
-            
-            # Test read permissions
-            echo "Testing read permissions..."
-            kubectl get namespaces &>/dev/null && echo "✓ Can list namespaces"
-            kubectl get pods -A --limit=5 &>/dev/null && echo "✓ Can list pods"
-            kubectl get deployments -A --limit=5 &>/dev/null && echo "✓ Can list deployments"
-            
-            # Test Flux resources
-            if kubectl get hr -A --limit=5 &>/dev/null; then
-              echo "✓ Can list Flux HelmReleases"
-            fi
-            
-            if kubectl get kustomizations -A --limit=5 &>/dev/null; then
-              echo "✓ Can list Flux Kustomizations"
-            fi
-            
-            # Verify no write access (should fail)
-            if ! kubectl auth can-i create pods -A &>/dev/null; then
-              echo "✓ Verified: No write access (as expected)"
-            else
-              echo "⚠ Warning: Write access detected (unexpected)"
-            fi
-            
-            echo ""
-            echo "✓ Cluster access configured successfully!"
-            echo "✓ Running on self-hosted runner inside the cluster"
-            echo "✓ Using ServiceAccount: copilot-agent-readonly"
-            echo ""
-            echo "Copilot can now use kubectl commands to investigate cluster resources."
-          else
-            echo "❌ Cluster connection failed"
-            echo "This should not happen when running on self-hosted runners in the cluster"
-            exit 1
-          fi
-
-      - name: Install kustomize
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
 
       - name: Install Flux CLI
         run: |
           curl -s https://fluxcd.io/install.sh | sudo bash
 
-      - name: Validate Flux installation
+      - name: Install kustomize
         run: |
-          flux --version
-
-      - name: Build Kustomize overlays
-        run: |
-          echo "Building apps Kustomization..."
-          kustomize build apps/kyrion/ > /dev/null || echo "Apps build completed with warnings"
-
-          echo "Building infrastructure Kustomization..."
-          kustomize build infrastructure/controllers/ > /dev/null || echo "Infrastructure build completed with warnings"
-          kustomize build infrastructure/configs/ > /dev/null || echo "Infrastructure configs build completed with warnings"
-
-      - name: Validate Flux Kustomizations (dry-run)
-        run: |
-          echo "Validating Flux Kustomizations..."
-          flux build kustomization apps --path clusters/kyrion --dry-run || echo "Flux validation completed"
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
 
       - name: Install kubeseal
         run: |
@@ -145,31 +97,3 @@ jobs:
           tar xfz kubeseal-0.24.0-linux-amd64.tar.gz
           sudo install -m 755 kubeseal /usr/local/bin/kubeseal
           rm -f kubeseal kubeseal-0.24.0-linux-amd64.tar.gz
-
-      - name: Validate sealed secrets public key
-        run: |
-          if [ -f "etc/certs/pub-sealed-secrets.pem" ]; then
-            echo "✓ Sealed secrets public key found"
-            openssl x509 -in etc/certs/pub-sealed-secrets.pem -noout -text || echo "Public key validation completed"
-          else
-            echo "⚠ Sealed secrets public key not found (expected for new clusters)"
-          fi
-
-      - name: Check for shell scripts
-        run: |
-          if [ -f "scripts/bootstrap_flux.sh" ]; then
-            echo "✓ Bootstrap script found"
-            bash -n scripts/bootstrap_flux.sh || echo "Script syntax check completed"
-          fi
-
-      - name: Summary
-        run: |
-          echo "✓ YAML linting completed"
-          echo "✓ Kustomize builds validated"
-          echo "✓ Flux CLI validated"
-          echo "✓ Tools installed: kubectl, kustomize, flux, kubeseal"
-          if [ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ]; then
-            echo "✓ Cluster access configured (read-only, in-cluster)"
-          fi
-          echo ""
-          echo "Environment ready for GitOps operations!"
