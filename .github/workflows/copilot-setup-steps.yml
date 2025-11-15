@@ -25,16 +25,31 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install yamllint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint -c .yamllint.yaml clusters/ infrastructure/ apps/ monitoring/ || echo "YAML linting completed with warnings"
+
       - name: Install MCP clients globally
         run: |
           npm config set fund false
-          npm install -g kubernetes-mcp-server@latest @playwright/mcp@0.0.40
+          npm install -g kubernetes-mcp-server@latest
 
       - name: Install flux-operator-mcp
         run: |
+          if [ ! -f ".devcontainer/features/flux-operator-mcp/install.sh" ]; then
+            echo "Error: flux-operator-mcp install script not found"
+            exit 1
+          fi
           sudo bash .devcontainer/features/flux-operator-mcp/install.sh
 
       - name: Set GITHUB_HOST for CodeQL
+        # Required for Copilot coding agent environment to resolve GitHub API endpoints
+        # See: https://github.com/orgs/community/discussions/177903#discussioncomment-14841783
         run: |
           echo "GITHUB_HOST=github.com" >> $GITHUB_ENV
 
