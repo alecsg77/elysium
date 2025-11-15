@@ -1227,11 +1227,18 @@ GitHub Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Co
    - Select template: 🔍 Troubleshooting Request or 🐛 Bug Report
    - Fill out structured form with symptoms and context
 
-2. **Invoke Copilot**: In GitHub Copilot Chat on issue page
-   ```
-   #file:.github/agents/troubleshooter.agents.md
-   Please investigate this issue and run diagnostics
-   ```
+2. **Invoke Copilot**: Choose your method:
+   
+  **Agent Session (Full Automation)**:
+  - Click "Agent session" on issue page
+  - Select `troubleshooter` agent
+  - Prompt: `Please investigate this issue https://github.com/alecsg77/elysium/issues/[N] and run diagnostics`
+  - ✅ Can create PR automatically
+   
+  **Copilot Chat (Advisory)**:
+  - Open Copilot Chat on issue page
+  - Prompt: `@alecsg77/elysium/files/.github/agents/troubleshooter.agents.md Please investigate this issue and run diagnostics`
+  - ✅ Provides detailed analysis and recommendations
 
 3. **Review Analysis**: Copilot posts diagnostic reports in phases:
    - Health Check → Resource Status → Logs → Events → Configuration → Root Causes

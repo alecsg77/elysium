@@ -111,31 +111,49 @@ Best for: "I know what's broken and have error details"
 
 After issue creation, invoke troubleshooter:
 
-#### Method 1: GitHub Copilot Chat (Recommended)
+#### Method 1: Agent Session (Most Automated)
+
+For full automation including PR creation:
+
+1. Go to the issue page
+2. Click "Agent session" button (or use Copilot dropdown)
+3. Select `troubleshooter` agent
+4. Provide prompt:
+   ```
+   Please investigate this issue https://github.com/alecsg77/elysium/issues/[number] and run diagnostics
+   ```
+
+**Benefits**:
+- ✅ Full automation (investigation → PR creation)
+- ✅ Can trigger coding agent for fixes
+- ✅ More powerful tool access
+
+#### Method 2: GitHub Copilot Chat (Advisory Mode)
+
+For analysis and recommendations:
 
 1. Open Copilot Chat on the issue page
 2. Reference the troubleshooter agent:
    ```
-   #file:.github/agents/troubleshooter.agents.md
+   @[owner]/[repo]/files/.github/agents/troubleshooter.agents.md
    
-   Please investigate issue #[number] and provide comprehensive diagnostics
+   Please investigate this issue and run diagnostics
+   ```
+   
+   Example:
+   ```
+   @alecsg77/elysium/files/.github/agents/troubleshooter.agents.md
+   Please investigate this issue and run diagnostics
    ```
 
-3. Copilot will:
-   - Search knowledge base first
-   - If no known fix, run full diagnostics
-   - Post results in multiple comments (organized by phase)
-
-#### Method 2: Manual Comment (Alternative)
-
-Comment on the issue:
-```
-@copilot Please run diagnostics using the troubleshooter agent
-```
+**Benefits**:
+- ✅ Provides detailed analysis
+- ✅ Suggests solutions with trade-offs
+- ⚠️ Requires manual implementation or separate agent session for PR
 
 #### What to Expect
 
-Copilot posts diagnostic results as **sequential comments**:
+Copilot posts diagnostic results as **sequential comments** or **inline analysis**:
 
 1. **🏥 Health Check Results**
    - Flux controller status
@@ -590,6 +608,55 @@ This is urgent and low-risk. Please submit to coding agent immediately after gen
 ```
 
 ⚠️ Use sparingly - you lose review opportunity.
+
+## Real-World Example: Issue #4
+
+### Problem
+Coder HelmRelease failing with "context deadline exceeded" error.
+
+### Investigation
+**Agent Used**: Troubleshooter via Agent Session
+
+**Invocation**:
+```
+Please investigate this issue https://github.com/alecsg77/elysium/issues/4 and run diagnostics
+```
+
+### Root Cause Discovery
+Agent identified the **real** cause vs misleading symptom:
+- ❌ **Symptom**: "context deadline exceeded" (timeout error)
+- ✅ **Root Cause**: Node memory exhaustion during rolling update
+  - Node has 32Gi total, 74% used (23.5Gi)
+  - Coder pod needs 4Gi × 2 pods during rolling update = 8Gi
+  - Only ~9Gi available
+  - New pod stuck Pending: "Insufficient memory"
+
+### Solution Implemented
+**PR #5**: Changed deployment strategy from RollingUpdate to Recreate
+
+**Changes**:
+```yaml
+# apps/base/coder/release.yaml
+version: 2.28.x          # Pin to prevent unexpected upgrades
+timeout: 10m             # Increase from 5m
+
+# apps/kyrion/coder-values.yaml
+deploymentStrategy:
+  type: Recreate         # Eliminates memory spike
+```
+
+**Trade-off**: Brief downtime (~30-60s) during upgrades - acceptable for dev environment
+
+### Key Learnings
+1. **Agent sessions are more powerful** - Can trigger coding agent automatically
+2. **Root cause ≠ error message** - Agent dug deeper to find real issue
+3. **Resource constraints require strategy** - Single-node clusters need Recreate strategy
+4. **Documentation matters** - Agent created `INVESTIGATION_ISSUE_4.md` with full analysis
+
+### Outcome
+✅ PR created automatically  
+✅ Fix correctly implemented  
+✅ Issue resolved  
 
 ## Workflow Diagram
 
