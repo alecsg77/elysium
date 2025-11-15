@@ -20,6 +20,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install MCP clients globally
+        run: |
+          npm config set fund false
+          npm install -g kubernetes-mcp-server@latest @playwright/mcp@0.0.40
+          echo "✓ MCP clients installed globally"
+
+      - name: Ensure flux-operator-mcp exists
+        run: |
+          if [ -x /usr/local/bin/flux-operator-mcp ]; then
+            echo "✓ flux-operator-mcp found"
+          else
+            echo "⚠ flux-operator-mcp not found at /usr/local/bin/flux-operator-mcp"
+            echo "To auto-install, replace the placeholder URL below with the official binary source and uncomment the curl command."
+            # curl -Lo /usr/local/bin/flux-operator-mcp https://example.com/path/to/flux-operator-mcp && chmod +x /usr/local/bin/flux-operator-mcp
+            exit 1
+          fi
+
+      - name: Set GITHUB_HOST for CodeQL
+        run: |
+          echo "GITHUB_HOST=github.com" >> $GITHUB_ENV
+          echo "✓ GITHUB_HOST environment variable set"
+
       - name: Install yamllint
         run: |
           sudo apt-get update
