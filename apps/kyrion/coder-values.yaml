@@ -4,8 +4,11 @@ metadata:
   name: coder
   namespace: coder
 spec:
+  timeout: 10m
   values:
     coder:
+      deploymentStrategy:
+        type: Recreate
       service:
         type: ClusterIP
       ingress:
