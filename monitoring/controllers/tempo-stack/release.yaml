@@ -14,3 +14,12 @@ spec:
         kind: HelmRepository
         name: grafana-charts
       interval: 60m
+  values:
+    tempo:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi

@@ -49,7 +49,10 @@ spec:
     prometheus:
       prometheusSpec:
         externalUrl: https://prometheus.${ts_net}
-        retention: 30d
+        retention: 15d
+        walCompression: true
+        storage.tsdb.max_block_duration: 4h
+        storage.tsdb.min_block_duration: 2h
         storageSpec:
           volumeClaimTemplate:
             spec:
@@ -60,8 +63,11 @@ spec:
                   storage: 50Gi
         resources:
           requests:
-            cpu: 200m
-            memory: 200Mi
+            cpu: 250m
+            memory: 2Gi
+          limits:
+            cpu: 1
+            memory: 3Gi
         podMonitorSelectorNilUsesHelmValues: false
         serviceMonitorSelectorNilUsesHelmValues: false
       ingress:
