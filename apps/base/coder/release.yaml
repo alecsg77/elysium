@@ -36,7 +36,9 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: coder-v2
+      version: 2.28.x
   interval: 12h
+  timeout: 10m
   targetNamespace: coder
   values:
     coder:
