@@ -405,7 +405,7 @@ spec:
 - **Variable not substituted**: Verify ConfigMap/Secret exists and key name matches
 - **Permission denied**: Check RBAC for service account
 
-> **Tip**: Use `#file:manage-secrets.prompt.md` for guided secret creation
+> **Tip**: Use `prompts/manage-secrets.prompt.md` for a guided secret creation flow
 
 #### Sealed Secrets Key Backup and Recovery
 
@@ -455,10 +455,40 @@ kubectl create secret tls sealed-secrets-new-key \
 - **Document key custodians** who have access to backups
 - **Use separate keys per cluster** in multi-cluster environments
 
+### Secure Troubleshooting Workflow
+
+All contributors and agents must treat troubleshooting artifacts as sensitive until proven otherwise.
+
+**Before sharing diagnostics**:
+- Limit pasted logs to the exact lines that demonstrate the failure. Summarize the rest and reference where the agent can pull the full output.
+- Replace secrets, hostnames, file paths, persistent volume IDs, and IP addresses with meaningful placeholders (for example, `[REDACTED_TOKEN]` or `<AI_NAMESPACE_NODE_IP>`).
+- Never post `kubectl describe secret`, kubeconfig files, credential JSON, or any base64-decoded Secret data. Instead, state which Secret is missing or invalid.
+- Note every redaction directly in the comment so future responders understand gaps without reintroducing sensitive data.
+- Ask for credential rotation immediately if you suspect something already leaked.
+
+**Mandatory manual scan**: Run a quick regex scan over any diagnostic directory before pasting content. Redact matches and rerun until the scan is clean.
+
+```bash
+# From repo root, scan common log folders for high-risk terms
+rg -n --no-heading -e 'password|secret|token|apikey|bearer|session|private key' diagnostics/ logs/ tmp/ 2>/dev/null
+
+# Detect stray key or certificate blocks
+rg -n --no-heading -e 'BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|BEGIN CERTIFICATE' diagnostics/ logs/ tmp/ 2>/dev/null
+
+# Portable alternative when ripgrep is unavailable
+grep -RIn --color=never -E 'password|secret|token|apikey|bearer' diagnostics/ logs/ tmp/
+```
+
+**Post-incident review**:
+1. Re-run the scans above on any new evidence gathered during the fix and scrub lingering secrets from issues or PRs.
+2. Verify the merged PR diff contains only intentional configuration changes—no debug dumps or sensitive literals.
+3. Rotate any credentials that might have been exposed and document the rotation in the relevant issue or knowledge base entry.
+4. If you discover a leak after the fact, open a dedicated security issue to coordinate clean-up (log purges, Git history rewrites, access revocations).
+
 ### Development Workflows
 
 #### Creating/Modifying Apps
-1. **Plan**: Use planner chat mode or `#file:deploy-app.prompt.md`
+1. **Plan**: Use planner chat mode or open `prompts/deploy-app.prompt.md`
 2. **Create base**: Add configuration in `apps/base/<app>/`
    - `namespace.yaml` - Namespace with labels
    - `release.yaml` or individual YAML files
@@ -468,7 +498,7 @@ kubectl create secret tls sealed-secrets-new-key \
 4. **Create overlay**: Add environment patches in `apps/kyrion/` if needed
 5. **Commit**: Push to Git - Flux auto-deploys within 5 minutes
 6. **Verify**: Check status with `flux get hr -A` or `kubectl get pods -n <namespace>`
-7. **Document**: Create README using `#file:generate-docs.prompt.md`
+7. **Document**: Create README using `prompts/generate-docs.prompt.md`
 
 #### Managing Secrets
 **Quick Reference**:
@@ -497,7 +527,7 @@ kubectl create secret docker-registry regcred \
   kubeseal --cert etc/certs/pub-sealed-secrets.pem -o yaml > sealed-secret.yaml
 ```
 
-> **Guided workflow**: `#file:manage-secrets.prompt.md create secret`
+> **Guided workflow**: Follow the prompts in `prompts/manage-secrets.prompt.md create secret`
 
 #### Advanced Flux Operations
 | Operation | Command | Use Case |
@@ -537,7 +567,7 @@ watch -n 5 'kubectl get hr -A'
 
 #### Debugging Workflows
 When things go wrong:
-1. **Use troubleshooter chat mode** or `#file:troubleshoot-flux.prompt.md`
+1. **Use troubleshooter chat mode** or follow `prompts/troubleshoot-flux.prompt.md`
 2. **Check Flux status**: `flux get all -A`
 3. **Review logs**: `kubectl logs -n flux-system deploy/<controller-name>`
 4. **Examine resources**: `kubectl describe <resource> <name> -n <namespace>`
@@ -720,7 +750,7 @@ curl https://<app-url>
 
 ### Troubleshooting Workflows
 
-> **Quick Help**: Switch to troubleshooter chat mode or use `#file:troubleshoot-flux.prompt.md`
+> **Quick Help**: Switch to troubleshooter chat mode or reference `prompts/troubleshoot-flux.prompt.md`
 
 #### Troubleshooting Decision Tree
 ```
@@ -1154,7 +1184,7 @@ When modifying this codebase, always follow these GitOps principles:
 - [ ] Changes tested locally
 
 #### Code Review Checklist
-Use reviewer chat mode or `#file:review-config.prompt.md` to verify:
+Use reviewer chat mode or consult `prompts/review-config.prompt.md` to verify:
 - [ ] Security best practices followed
 - [ ] Kubernetes conventions adhered to
 - [ ] Flux patterns correctly implemented
@@ -1424,11 +1454,11 @@ grep -i "error pattern" .github/KNOWN_ISSUES.md
 ### Support and Resources
 
 #### Quick Help
-- **Deploy app**: `#file:deploy-app.prompt.md`
+- **Deploy app**: `prompts/deploy-app.prompt.md`
 - **Debug issue**: Switch to troubleshooter chat mode
-- **Review config**: `#file:review-config.prompt.md`
-- **Manage secrets**: `#file:manage-secrets.prompt.md`
-- **Generate docs**: `#file:generate-docs.prompt.md`
+- **Review config**: `prompts/review-config.prompt.md`
+- **Manage secrets**: `prompts/manage-secrets.prompt.md`
+- **Generate docs**: `prompts/generate-docs.prompt.md`
 
 #### Documentation
 - **Copilot Guide**: `.github/README-COPILOT.md`

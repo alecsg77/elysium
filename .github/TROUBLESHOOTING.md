@@ -107,6 +107,33 @@ Best for: "I know what's broken and have error details"
 - **Reproduction Steps**: How to reproduce
 - **Expected vs Actual**: What should happen vs what's happening
 
+### Data Handling & Redaction Rules
+
+Protect credentials and private infrastructure data when collecting evidence:
+
+- 🔒 Never paste API keys, kubeconfigs, bearer tokens, OAuth secrets, customer data, or `kubectl describe secret` output into an issue. Replace sensitive values with `[REDACTED]` or descriptive placeholders such as `<LIBRECHAT_DB_HOST>`.
+- ✂️ Share only the lines that prove the symptom. Prefer `tail -100` log clips and summarize the rest instead of dumping entire files.
+- 🧽 Sanitize hostnames, pod IPs, persistent volume paths, and any identifiers that could reveal your home network topology.
+- 🧾 Acknowledge redactions explicitly (e.g., `Token value redacted; reference event at 2024-09-18T11:32Z`). This helps future readers understand missing context without reintroducing secrets.
+- 📁 Do not attach raw diagnostic archives unless you have reviewed every file inside. If unsure, share the commands you ran and let the agents rerun them.
+
+#### Manual Secret Scan Before Posting
+
+Run these quick scans from the repository root (or wherever you stored logs) before sharing output. Redact or delete any matches before submitting the issue.
+
+```bash
+# Look for obvious high-risk keywords in diagnostics
+rg -n --no-heading -e 'password|secret|token|apikey|bearer|session|private key' diagnostics/ logs/ 2>/dev/null
+
+# Catch accidental private key blocks anywhere in the snippet directory
+rg -n --no-heading -e 'BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|BEGIN CERTIFICATE' diagnostics/ logs/ 2>/dev/null
+
+# Fallback if ripgrep is unavailable
+grep -RIn --color=never -E 'password|secret|token|apikey|bearer' diagnostics/ logs/
+```
+
+If a command flags something that must stay secret (for example, `MONGODB_URI`), redact it, note the redaction in the issue, and rotate the credential if you suspect it leaked earlier.
+
 ### Phase 2: Automated Diagnostics
 
 After issue creation, invoke troubleshooter:
@@ -474,6 +501,16 @@ This resets attempt counter and removes circuit breaker label.
 ❌ **Don't**:
 - Reopen closed issues for new problems
 - Forget to validate in your environment
+
+### Post-Incident Security Review
+
+After the technical fix lands, do a quick security sweep to ensure the investigation itself did not leak credentials:
+
+1. **Re-run the secret scan** on any new log captures, attachments, or pasted snippets using the commands above. Delete or edit any comment that still contains sensitive data.
+2. **Inspect the merged PR diff** for stray environment variables, debugging scripts, or dumps that reference secrets. Anything suspicious should be reverted immediately.
+3. **Rotate affected credentials** (API keys, database passwords, OAuth tokens) whenever there is even a slight chance they were exposed. Document the rotation in the relevant issue or knowledge base entry.
+4. **Document lessons learned** in `.github/KNOWN_ISSUES.md` or the associated runbook, explicitly calling out how future responders should collect sanitized evidence.
+5. **Escalate** via a dedicated security issue if you discover a leak after the fact so the team can audit Git history and revoke access where necessary.
 
 ## Troubleshooting the Troubleshooter
 

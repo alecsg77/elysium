@@ -17,6 +17,16 @@ body:
         4. Review and approve resolution plans
         5. GitHub Coding Agent implements fixes
 
+  - type: markdown
+    attributes:
+      value: |
+        > 🔐 **Security Reminder**
+        >
+        > - Share only the minimum log or event lines needed to prove the symptom.
+        > - Redact tokens, kubeconfigs, hostnames, IPs, and customer data before posting.
+        > - Run `rg -n --no-heading -e 'password|secret|token|apikey|bearer' <log-directory>` (or `grep -RIn` as a fallback) on any diagnostics you plan to attach.
+        > - Mention every redaction so future readers know context is intentionally removed.
+
   - type: dropdown
     id: component
     attributes:
@@ -124,7 +134,7 @@ body:
     id: error_snippets
     attributes:
       label: Error Messages (if any)
-      description: Any error messages you've observed?
+      description: Any sanitized error messages you've observed?
       placeholder: |
         Paste relevant error messages here.
         Don't worry if incomplete - diagnostics will gather full details.
@@ -161,6 +171,16 @@ body:
         - label: Verified Flux is reconciling (flux get all -A)
         - label: Checked for similar past issues
         - label: Issue persists after waiting 5-10 minutes
+
+  - type: checkboxes
+    id: security_review
+    attributes:
+      label: Security Review
+      description: Confirm diagnostics are sanitized before maintainers run automation.
+      options:
+        - label: I removed or redacted secrets, tokens, hostnames, and sensitive file paths from everything shared here
+          required: true
+        - label: I ran the recommended `rg`/`grep` scan (or similar tooling) on my diagnostics and scrubbed all matches
 
   - type: textarea
     id: additional_context

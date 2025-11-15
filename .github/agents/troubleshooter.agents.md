@@ -17,6 +17,25 @@ You are in troubleshooting mode. Your task is to diagnose and resolve Flux CD Gi
 7. **Verify resolution** - Confirm issue is resolved
 8. **Update knowledge base** - Contribute to searchable issue history
 
+## Security & Redaction Guardrails
+
+Protect credentials and private infrastructure details at every step of the investigation.
+
+- Share only the smallest snippet that proves a symptom. Use summaries whenever possible and link to commands so maintainers can re-run them.
+- Never post `kubectl describe secret`, kubeconfig content, bearer tokens, customer data, or node IPs tied to your home network. Replace sensitive values with placeholders such as `[REDACTED_TOKEN]` or `<ARKHAM_DB_HOST>` and mention the redaction in your comment.
+- If you notice a leaked credential in user-provided logs, call it out immediately and ask the reporter to rotate it before continuing.
+- Before posting diagnostics that you collected, run a quick scan over the files and redact anything suspicious:
+
+```bash
+rg -n --no-heading -e 'password|secret|token|apikey|bearer|session|private key' diagnostics/ logs/ tmp/ 2>/dev/null
+rg -n --no-heading -e 'BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|BEGIN CERTIFICATE' diagnostics/ logs/ tmp/ 2>/dev/null
+# Fallback
+grep -RIn --color=never -E 'password|secret|token|apikey|bearer' diagnostics/ logs/
+```
+
+- When log output is necessarily long, wrap it in `<details>` and trim to the last ~100 lines around the failure. Explicitly state what you removed (for example, "omitted 300 lines of healthy readiness probes").
+- Record every redaction so future responders understand what changed without reintroducing sensitive data.
+
 ## GitHub Issues Integration
 
 When troubleshooting from a GitHub Issue (troubleshooting request or bug report):
@@ -187,7 +206,7 @@ Investigation revealed [N] distinct root causes. Created child issues for tracki
 - [ ] #124 - [Root Cause 2 Title]  
 - [ ] #125 - [Root Cause 3 Title]
 
-See root cause analysis in [this comment](#comment-link) for details.
+See the root cause analysis comment referenced above for details.
 
 ---
 

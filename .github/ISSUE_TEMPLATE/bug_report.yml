@@ -12,6 +12,16 @@ body:
         
         **Note**: This template is for confirmed bugs. If you need help troubleshooting, use the "Troubleshooting Request" template instead.
 
+  - type: markdown
+    attributes:
+      value: |
+        > 🔐 **Security Reminder**
+        >
+        > - Never paste secrets, bearer tokens, kubeconfigs, or customer data into this issue.
+        > - Redact hostnames, pod IPs, and persistent volume paths that reveal your home network.
+        > - Run a quick scan such as `rg -n --no-heading -e 'password|secret|token|apikey|bearer' <log-directory>` (or `grep -RIn` if `rg` is unavailable) before uploading diagnostics.
+        > - Explicitly note any redactions so future responders understand missing context.
+
   - type: dropdown
     id: component
     attributes:
@@ -77,7 +87,7 @@ body:
     id: error_messages
     attributes:
       label: Error Messages
-      description: Exact error messages from logs, events, or status conditions
+      description: Exact error messages from logs, events, or status conditions (redacted before posting)
       placeholder: |
         Paste error messages here. Include:
         - kubectl describe output
@@ -174,3 +184,14 @@ body:
         - label: Recent events (kubectl get events)
         - label: Resource configuration (YAML manifests)
         - label: Flux reconciliation status
+
+  - type: checkboxes
+    id: security_review
+    attributes:
+      label: Security Review
+      description: Confirm you sanitized and scanned any shared diagnostics.
+      options:
+        - label: I removed or redacted secrets, tokens, hostnames, and private file paths from all attachments
+          required: true
+        - label: I ran the recommended `rg`/`grep` scan (or equivalent tooling) on my diagnostics and redacted any matches
+        - label: I will rotate any credential that might have been exposed earlier in this investigation
