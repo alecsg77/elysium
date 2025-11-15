@@ -6,9 +6,10 @@ metadata:
 spec:
   timeout: 10m
   values:
+    # Set deploymentStrategy at chart top-level (not under coder) so upgrades don't require double memory
+    deploymentStrategy:
+      type: Recreate
     coder:
-      deploymentStrategy:
-        type: Recreate
       service:
         type: ClusterIP
       ingress:
