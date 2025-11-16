@@ -88,4 +88,3 @@ spec:
   policy:
     semver:
       range: "*"
-  interval: 24h
