@@ -103,7 +103,7 @@ Verify:
 ### 4. Helm Chart Configuration Review
 
 #### Chart Selection
-- Chart follows selection priority:
+- Chart follows [selection priority](../copilot-instructions.md#helm--kustomize-integration):
   1. Official chart from app owner (highest priority)
   2. Official documentation recommendation
   3. Well-maintained community chart (Bitnami, etc.)

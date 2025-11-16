@@ -42,12 +42,12 @@ Detailed, ordered list of steps to implement the change:
 
 #### Step 0: Choose Deployment Method
 - Research the application's official documentation
-- Select the appropriate chart/deployment method following this priority:
-  1. **Official Helm chart from app owner** - Check app's GitHub, official docs, or helm repository
-  2. **Official documentation method** - Use whatever deployment method the official docs recommend
-  3. **Well-maintained community charts** - Bitnami, Prometheus community, Grafana, etc.
-  4. **Official Kustomize manifests** - If app provides official Kustomize configurations
-  5. **onechart generic wrapper** - ONLY if app provides Docker/docker-compose only and no official chart exists
+- Select the appropriate chart/deployment method following the [chart selection priority](../copilot-instructions.md#helm--kustomize-integration):
+  1. Official Helm chart from app owner
+  2. Official documentation method
+  3. Well-maintained community charts (Bitnami, Prometheus community, etc.)
+  4. Official Kustomize manifests
+  5. onechart generic wrapper - **ONLY** as last resort for Docker-only apps
 - Document the source and reasoning for the selected method
 
 #### Step 1: Prepare Base Configuration
