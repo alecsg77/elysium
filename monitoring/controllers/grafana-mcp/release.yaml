@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: grafana-mcp
-      version: ">=0.1.0"
+      version: "*"
       sourceRef:
         kind: HelmRepository
         name: grafana-charts
@@ -18,21 +18,19 @@ spec:
   dependsOn:
     - name: kube-prometheus-stack
   values:
-    # Official Grafana MCP Server image from Docker Hub
+    # Official Grafana MCP Server image
     image:
-      repository: mcp/grafana  # {"$imagepolicy": "flux-system:grafana-mcp-policy:name"}
+      repository: grafana/mcp-grafana  # {"$imagepolicy": "flux-system:grafana-mcp-policy:name"}
       tag: ""  # {"$imagepolicy": "flux-system:grafana-mcp-policy:tag"}
       registry: docker.io
 
     # Grafana connection configuration
-    # Environment variables are set via envFrom from sealed secret
     grafana:
-      url: ""  # Set via GRAFANA_URL from sealed secret
+      url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
       apiKey: ""  # Set via GRAFANA_SERVICE_ACCOUNT_TOKEN from sealed secret
 
     # Environment variables from sealed secret
-    # The sealed secret contains:
-    # - GRAFANA_URL: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80
+    # The sealed secret contains only:
     # - GRAFANA_SERVICE_ACCOUNT_TOKEN: <service account token from Grafana>
     envFrom:
       - secretRef:
@@ -75,7 +73,7 @@ metadata:
   name: grafana-mcp
   namespace: flux-system
 spec:
-  image: docker.io/mcp/grafana
+  image: docker.io/grafana/mcp-grafana
   interval: 24h
 ---
 # ImagePolicy for automated image updates
@@ -89,7 +87,5 @@ spec:
     name: grafana-mcp
   policy:
     semver:
-      range: '>=0.1.0'
-  filterTags:
-    pattern: '^v?[0-9]+\.[0-9]+\.[0-9]+$'
+      range: "*"
   interval: 24h
