@@ -75,8 +75,8 @@ git push
 | Setting | Value | Description |
 |---------|-------|-------------|
 | **Grafana URL** | `http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80` | Internal Grafana service URL (configured in HelmRelease) |
-| **Internal Service** | `grafana-mcp.monitoring.svc.cluster.local:8000` | Cluster-internal access |
-| **External Access** | `https://grafana-mcp.${ts_net}` | Tailscale network access |
+| **Internal Service** | `grafana-mcp.monitoring.svc.cluster.local:8000/sse` | Cluster-internal SSE endpoint |
+| **External Access** | `https://grafana-mcp.${ts_net}/sse` | Tailscale network SSE endpoint |
 
 ### Resources
 
@@ -113,7 +113,7 @@ This section covers 3 different configuration methods for connecting to the Graf
 {
   "mcpServers": {
     "grafana": {
-      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000",
+      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/sse",
       "transport": "sse"
     }
   }
@@ -137,7 +137,7 @@ This section covers 3 different configuration methods for connecting to the Graf
 {
   "mcpServers": {
     "grafana": {
-      "url": "https://grafana-mcp.${ts_net}",
+      "url": "https://grafana-mcp.${ts_net}/sse",
       "transport": "sse"
     }
   }
@@ -173,7 +173,7 @@ This section covers 3 different configuration methods for connecting to the Graf
 {
   "mcpServers": {
     "grafana": {
-      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000",
+      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/sse",
       "transport": "sse",
       "tools": [
         "get_dashboard",
@@ -315,7 +315,7 @@ grafana-mcp-<hash>-<hash>      1/1     Running   0          2m
 ### 3. Test SSE Endpoint (from Tailscale network)
 
 ```bash
-curl -N https://grafana-mcp.${ts_net}
+curl -N https://grafana-mcp.${ts_net}/sse
 ```
 
 Expected: SSE event stream (connection stays open)
@@ -324,7 +324,7 @@ Expected: SSE event stream (connection stays open)
 
 ```bash
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl -N http://grafana-mcp.monitoring.svc.cluster.local:8000
+  curl -N http://grafana-mcp.monitoring.svc.cluster.local:8000/sse
 ```
 
 Expected: SSE event stream
@@ -474,7 +474,7 @@ To update the service account token:
 ```bash
 # Verify service is accessible
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl -v http://grafana-mcp.monitoring.svc.cluster.local:8000
+  curl -v http://grafana-mcp.monitoring.svc.cluster.local:8000/sse
 ```
 
 **Configuration 2 (Tailscale)**:
@@ -483,7 +483,7 @@ kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
 tailscale status
 
 # Test endpoint
-curl -v https://grafana-mcp.${ts_net}
+curl -v https://grafana-mcp.${ts_net}/sse
 ```
 
 ## References
