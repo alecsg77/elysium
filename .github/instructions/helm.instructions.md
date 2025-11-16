@@ -20,11 +20,23 @@ description: "Helm chart configuration and management in Flux"
 - Configure appropriate service account and RBAC
 
 ## Chart Selection
-- Prefer official or well-maintained charts
+
+**IMPORTANT**: Follow the chart selection priority defined in the main [Copilot Instructions - Helm + Kustomize Integration](../copilot-instructions.md#helm--kustomize-integration) section.
+
+### Quick Reference:
+1. Official chart from app owner/organization (highest priority)
+2. Official documentation recommendation
+3. Well-maintained community/vendor charts (Bitnami, Prometheus community, etc.)
+4. Official Kustomize manifests
+5. onechart generic wrapper - **last resort only**
+
+### Chart Evaluation Criteria:
 - Review chart dependencies and resource requirements
 - Verify chart compatibility with Kubernetes version
 - Check for CRD requirements and install order
 - Evaluate chart documentation and community support
+- Check last update date and issue activity
+- Review chart values.yaml for configuration options
 
 ## Values Management
 - Keep base values minimal and environment-agnostic

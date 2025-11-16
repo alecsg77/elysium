@@ -13,13 +13,17 @@ You are helping deploy a new application to the Elysium Kubernetes homelab using
 
 Ask the user for the following if not provided:
 1. **Application name** (kebab-case)
-2. **Deployment method**: HelmRelease or raw manifests
+2. **Deployment method**: HelmRelease, Kustomize, or raw manifests
 3. **Namespace** (create new or use existing)
-4. **Helm chart source** (if using Helm): repository URL and chart name
+4. **Helm chart source** (if using Helm): Follow the [chart selection priority](../copilot-instructions.md#helm--kustomize-integration) (official charts → community charts → Kustomize → onechart as last resort)
 5. **Required secrets**: authentication tokens, API keys, etc.
 6. **Ingress requirements**: Internal (Tailscale) or external
 7. **Storage needs**: PersistentVolumeClaim requirements
 8. **Dependencies**: Other apps or infrastructure components
+
+## Chart Selection Guidelines
+
+**See detailed chart selection priority in [Copilot Instructions](../copilot-instructions.md#helm--kustomize-integration).**
 
 ## Implementation Steps
 

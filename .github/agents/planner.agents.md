@@ -40,13 +40,23 @@ How this change affects the cluster architecture:
 
 Detailed, ordered list of steps to implement the change:
 
+#### Step 0: Choose Deployment Method
+- Research the application's official documentation
+- Select the appropriate chart/deployment method following the [chart selection priority](../copilot-instructions.md#helm--kustomize-integration):
+  1. Official Helm chart from app owner
+  2. Official documentation method
+  3. Well-maintained community charts (Bitnami, Prometheus community, etc.)
+  4. Official Kustomize manifests
+  5. onechart generic wrapper - **ONLY** as last resort for Docker-only apps
+- Document the source and reasoning for the selected method
+
 #### Step 1: Prepare Base Configuration
 - Create directory structure in `apps/base/<app-name>/`
 - Define namespace with appropriate labels
 - Set up base Kustomization
 
 #### Step 2: Configure Application
-- Create HelmRelease or raw Kubernetes manifests
+- Create HelmRelease (using official chart preferred) or raw Kubernetes manifests
 - Define resource requests and limits
 - Configure health probes
 - Set up persistent storage (if needed)

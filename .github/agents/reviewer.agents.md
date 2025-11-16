@@ -103,9 +103,15 @@ Verify:
 ### 4. Helm Chart Configuration Review
 
 #### Chart Selection
-- Chart from reputable source
-- Chart version appropriate
-- Chart dependencies understood
+- Chart follows [selection priority](../copilot-instructions.md#helm--kustomize-integration):
+  1. Official chart from app owner (highest priority)
+  2. Official documentation recommendation
+  3. Well-maintained community chart (Bitnami, etc.)
+  4. Official Kustomize manifests
+  5. onechart only as last resort for Docker-only apps
+- Chart from reputable/trusted source
+- Chart version pinned and appropriate
+- Chart dependencies understood and compatible
 
 #### Values Structure
 - Required values provided

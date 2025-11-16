@@ -206,7 +206,57 @@ When analyzing or troubleshooting Flux resources:
 4. Verify authentication for private repositories
 
 ### Helm + Kustomize Integration
-- **Base Pattern**: Most apps use HelmReleases in `apps/base/` pointing to `onechart` repository
+
+#### Chart Selection Priority
+
+**IMPORTANT**: Always follow this priority order when selecting a Helm chart for a new application:
+
+1. **Official Chart from App Owner/Organization**
+   - Check the application's GitHub repository for `charts/` or `helm/` directory
+   - Look for official Helm repository (often `https://helm.<app-domain>.com`)
+   - Example: Coder provides official chart at `https://helm.coder.com/v2`
+   - Example: Grafana provides charts at `https://grafana.github.io/helm-charts`
+
+2. **Official Documentation Recommendation**
+   - Check the app's official documentation for "Helm installation" section
+   - Use whatever chart/method the official docs recommend
+   - Some apps link to specific community charts they endorse
+
+3. **Well-Maintained Community/Vendor Charts**
+   - **Bitnami**: Widely used, well-maintained charts (PostgreSQL, MongoDB, Redis, etc.)
+   - **Prometheus Community**: Monitoring stack charts
+   - **Other reputable sources**: Check ArtifactHub.io for "verified publisher" badges
+   - Evaluate: Regular updates, active maintenance, good documentation
+
+4. **Official Kustomize Manifests**
+   - If app provides official Kustomize configurations in their repository
+   - Use Flux Kustomization resource instead of HelmRelease
+   - Example: n8n provides official Kubernetes manifests
+
+5. **onechart (Generic Wrapper) - Last Resort Only**
+   - Use **ONLY** when:
+     - App provides Docker/docker-compose only
+     - No official Helm chart exists
+     - No official Kustomize manifests available
+     - App is simple enough for generic chart wrapper
+   - onechart is a generic chart that wraps any container image
+   - Suitable for simple stateless apps, but lacks app-specific features
+
+**How to Find Official Charts:**
+```bash
+# Search application's GitHub repository
+curl -s https://api.github.com/repos/<org>/<app>/contents | grep -i "chart\|helm"
+
+# Check ArtifactHub.io for "Official" or "Verified Publisher" badges
+# Visit: https://artifacthub.io/packages/search?q=<app-name>
+
+# Check application's documentation
+# Look for: "Installation" -> "Kubernetes" or "Helm"
+```
+
+#### Helm Integration Patterns
+
+- **Base Pattern**: Apps use HelmReleases in `apps/base/` pointing to appropriate chart repositories (official charts preferred)
 - **Environment Patches**: Kyrion-specific overrides in `apps/kyrion/` using Kustomize patches
 - **Values Management**: 
   - Base values in HelmRelease spec
@@ -1023,7 +1073,7 @@ The cluster uses 18 HelmRepository sources for chart distribution:
 
 | Repository | Type | URL/OCI Path | Charts Used | Notes |
 |------------|------|--------------|-------------|-------|
-| **onechart** | Standard | https://chart.onechart.dev | Most applications | Primary chart repository for apps |
+| **onechart** | Standard | https://chart.onechart.dev | Legacy apps, generic deployments | Generic chart wrapper (use only when no official chart exists) |
 | **bitnami** | OCI | oci://registry-1.docker.io/bitnamicharts | MongoDB, PostgreSQL, Redis | Bitnami application charts |
 | **sealed-secrets** | Standard | https://bitnami-labs.github.io/sealed-secrets | sealed-secrets | Secret encryption |
 | **cert-manager** | Standard | https://charts.jetstack.io | cert-manager | Certificate management |
