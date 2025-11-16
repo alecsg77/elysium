@@ -5,3 +5,4 @@ namespace: monitoring
 resources:
   - grafana-mcp-credentials-sealed-secret.yaml
   - release.yaml
+  - repository.yaml
