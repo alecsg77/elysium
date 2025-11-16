@@ -1,6 +1,6 @@
 ---
 description: 'Generate implementation plans for new features or infrastructure changes (planning only, no code changes)'
-tools: ['fetch', 'search']
+tools: ['search', 'flux-operator-mcp/search_flux_docs', 'todos', 'usages', 'problems', 'changes', 'testFailure', 'fetch', 'githubRepo', 'github.vscode-pull-request-github/issue_fetch']
 model: Claude Sonnet 4.5
 ---
 

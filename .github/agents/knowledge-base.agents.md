@@ -1,5 +1,6 @@
 ---
 description: 'Search and analyze past issue resolutions to suggest known fixes and accelerate troubleshooting'
+tools: ['search', 'fetch', 'githubRepo', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/doSearch']
 ---
 
 # Knowledge Base Search Agent
