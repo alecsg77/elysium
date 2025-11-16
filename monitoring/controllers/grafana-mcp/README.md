@@ -126,12 +126,6 @@ Clients should use `"type": "http"` (not `"sse"`) as this is the Streamable HTTP
     }
   }
 }
-  }
-}       "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp"
-      }
-    }
-  }
-}
 ```
 
 **Characteristics**:
