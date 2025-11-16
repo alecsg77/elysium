@@ -1221,6 +1221,64 @@ When modifying this codebase, always follow these GitOps principles:
 6. **Rollback Capability**: Revert Git commits to rollback changes
 7. **Environment Separation**: Use Kustomize overlays for environment-specific config
 
+### Git Workflow and Commit Management
+
+#### Automatic Git Operations Policy
+
+**🚫 NEVER automatically push changes to Git without explicit user approval.**
+
+**Required Workflow:**
+1. Make code changes as requested
+2. Stage changes: `git add <files>`
+3. Create commit: `git commit -m "message"`
+4. **STOP and show the user what was committed**
+5. **Wait for explicit approval** before pushing
+6. Only push after user confirms: `git push`
+
+**Example completion message:**
+```
+✅ Changes committed locally:
+- Modified: apps/base/example/release.yaml
+- Commit: "fix(example): update image tag to v1.2.3"
+
+Run `git push` when you're ready to deploy, or request further changes.
+```
+
+#### Smart Commit Management
+
+When the user asks to fix, revert, or modify something that is in the **most recent commit** (not yet pushed):
+
+**ALWAYS ask which approach they prefer:**
+
+```
+I can handle this in three ways:
+1. **Amend the last commit** - Modify the existing commit (cleaner history)
+2. **Reset the last commit** - Undo the commit but keep changes (start over)
+3. **Create a new commit** - Add a separate fix commit (preserves history)
+
+Which would you prefer?
+```
+
+**Implementation:**
+- **Amend:** `git add <files> && git commit --amend --no-edit` (or with new message if requested)
+- **Reset:** `git reset HEAD~1` (keeps working directory changes for re-editing)
+- **New commit:** Standard `git add && git commit -m "fix: ..."` workflow
+
+**Detection:** Check if the change targets content in the last commit (unpushed) and offer these options automatically.
+
+**For already-pushed commits:** Skip the amend/reset options and proceed with revert or new fix commit as appropriate.
+
+#### Commit Message Standards
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat(scope):` New features
+- `fix(scope):` Bug fixes
+- `docs(scope):` Documentation changes
+- `refactor(scope):` Code restructuring
+- `chore(scope):` Maintenance tasks
+- `ci(scope):` CI/CD changes
+- `test(scope):` Test additions or modifications
+
 ### Quality Standards
 
 #### Before Committing
