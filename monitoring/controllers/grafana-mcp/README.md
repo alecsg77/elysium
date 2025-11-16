@@ -13,21 +13,28 @@ Grafana MCP (Model Context Protocol) Server enables AI assistants and automation
 ## Architecture
 
 - **Namespace**: `monitoring`
-- **Chart**: `onechart` (generic Helm chart for containerized applications)
+- **Chart**: `grafana-mcp` (official Grafana Helm chart)
+- **Image**: `docker.io/mcp/grafana` (official Docker image)
 - **Dependencies**: `kube-prometheus-stack` (Grafana deployment)
-- **Transport**: SSE (Server-Sent Events) for web client compatibility
 - **Access**: Private via Tailscale ingress at `https://grafana-mcp.${ts_net}`
+- **Port**: 8000 (SSE transport by default)
 
 ## Prerequisites
 
 ### 1. Create Grafana Service Account
 
+The service account role determines the available permissions:
+
+- **Editor role**: Full read/write access (recommended for development and working scenarios)
+- **Viewer role**: Read-only access (recommended for troubleshooting scenarios)
+
+**Steps**:
 1. Open Grafana UI at `https://grafana.${ts_net}`
 2. Navigate to: **Administration** → **Service Accounts**
 3. Click **Add service account**
 4. Configure:
-   - **Display name**: `grafana-mcp-server`
-   - **Role**: `Editor` (provides read/write access to dashboards and data sources)
+   - **Display name**: `grafana-mcp-server` (or `grafana-mcp-readonly` for read-only)
+   - **Role**: `Editor` or `Viewer` (based on use case)
 5. Click **Create**
 6. Click **Add service account token**
 7. Copy the generated token (it won't be shown again)
@@ -46,39 +53,12 @@ kubectl create secret generic grafana-mcp-credentials \
   --format=yaml > monitoring/controllers/grafana-mcp/grafana-mcp-credentials-sealed-secret.yaml
 ```
 
-### 3. Container Image Availability
-
-**Important**: As of the initial implementation, the Grafana MCP project does not publish official container images to a public registry. You have two options:
-
-#### Option A: Build Custom Image
-
-```bash
-# Clone the repository
-git clone https://github.com/grafana/mcp-grafana.git
-cd mcp-grafana
-
-# Build the Docker image
-docker build -t <your-registry>/grafana-mcp:latest .
-
-# Push to your registry
-docker push <your-registry>/grafana-mcp:latest
-
-# Update the image reference in release.yaml
-# image:
-#   repository: <your-registry>/grafana-mcp
-#   tag: latest
-```
-
-#### Option B: Wait for Official Image
-
-Monitor the [Grafana MCP GitHub repository](https://github.com/grafana/mcp-grafana) for official image releases. Once available, update the image reference in `release.yaml`.
-
-### 4. Commit and Deploy
+### 3. Commit and Deploy
 
 ```bash
 # Commit the sealed secret
 git add monitoring/controllers/grafana-mcp/
-git commit -m "feat(monitoring): deploy grafana-mcp server"
+git commit -m "chore(monitoring): add grafana-mcp sealed secret"
 git push
 
 # Flux will automatically deploy within 1-5 minutes
@@ -92,15 +72,12 @@ git push
 |----------|--------|-------------|
 | `GRAFANA_URL` | Sealed Secret | Internal Grafana service URL |
 | `GRAFANA_SERVICE_ACCOUNT_TOKEN` | Sealed Secret | Service account token for authentication |
-| `TRANSPORT` | ConfigMap | Transport mode (`sse` for Server-Sent Events) |
-| `DEBUG` | ConfigMap | Enable debug logging (`true`/`false`) |
 
 ### Endpoints
 
 | Endpoint | URL | Description |
 |----------|-----|-------------|
-| **Health Check** | `https://grafana-mcp.${ts_net}/healthz` | Health status endpoint |
-| **SSE Endpoint** | `https://grafana-mcp.${ts_net}/sse` | Server-Sent Events stream |
+| **SSE Endpoint** | `https://grafana-mcp.${ts_net}` | Server-Sent Events stream (default transport) |
 | **Internal Service** | `grafana-mcp.monitoring.svc.cluster.local:8000` | Cluster-internal access |
 
 ### Resources
@@ -112,8 +89,7 @@ git push
 
 ### Grafana Service Account Permissions
 
-The service account requires the following RBAC scopes for full functionality:
-
+**Editor Role** (Full Access):
 - `datasources:*` - Read and query data sources
 - `dashboards:*` - Read, create, and update dashboards
 - `folders:*` - Read folders
@@ -123,28 +99,157 @@ The service account requires the following RBAC scopes for full functionality:
 - `alert.notifications:read` - Read notifications
 - `annotations:*` - Read and write annotations
 
-**Recommended**: Assign the **Editor** role for broad access.
+**Viewer Role** (Read-Only Access):
+- `datasources:read` - Read and query data sources
+- `dashboards:read` - Read dashboards
+- `folders:read` - Read folders
+- `teams:read` - Read teams
+- `global.users:read` - Read users
+- `alert.rules:read` - Read alert rules
+- `alert.notifications:read` - Read notifications
+- `annotations:read` - Read annotations
 
-## Usage Examples
+## MCP Client Configuration
 
-### MCP Client Configuration
+This section covers 4 different usage scenarios for connecting to the Grafana MCP server.
 
-Configure your MCP client to connect to Grafana MCP:
+### Scenario 1: DevContainer in Cluster (Coder)
 
+**Use Case**: Working inside a devcontainer deployed in the cluster using Coder DevContainer Template.
+
+**Access Method**: Direct cluster service access (internal DNS)
+
+**Permissions**: Full read/write (Editor role)
+
+**Configuration** (`.mcp-config.json` or IDE settings):
 ```json
 {
   "mcpServers": {
     "grafana": {
-      "url": "https://grafana-mcp.${ts_net}/sse",
+      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000",
       "transport": "sse"
     }
   }
 }
 ```
 
-### Query Prometheus Metrics
+**Notes**:
+- Uses internal Kubernetes DNS
+- No Tailscale required (already inside cluster network)
+- Direct service-to-service communication
+- Low latency
 
-Example MCP request to query Prometheus:
+### Scenario 2: DevContainer via Codespaces + Tailscale
+
+**Use Case**: Working inside a devcontainer using GitHub Codespaces with Tailscale connection to cluster network.
+
+**Access Method**: Tailscale ingress (private network overlay)
+
+**Permissions**: Full read/write (Editor role)
+
+**Configuration** (`.mcp-config.json` or IDE settings):
+```json
+{
+  "mcpServers": {
+    "grafana": {
+      "url": "https://grafana-mcp.${ts_net}",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**Prerequisites**:
+- Tailscale installed and authenticated in Codespaces
+- Connected to the cluster's Tailscale network
+- Access to `*.${ts_net}` domain
+
+**Notes**:
+- Secure access over Tailscale mesh network
+- HTTPS with automatic TLS via Tailscale
+- Can access from anywhere with Tailscale
+
+### Scenario 3: Local DevContainer on PC (VSCode)
+
+**Use Case**: Working inside a devcontainer on your own PC using VSCode devcontainer capabilities, connected to Tailscale network.
+
+**Access Method**: Tailscale ingress (private network overlay)
+
+**Permissions**: Full read/write (Editor role)
+
+**Configuration** (`.mcp-config.json` or IDE settings):
+```json
+{
+  "mcpServers": {
+    "grafana": {
+      "url": "https://grafana-mcp.${ts_net}",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**Prerequisites**:
+- Tailscale installed on local PC
+- Connected to the cluster's Tailscale network
+- Docker Desktop or equivalent container runtime
+
+**Notes**:
+- Same configuration as Scenario 2
+- Works from local development environment
+- Requires local Tailscale client
+
+### Scenario 4: GitHub Copilot Agent (ARC)
+
+**Use Case**: Troubleshooting with GitHub Copilot coding agent running inside the cluster using Actions Runner Controller (ARC).
+
+**Access Method**: Direct cluster service access (internal DNS)
+
+**Permissions**: Read-only (Viewer role recommended for safety)
+
+**Configuration** (GitHub Repository MCP Settings):
+
+Navigate to repository settings → Copilot → MCP Servers and configure:
+
+```json
+{
+  "mcpServers": {
+    "grafana": {
+      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+**Recommended Setup for Read-Only Access**:
+
+1. Create a separate service account with **Viewer** role:
+   ```bash
+   # In Grafana UI: Create service account "grafana-mcp-readonly" with Viewer role
+   ```
+
+2. Create a read-only sealed secret (optional, for dedicated read-only deployment):
+   ```bash
+   kubectl create secret generic grafana-mcp-readonly-credentials \
+     --namespace=monitoring \
+     --from-literal=GRAFANA_URL='http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80' \
+     --from-literal=GRAFANA_SERVICE_ACCOUNT_TOKEN='<readonly-token>' \
+     --dry-run=client -o yaml | \
+     kubeseal --cert etc/certs/pub-sealed-secrets.pem \
+     --format=yaml > monitoring/controllers/grafana-mcp/grafana-mcp-readonly-credentials-sealed-secret.yaml
+   ```
+
+**Notes**:
+- Viewer role limits agent to read-only operations
+- Prevents accidental modifications during troubleshooting
+- Same internal DNS access as Scenario 1
+- GitHub Copilot agent runs in `arc-runners` namespace
+- Automatic service discovery via Kubernetes DNS
+
+## Usage Examples
+
+### Query Prometheus Metrics
 
 ```json
 {
@@ -159,9 +264,22 @@ Example MCP request to query Prometheus:
 }
 ```
 
-### Create Dashboard
+### Query Loki Logs
 
-Example MCP request to create a dashboard:
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "loki_query",
+    "arguments": {
+      "query": "{namespace=\"monitoring\"}",
+      "datasource": "Loki"
+    }
+  }
+}
+```
+
+### Create Dashboard (Editor role only)
 
 ```json
 {
@@ -172,6 +290,20 @@ Example MCP request to create a dashboard:
       "title": "My Custom Dashboard",
       "folder": "General",
       "panels": [...]
+    }
+  }
+}
+```
+
+### Read Dashboard (Any role)
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "get_dashboard",
+    "arguments": {
+      "uid": "dashboard-uid"
     }
   }
 }
@@ -203,18 +335,24 @@ NAME                           READY   STATUS    RESTARTS   AGE
 grafana-mcp-<hash>-<hash>      1/1     Running   0          2m
 ```
 
-### 3. Test Health Endpoint
+### 3. Test SSE Endpoint (from Tailscale network)
 
 ```bash
-curl https://grafana-mcp.${ts_net}/healthz
+curl -N https://grafana-mcp.${ts_net}
 ```
 
-Expected output:
-```json
-{"status": "ok"}
+Expected: SSE event stream (connection stays open)
+
+### 4. Test from Inside Cluster
+
+```bash
+kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
+  curl -N http://grafana-mcp.monitoring.svc.cluster.local:8000
 ```
 
-### 4. Check Logs
+Expected: SSE event stream
+
+### 5. Check Logs
 
 ```bash
 kubectl logs -n monitoring -l app.kubernetes.io/name=grafana-mcp --tail=100
@@ -225,21 +363,13 @@ Look for:
 - No authentication errors
 - SSE server listening on port 8000
 
-### 5. Verify Grafana Connectivity
+### 6. Verify Grafana Connectivity
 
 ```bash
 kubectl logs -n monitoring -l app.kubernetes.io/name=grafana-mcp | grep -i grafana
 ```
 
 Expected: Log lines showing successful Grafana API calls
-
-### 6. Test MCP SSE Endpoint
-
-```bash
-curl -N https://grafana-mcp.${ts_net}/sse
-```
-
-Expected: SSE event stream (connection stays open)
 
 ## Maintenance
 
@@ -269,18 +399,10 @@ kubectl logs -n monitoring -l app.kubernetes.io/name=grafana-mcp --previous
 
 To update environment variables:
 
-1. Edit `monitoring/controllers/grafana-mcp/release.yaml`
-2. Modify the `vars` section
+1. Edit `monitoring/controllers/grafana-mcp/grafana-mcp-credentials-sealed-secret.yaml`
+2. Regenerate sealed secret with new values
 3. Commit and push
 4. Flux will reconcile within 1 hour (or force: `flux reconcile hr grafana-mcp -n monitoring`)
-
-### Scale Replicas
-
-The MCP server is designed to run as a single instance. To change:
-
-1. Edit `release.yaml` → `values.replicas`
-2. Commit and push
-3. Flux will reconcile automatically
 
 ## Troubleshooting
 
@@ -293,8 +415,7 @@ The MCP server is designed to run as a single instance. To change:
    ```bash
    kubectl get secret grafana-mcp-credentials -n monitoring -o yaml
    ```
-2. **Image not available**: Build and push custom image (see Prerequisites)
-3. **Grafana not ready**: Check kube-prometheus-stack status
+2. **Grafana not ready**: Check kube-prometheus-stack status
    ```bash
    kubectl get hr -n monitoring kube-prometheus-stack
    ```
@@ -314,22 +435,8 @@ The MCP server is designed to run as a single instance. To change:
 
 **Resolution**:
 1. Verify token in Grafana UI (Service Accounts)
-2. Ensure service account has **Editor** role
+2. Ensure service account has appropriate role (Editor or Viewer)
 3. Regenerate token and update sealed secret
-
-### Health Check Failing
-
-**Symptom**: Readiness/liveness probes failing
-
-**Causes**:
-1. Server not listening on expected port
-2. Health endpoint path incorrect
-3. Server startup timeout
-
-**Resolution**:
-1. Check container logs for startup errors
-2. Verify `containerPort` matches server configuration
-3. Increase `initialDelaySeconds` in probes
 
 ### Connection Timeout
 
@@ -375,12 +482,35 @@ The MCP server is designed to run as a single instance. To change:
    tailscale status
    ```
 
+### MCP Client Connection Issues
+
+**Symptom**: MCP client cannot connect to server
+
+**Troubleshooting by Scenario**:
+
+**Scenario 1 & 4 (In-Cluster)**:
+```bash
+# Verify service is accessible
+kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
+  curl -v http://grafana-mcp.monitoring.svc.cluster.local:8000
+```
+
+**Scenario 2 & 3 (Tailscale)**:
+```bash
+# Verify Tailscale connection
+tailscale status
+
+# Test endpoint
+curl -v https://grafana-mcp.${ts_net}
+```
+
 ## References
 
 - [Grafana MCP GitHub Repository](https://github.com/grafana/mcp-grafana)
+- [Grafana MCP Docker Image](https://hub.docker.com/r/mcp/grafana)
 - [Model Context Protocol Specification](https://modelcontextprotocol.io/)
 - [Grafana Service Accounts Documentation](https://grafana.com/docs/grafana/latest/administration/service-accounts/)
-- [OneChart Documentation](https://github.com/gimlet-io/onechart)
+- [Grafana Helm Charts](https://github.com/grafana/helm-charts)
 - [Flux HelmRelease Documentation](https://fluxcd.io/docs/components/helm/helmreleases/)
 
 ## Related Components
@@ -389,12 +519,16 @@ The MCP server is designed to run as a single instance. To change:
 - **Tailscale Operator**: Provides private network access
 - **Sealed Secrets**: Encrypts sensitive credentials
 - **Flux**: GitOps continuous delivery
+- **Actions Runner Controller (ARC)**: GitHub Actions self-hosted runners for Copilot agent
 
 ## Security Considerations
 
 - Service account token stored encrypted with Sealed Secrets
-- Pod runs as non-root user (UID 65534)
-- All capabilities dropped from container
-- Access restricted to Tailscale network only
+- Pod runs as non-root user (default from Helm chart)
+- All capabilities dropped from container (default from Helm chart)
+- Access restricted to Tailscale network for external access
+- Internal cluster access for in-cluster workloads
 - Token rotation recommended quarterly
+- Use Viewer role for read-only scenarios (troubleshooting)
+- Use Editor role for full read/write access (development)
 - Audit logs available in Grafana for API access tracking
