@@ -20,11 +20,11 @@ spec:
     resources:
       requests:
         cpu: "1"
-        memory: "2Gi"
+        memory: "512Mi"
         gpu.intel.com/i915: "1"
       limits:
         cpu: "8"
-        memory: "8Gi"
+        memory: "4Gi"
         gpu.intel.com/i915: "1"
     vars:
       PUID: ${PUID:=1000}

@@ -43,6 +43,8 @@ patches:
       kind: HelmRelease
       name: mediamtx
       namespace: mediamtx
+  - path: arkham-resources.yaml
+  - path: discourse-resources.yaml
 
 configMapGenerator:
   - name: mediamtx-config

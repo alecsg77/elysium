@@ -19,11 +19,11 @@ spec:
       tag: "2025.11.15-45a4b8ad1" # {"$imagepolicy": "flux-system:searxng-policy:tag"}
     resources:
       requests:
-        cpu: "500m"
-        memory: "1Gi"
+        cpu: "250m"
+        memory: "512Mi"
       limits:
         cpu: "2"
-        memory: "4Gi"
+        memory: "2Gi"
     vars:
       SEARXNG_BASE_URL: https://search.${ts_net}/
     # Use existingFileSecrets to mount secret without triggering PVC creation in onechart
