@@ -103,11 +103,12 @@ git push
 
 This section covers 3 different configuration methods for connecting to the Grafana MCP server.
 
-**Transport Mode**: The server runs in **Streamable HTTP** mode (MCP protocol 2025-06-18), which provides native support for:
-- **Modern clients** (VSCode, Claude Desktop): Direct `POST /sse` for initialization and messaging
-- **Legacy clients**: Automatic fallback to `GET /sse` (SSE stream) + `POST /message?sessionId=...` pattern
+**Transport Mode**: The server is explicitly configured with **Streamable HTTP** transport via the `-t streamable-http` flag (MCP protocol 2025-06-18). This provides native support for modern MCP clients:
+- **Modern clients** (VSCode, Claude Desktop): Use `"transport": "http"` - supports both POST and GET on `/mcp` endpoint
+- **Protocol support**: Full implementation of MCP 2025-06-18 Streamable HTTP specification
+- **Backward compatibility**: The Streamable HTTP transport automatically handles legacy protocol fallback when needed
 
-This ensures compatibility with all MCP client versions without requiring client-side configuration changes.
+Clients should use `"transport": "http"` (not `"sse"`) as this is the Streamable HTTP transport mode.
 
 ### Configuration 1: Inside the Cluster
 
@@ -121,7 +122,13 @@ This ensures compatibility with all MCP client versions without requiring client
   "mcpServers": {
     "grafana": {
       "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp",
-      "transport": "sse"
+      "transport": "http"
+    }
+  }
+}   }
+  }
+}       "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp"
+      }
     }
   }
 }
@@ -145,7 +152,7 @@ This ensures compatibility with all MCP client versions without requiring client
   "mcpServers": {
     "grafana": {
       "url": "https://grafana-mcp.${ts_net}/mcp",
-      "transport": "sse"
+      "transport": "http"
     }
   }
 }
@@ -181,7 +188,7 @@ This ensures compatibility with all MCP client versions without requiring client
   "mcpServers": {
     "grafana": {
       "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp",
-      "transport": "sse",
+      "transport": "http",
       "tools": [
         "get_dashboard",
         "search_dashboards",
