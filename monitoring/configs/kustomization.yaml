@@ -6,7 +6,8 @@ resources:
   - arc-workload-identity-monitor.yaml
   - elasticsearch.yaml
   - otel.yaml
-  
+  - grafana-mcp-monitor.yaml
+
 configMapGenerator:
   - name: flux-grafana-dashboards
     files:
