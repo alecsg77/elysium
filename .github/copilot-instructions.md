@@ -206,7 +206,13 @@ When analyzing or troubleshooting Flux resources:
 4. Verify authentication for private repositories
 
 ### Helm + Kustomize Integration
-- **Base Pattern**: Most apps use HelmReleases in `apps/base/` pointing to `onechart` repository
+- **Chart Selection Priority**: When deploying new applications, follow this order:
+  1. **Official chart from app owner** - Charts provided by the same organization/owner
+  2. **Official documentation method** - Any Helm chart or deployment method suggested in official docs
+  3. **Well-maintained community charts** - Charts from Bitnami, Prometheus community, etc.
+  4. **Official Kustomize manifests** - If the app provides Kustomize configurations
+  5. **onechart (generic wrapper)** - Only when app provides Docker/docker-compose only and no official chart exists
+- **Base Pattern**: Apps use HelmReleases in `apps/base/` pointing to appropriate chart repositories (official charts preferred)
 - **Environment Patches**: Kyrion-specific overrides in `apps/kyrion/` using Kustomize patches
 - **Values Management**: 
   - Base values in HelmRelease spec
@@ -1023,7 +1029,7 @@ The cluster uses 18 HelmRepository sources for chart distribution:
 
 | Repository | Type | URL/OCI Path | Charts Used | Notes |
 |------------|------|--------------|-------------|-------|
-| **onechart** | Standard | https://chart.onechart.dev | Most applications | Primary chart repository for apps |
+| **onechart** | Standard | https://chart.onechart.dev | Legacy apps, generic deployments | Generic chart wrapper (use only when no official chart exists) |
 | **bitnami** | OCI | oci://registry-1.docker.io/bitnamicharts | MongoDB, PostgreSQL, Redis | Bitnami application charts |
 | **sealed-secrets** | Standard | https://bitnami-labs.github.io/sealed-secrets | sealed-secrets | Secret encryption |
 | **cert-manager** | Standard | https://charts.jetstack.io | cert-manager | Certificate management |

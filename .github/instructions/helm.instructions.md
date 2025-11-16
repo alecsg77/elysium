@@ -20,11 +20,63 @@ description: "Helm chart configuration and management in Flux"
 - Configure appropriate service account and RBAC
 
 ## Chart Selection
-- Prefer official or well-maintained charts
+
+**IMPORTANT**: Always follow this priority order when selecting a Helm chart for a new application:
+
+### Selection Priority (from highest to lowest):
+
+1. **Official Chart from App Owner/Organization**
+   - Check the application's GitHub repository for `charts/` or `helm/` directory
+   - Look for official Helm repository (often `https://helm.<app-domain>.com`)
+   - Example: Coder provides official chart at `https://helm.coder.com/v2`
+   - Example: Grafana provides charts at `https://grafana.github.io/helm-charts`
+
+2. **Official Documentation Recommendation**
+   - Check the app's official documentation for "Helm installation" section
+   - Use whatever chart/method the official docs recommend
+   - Some apps link to specific community charts they endorse
+
+3. **Well-Maintained Community/Vendor Charts**
+   - **Bitnami**: Widely used, well-maintained charts (PostgreSQL, MongoDB, Redis, etc.)
+   - **Prometheus Community**: Monitoring stack charts
+   - **Other reputable sources**: Check ArtifactHub.io for "verified publisher" badges
+   - Evaluate: Regular updates, active maintenance, good documentation
+
+4. **Official Kustomize Manifests**
+   - If app provides official Kustomize configurations in their repository
+   - Use Flux Kustomization resource instead of HelmRelease
+   - Example: n8n provides official Kubernetes manifests
+
+5. **onechart (Generic Wrapper) - Last Resort Only**
+   - Use **ONLY** when:
+     - App provides Docker/docker-compose only
+     - No official Helm chart exists
+     - No official Kustomize manifests available
+     - App is simple enough for generic chart wrapper
+   - onechart is a generic chart that wraps any container image
+   - Suitable for simple stateless apps, but lacks app-specific features
+
+### How to Find Official Charts:
+
+```bash
+# Search application's GitHub repository
+curl -s https://api.github.com/repos/<org>/<app>/contents | grep -i "chart\|helm"
+
+# Check ArtifactHub
+# Visit: https://artifacthub.io/packages/search?q=<app-name>
+# Look for "Official" or "Verified Publisher" badges
+
+# Check application's documentation
+# Look for: "Installation" -> "Kubernetes" or "Helm"
+```
+
+### Chart Evaluation Criteria:
 - Review chart dependencies and resource requirements
 - Verify chart compatibility with Kubernetes version
 - Check for CRD requirements and install order
 - Evaluate chart documentation and community support
+- Check last update date and issue activity
+- Review chart values.yaml for configuration options
 
 ## Values Management
 - Keep base values minimal and environment-agnostic
