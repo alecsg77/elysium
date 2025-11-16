@@ -17,7 +17,8 @@ Grafana MCP (Model Context Protocol) Server enables AI assistants and automation
 - **Image**: `docker.io/grafana/mcp-grafana` (official Docker image)
 - **Dependencies**: `kube-prometheus-stack` (Grafana deployment)
 - **Access**: Private via Tailscale ingress at `https://grafana-mcp.${ts_net}` or internal cluster DNS
-- **Port**: 8000 (SSE transport by default)
+- **Port**: 8000 (Streamable HTTP transport)
+- **Protocol**: MCP 2025-06-18 (backward compatible with 2024-11-05)
 
 ## Prerequisites
 
@@ -101,6 +102,12 @@ git push
 ## MCP Client Configuration
 
 This section covers 3 different configuration methods for connecting to the Grafana MCP server.
+
+**Transport Mode**: The server runs in **Streamable HTTP** mode (MCP protocol 2025-06-18), which provides native support for:
+- **Modern clients** (VSCode, Claude Desktop): Direct `POST /sse` for initialization and messaging
+- **Legacy clients**: Automatic fallback to `GET /sse` (SSE stream) + `POST /message?sessionId=...` pattern
+
+This ensures compatibility with all MCP client versions without requiring client-side configuration changes.
 
 ### Configuration 1: Inside the Cluster
 

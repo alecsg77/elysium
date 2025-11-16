@@ -44,6 +44,12 @@ spec:
         cpu: 500m
         memory: 512Mi
 
+    # Transport mode: Use Streamable HTTP (MCP protocol 2025-06-18)
+    # Supports both modern clients (POST /sse) and legacy clients (GET /sse)
+    extraArgs:
+      - "-t"
+      - "streamable-http"
+
     # Ingress configuration (Tailscale for private access)
     ingress:
       enabled: true
