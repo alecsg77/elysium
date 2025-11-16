@@ -15,7 +15,7 @@ Ask the user for the following if not provided:
 1. **Application name** (kebab-case)
 2. **Deployment method**: HelmRelease, Kustomize, or raw manifests
 3. **Namespace** (create new or use existing)
-4. **Helm chart source** (if using Helm): Follow the [chart selection priority](../.github/copilot-instructions.md#helm--kustomize-integration) (official charts → community charts → Kustomize → onechart as last resort)
+4. **Helm chart source** (if using Helm): Follow the [chart selection priority](../copilot-instructions.md#helm--kustomize-integration) (official charts → community charts → Kustomize → onechart as last resort)
 5. **Required secrets**: authentication tokens, API keys, etc.
 6. **Ingress requirements**: Internal (Tailscale) or external
 7. **Storage needs**: PersistentVolumeClaim requirements
@@ -24,21 +24,6 @@ Ask the user for the following if not provided:
 ## Chart Selection Guidelines
 
 **See detailed chart selection priority in [Copilot Instructions](../copilot-instructions.md#helm--kustomize-integration).**
-
-When deploying with Helm, always prioritize official charts:
-
-### Quick Priority Reference:
-1. **Official Chart from App Owner** - Example: `coder` from https://helm.coder.com/v2
-2. **Official Documentation Method** - Check the app's official docs for recommended chart
-3. **Community/Vendor Charts** - Bitnami, Grafana, Prometheus community, etc.
-4. **Official Kustomize** - If app provides Kustomize manifests (like n8n)
-5. **onechart** - Only when no other options exist
-
-### How to Find Official Charts:
-1. Check the application's GitHub repository for a `charts/` or `helm/` directory
-2. Look in the official documentation for "Helm installation" or "Kubernetes deployment"
-3. Search for official Helm repositories (often `https://helm.<app-domain>.com` or similar)
-4. Check ArtifactHub.io for charts with "official" or "verified publisher" badges
 
 ## Implementation Steps
 
