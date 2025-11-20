@@ -69,7 +69,7 @@ endpoints:
       # use 'host.docker.internal' instead of localhost if running LibreChat in a docker container
       baseURL: "http://ollama.ai.svc:11434/v1/"
       models:
-        default: ["gpt-oss", "deepseek-r1"]
+        default: ["phi3"]
         # fetching list of models is supported but the `name` field must start
         # with `ollama` (case-insensitive), as it does in this example.
         fetch: true

@@ -29,6 +29,10 @@ spec:
         pull:
           - phi3
           - phi3:14b
+          - gpt-oss
+          - deepseek-v3.1
+          - llama4
+          - mistral
         run:
           - phi3
 
