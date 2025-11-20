@@ -64,7 +64,8 @@ endpoints:
       titleConvo: true
       titleModel: "gpt-4o-mini"
 
-    - name: "Ollama"
+    # fix https://github.com/danny-avila/LibreChat/discussions/10321#discussioncomment-14845891
+    - name: "local"
       apiKey: "ollama"
       # use 'host.docker.internal' instead of localhost if running LibreChat in a docker container
       baseURL: "http://ollama.ai.svc:11434/v1/"
