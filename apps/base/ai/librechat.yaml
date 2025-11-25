@@ -45,7 +45,7 @@ spec:
         DOMAIN_CLIENT: https://chat.${ts_net}
         DOMAIN_SERVER: https://chat.${ts_net}
         GOOGLE_CALLBACK_URL: /oauth/google/callback
-        GOOGLE_MODELS: gemini-1.5-flash-latest,gemini-1.0-pro,gemini-1.0-pro-001,gemini-1.0-pro-latest,gemini-1.0-pro-vision-latest,gemini-1.5-pro-latest,gemini-pro,gemini-pro-vision
+        GOOGLE_MODELS: gemini-2.5-pro,gemini-2.5-flash,gemini-2.5-flash-preview,gemini-2.5-flash-lite,gemini-2.5-flash-lite-preview,gemini-2.5-flash-native-audio-preview,gemini-2.5-flash-image,gemini-2.0-flash,gemini-2.0-flash-lite,gemini-robotics-er-1.5-preview,gemma-3,gemma-3n,gemini-embedding-001
         GITHUB_CALLBACK_URL: /oauth/github/callback
       existingConfigYaml: librechat-config
     ingress:

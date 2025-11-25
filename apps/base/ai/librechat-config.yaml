@@ -101,3 +101,12 @@ webSearch:
   searxngInstanceUrl: "http://search.ai.svc"
   searxngApiKey: "$${SEARXNG_API_KEY}"
   searchProvider: "searxng"
+
+fileConfig:
+  endpoints:
+    default:
+      fileSizeLimit: 50  # 50MB
+      totalSizeLimit: 150
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
