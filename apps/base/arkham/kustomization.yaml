@@ -18,3 +18,4 @@ resources:
   - prowlarr.yaml
   - configarr.yaml
   - unmonitorr.yaml
+  - pihole.yaml
