@@ -26,6 +26,8 @@ spec:
         memory: "1Gi"
     vars:
       TZ: ${TZ:=Etc/UTC}
+    podSecurityContext:
+      fsGroup: ${PGID:=1000}
     volumes:
       - name: etc-pihole
         size: "1Gi"
@@ -38,8 +40,6 @@ spec:
         subPath: pihole/etc-dnsmasq
         existingClaim: pvc-storage
     containerPort: 80
-    service:
-      type: LoadBalancer
     container:
       ports:
         - name: http
