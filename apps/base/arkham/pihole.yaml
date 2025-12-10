@@ -1,0 +1,97 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pihole
+  namespace: arkham
+spec:
+  releaseName: pihole
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 12h
+  values:
+    image:
+      repository: pihole/pihole # {"$imagepolicy": "flux-system:pihole-policy:name"}
+      tag: "2025.11.0" # {"$imagepolicy": "flux-system:pihole-policy:tag"}
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "1"
+        memory: "1Gi"
+    vars:
+      TZ: ${TZ:=Etc/UTC}
+    volumes:
+      - name: etc-pihole
+        size: "1Gi"
+        path: /etc/pihole
+        subPath: pihole/etc-pihole
+        existingClaim: pvc-storage
+      - name: etc-dnsmasq
+        size: "1Gi"
+        path: /etc/dnsmasq.d
+        subPath: pihole/etc-dnsmasq
+        existingClaim: pvc-storage
+    containerPort: 80
+    service:
+      type: LoadBalancer
+    container:
+      ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: dns-tcp
+          containerPort: 53
+          protocol: TCP
+        - name: dns-udp
+          containerPort: 53
+          protocol: UDP
+    ingress:
+      tlsEnabled: true
+      ingressClassName: tailscale
+      host: pihole.${ts_net}
+    probe:
+      enabled: true
+      path: /docs
+      settings:
+        initialDelaySeconds: 60
+        timeoutSeconds: 5
+        periodSeconds: 30
+    livenessProbe:
+      enabled: true
+      path: /docs
+      settings:
+        initialDelaySeconds: 60
+        timeoutSeconds: 10
+        periodSeconds: 30
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: pihole
+  namespace: flux-system
+spec:
+  image: pihole/pihole
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: pihole-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: pihole
+  filterTags:
+    pattern: '^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$'
+    extract: "$major.$minor.$patch"
+  policy:
+    semver:
+      range: "*"
+  digestReflectionPolicy: Always
+  interval: 24h
