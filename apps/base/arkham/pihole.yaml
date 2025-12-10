@@ -29,15 +29,10 @@ spec:
     podSecurityContext:
       fsGroup: ${PGID:=1000}
     volumes:
-      - name: etc-pihole
-        size: "1Gi"
+      - name: storage
+        size: "100Mi"
         path: /etc/pihole
-        subPath: pihole/etc-pihole
-        existingClaim: pvc-storage
-      - name: etc-dnsmasq
-        size: "1Gi"
-        path: /etc/dnsmasq.d
-        subPath: pihole/etc-dnsmasq
+        subPath: pihole/config
         existingClaim: pvc-storage
     containerPort: 80
     container:
