@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: pihole/pihole # {"$imagepolicy": "flux-system:pihole-policy:name"}
-      tag: "2025.11.0" # {"$imagepolicy": "flux-system:pihole-policy:tag"}
+      tag: "2025.11.1" # {"$imagepolicy": "flux-system:pihole-policy:tag"}
     resources:
       requests:
         cpu: "100m"
