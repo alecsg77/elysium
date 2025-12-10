@@ -50,20 +50,6 @@ spec:
       tlsEnabled: true
       ingressClassName: tailscale
       host: pihole.${ts_net}
-    probe:
-      enabled: true
-      path: /docs
-      settings:
-        initialDelaySeconds: 60
-        timeoutSeconds: 5
-        periodSeconds: 30
-    livenessProbe:
-      enabled: true
-      path: /docs
-      settings:
-        initialDelaySeconds: 60
-        timeoutSeconds: 10
-        periodSeconds: 30
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
