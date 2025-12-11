@@ -56,6 +56,13 @@ spec:
       host: pihole.${ts_net}
     serviceAnnotations:
       tailscale.com/expose: "true"
+    ports:
+      - name: dns-tcp
+        containerPort: 53
+        protocol: TCP
+      - name: dns-udp
+        containerPort: 53
+        protocol: UDP
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
