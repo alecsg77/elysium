@@ -23,6 +23,14 @@ spec:
         kind: HelmRepository
         name: otwld
   interval: 12h
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
   values:
     ollama:
       models:
