@@ -26,6 +26,9 @@ spec:
         memory: "1Gi"
     vars:
       TZ: ${TZ:=Etc/UTC}
+      FTLCONF_webserver_api_password: ''
+      FTLCONF_webserver_port: '80'
+      FTLCONF_dns_domain_name: '${ts_net}'
     podSecurityContext:
       fsGroup: ${PGID:=1000}
     volumes:
@@ -50,6 +53,8 @@ spec:
       tlsEnabled: true
       ingressClassName: tailscale
       host: pihole.${ts_net}
+    serviceAnnotations:
+      tailscale.com/expose: "true"
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
