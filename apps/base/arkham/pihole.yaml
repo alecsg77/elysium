@@ -28,7 +28,8 @@ spec:
       TZ: ${TZ:=Etc/UTC}
       FTLCONF_webserver_api_password: ''
       FTLCONF_webserver_port: '80'
-      FTLCONF_dns_domain_name: '${ts_net}'
+      FTLCONF_webserver_domain: '${ts_net}'
+      FTLCONF_dns_listeningMode: 'ALL'
     podSecurityContext:
       fsGroup: ${PGID:=1000}
     volumes:
