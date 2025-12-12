@@ -29,6 +29,7 @@ spec:
       FTLCONF_webserver_api_password: ''
       FTLCONF_webserver_port: '80'
       FTLCONF_webserver_domain: '${ts_net}'
+      FTLCONF_webserver_paths_prefix: '/pihole'
       FTLCONF_dns_listeningMode: 'ALL'
     podSecurityContext:
       fsGroup: ${PGID:=1000}
@@ -51,9 +52,11 @@ spec:
           containerPort: 53
           protocol: UDP
     ingress:
-      tlsEnabled: true
-      ingressClassName: tailscale
-      host: pihole.${ts_net}
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+        traefik.ingress.kubernetes.io/router.middlewares: arkham-strip-prefix@kubernetescrd
+      host: arkham.${ts_net}
+      path: /pihole
     ports:
       - name: http
         containerPort: 80
