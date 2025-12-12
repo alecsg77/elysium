@@ -54,8 +54,6 @@ spec:
       tlsEnabled: true
       ingressClassName: tailscale
       host: pihole.${ts_net}
-    serviceAnnotations:
-      tailscale.com/expose: "true"
     ports:
       - name: http
         containerPort: 80
