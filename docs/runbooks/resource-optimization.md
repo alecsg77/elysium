@@ -1,3 +1,33 @@
+# Runbook: Resource Optimization
+
+Migrated from root directory.
+
+**Related**: See [Coder HelmRelease Timeout Investigation](/docs/troubleshooting/coder-helmrelease-timeout.md) for specific application failure case.
+
+## Summary
+Coder pod scheduling failures due to excessive memory requests across apps. This runbook documents request/limit tuning and expected outcomes.
+
+## Current State
+- Node: 32GB total memory
+- Memory Requests: 31GB (96%)
+- Actual Usage: 23GB (72%)
+
+## Optimization Plan
+See per-app recommendations and files to modify in `apps/` and `apps/kyrion/` patches.
+
+## Validation
+- `flux get hr -A`
+- `kubectl get pods -A`
+- `kubectl top pods -A`
+- `kubectl describe node <node>`
+
+---
+
+Full original summary content is preserved below.
+
+---
+
+```
 # Resource Optimization Summary
 
 **Issue**: Coder pod failed to schedule with "Insufficient memory" despite node showing 72% actual usage vs 96% reserved.
@@ -91,7 +121,7 @@ If issues arise, adjust specific application requests incrementally rather than 
 Changes committed to Git and will be applied automatically by Flux CD within 5 minutes.
 
 Check deployment status:
-```bash
+
 flux get hr -A
 kubectl get pods -A
 kubectl top pods -A

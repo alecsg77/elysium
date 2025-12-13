@@ -281,13 +281,13 @@ Before creating issues, search for known fixes:
 
 ```bash
 # Search by component
-grep -A 20 "## Component: Flux CD" .github/KNOWN_ISSUES.md
+grep -A 20 "## Flux CD" docs/troubleshooting/known-issues.md
 
-# Search by error
-grep -i "timeout" .github/KNOWN_ISSUES.md
+# Search for timeouts
+grep -i "timeout" docs/troubleshooting/known-issues.md
 
-# Search by resource type
-grep -A 20 "HelmRelease" .github/KNOWN_ISSUES.md
+# Search by resource
+grep -A 20 "HelmRelease" docs/troubleshooting/known-issues.md
 ```
 
 Or use knowledge-base agent in Copilot Chat:

@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📚 Documentation
-    url: https://github.com/alecsg77/elysium/blob/main/.github/TROUBLESHOOTING.md
+    url: https://github.com/alecsg77/elysium/blob/main/docs/troubleshooting/web-troubleshooting.md
     about: Read the troubleshooting guide and documentation
   - name: 💬 Discussions
     url: https://github.com/alecsg77/elysium/discussions

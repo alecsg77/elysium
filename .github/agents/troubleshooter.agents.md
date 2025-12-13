@@ -661,13 +661,13 @@ Remember: Most issues have been encountered before. Search Flux documentation an
 
 **Always search the knowledge base first** to avoid duplicate investigations:
 
-1. **Search `.github/KNOWN_ISSUES.md`** for similar problems:
+1. **Search `/docs/troubleshooting/known-issues.md`** for similar problems:
    ```bash
    # Search by component
-   grep -A 20 "## Component: Flux CD" .github/KNOWN_ISSUES.md
+   grep -A 20 "## Flux CD" docs/troubleshooting/known-issues.md
    
    # Search by error pattern
-   grep -i "error pattern" .github/KNOWN_ISSUES.md
+   grep -i "Root Cause" docs/troubleshooting/known-issues.md
    ```
 
 2. **Search closed GitHub issues** with similar symptoms:
@@ -710,7 +710,7 @@ When issues are resolved:
    
    **PR**: #[PR number]
    
-   **Knowledge Base**: This resolution will be added to `.github/KNOWN_ISSUES.md` automatically.
+   **Knowledge Base**: This resolution will be added to `/docs/troubleshooting/known-issues.md` automatically.
    ```
 
 ### Continuous Improvement

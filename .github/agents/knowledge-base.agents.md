@@ -25,7 +25,7 @@ Extract Symptoms & Context
     ↓
 Search Closed Issues (by labels, keywords, errors)
     ↓
-Search .github/KNOWN_ISSUES.md
+Search docs/troubleshooting/known-issues.md
     ↓
 Rank Results by Similarity
     ↓
@@ -51,7 +51,7 @@ Automatically search knowledge base when:
 **Use available search methods flexibly**:
 - **GitHub Issues API**: Use activate_search_and_discovery_tools if available
 - **Manual search**: Provide GitHub search queries for user to execute
-- **File search**: Search .github/KNOWN_ISSUES.md directly via file read
+- **File search**: Search docs/troubleshooting/known-issues.md directly via file read
 - **Semantic search**: Use workspace semantic search for related documentation
 
 #### 1. GitHub Issues Search
@@ -84,19 +84,19 @@ is:issue is:closed "librechat" label:component:application
 is:issue is:closed "sealed-secrets" label:component:security
 ```
 
-#### 2. KNOWN_ISSUES.md Search
+#### 2. known-issues.md Search
 
 Search the knowledge base file:
 
 ```bash
 # By component section
-awk '/## Component: Flux CD/,/## Component:/ {print}' .github/KNOWN_ISSUES.md
+awk '/## Flux CD/,/##/ {print}' docs/troubleshooting/known-issues.md
 
 # By error pattern
-grep -A 20 "error message pattern" .github/KNOWN_ISSUES.md
+grep -A 20 "Root Cause" docs/troubleshooting/known-issues.md
 
 # By resource type
-grep -A 20 "HelmRelease" .github/KNOWN_ISSUES.md
+grep -A 20 "HelmRelease" docs/troubleshooting/known-issues.md
 ```
 
 ### Extracting Search Terms
@@ -273,7 +273,7 @@ From Issue #123:
 
 Store this pattern for future lookups.
 
-## Integration with KNOWN_ISSUES.md
+## Integration with known-issues.md
 
 ### Reading Knowledge Base
 
@@ -340,7 +340,7 @@ Skip full diagnostics? This fix resolved [N] similar issues.
 
 **Searched**:
 - [N] closed issues with matching labels
-- KNOWN_ISSUES.md (Component: [X])
+- docs/troubleshooting/known-issues.md (Component: [X])
 - Past [component] failures
 
 **No similar issues found** in history.

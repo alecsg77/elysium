@@ -1495,17 +1495,18 @@ Coding agent requests are optimized for token efficiency:
 **Automatic Updates**:
 1. Issue closed with `status:resolved` label
 2. Workflow extracts root cause, resolution, and learnings
-3. PR created updating `.github/KNOWN_ISSUES.md`
+3. PR created updating `/docs/troubleshooting/known-issues.md`
 4. Auto-merged after validation
 5. Future searches benefit from documented pattern
 
 **Manual Search**:
+Refer to [Known Issues and Troubleshooting](/docs/troubleshooting/known-issues.md) directly in web browser, or use grep on local copy:
 ```bash
 # By component
-grep -A 20 "## Component: Flux CD" .github/KNOWN_ISSUES.md
+grep -A 20 "## Component: Flux CD" docs/troubleshooting/known-issues.md
 
 # By error message
-grep -i "error pattern" .github/KNOWN_ISSUES.md
+grep -i "error pattern" docs/troubleshooting/known-issues.md
 ```
 
 #### Example Workflow
@@ -1553,8 +1554,8 @@ grep -i "error pattern" .github/KNOWN_ISSUES.md
 
 #### Troubleshooting Resources
 
-- **User Guide**: `.github/TROUBLESHOOTING.md` - Complete workflow examples
-- **Known Issues**: `.github/KNOWN_ISSUES.md` - Past resolutions by component
+- **User Guide**: [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md) - Complete workflow examples
+- **Known Issues**: [Known Issues and Troubleshooting](/docs/troubleshooting/known-issues.md) - Past resolutions by component
 - **Root Cause Analysis**: `.github/prompts/analyze-root-cause.prompt.md` - Analysis methodology
 - **Resolution Requests**: `.github/prompts/request-resolution.prompt.md` - Token optimization guide
 - **Issue Templates**: `.github/ISSUE_TEMPLATE/` - Structured reporting forms
@@ -1569,10 +1570,15 @@ grep -i "error pattern" .github/KNOWN_ISSUES.md
 - **Generate docs**: `prompts/generate-docs.prompt.md`
 
 #### Documentation
-- **Copilot Guide**: `.github/README-COPILOT.md`
+- **Project Documentation**: `docs/README.md`
 - **Instructions**: `.github/instructions/*.instructions.md`
 - **Prompts**: `.github/prompts/*.prompt.md`
-- **Chat Modes**: `.github/chatmodes/*.chatmode.md`
+- **Agents**: `.github/agents/*.agents.md`
+- **App Catalog**: `apps/README.md`
+- **Infrastructure Catalog**: `infrastructure/README.md`
+- **Monitoring Docs**: `monitoring/README.md`
+- **Coder Templates Catalog**: `coder/README.md`
+- **Function Development Docs**: `functions/README.md`
 
 #### External Resources
 - [Flux Documentation](https://fluxcd.io/docs/)

@@ -283,6 +283,6 @@ For comprehensive HelmRelease diagnostics and automated resolution, use the GitH
 
 ### Additional Resources
 
-- **Troubleshooting Guide**: `.github/TROUBLESHOOTING.md`
-- **Known Issues Database**: `.github/KNOWN_ISSUES.md`
+- **Troubleshooting Guide**: [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md)
+- **Known Issues Database**: [Known Issues and Troubleshooting](/docs/troubleshooting/known-issues.md)
 - **Copilot Instructions**: `.github/copilot-instructions.md` - See "Web-Based Troubleshooting Workflow"

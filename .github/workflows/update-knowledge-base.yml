@@ -159,12 +159,12 @@ jobs:
           echo "component=${COMPONENT}" >> $GITHUB_OUTPUT
           echo "entry_file=/tmp/kb_entry.md" >> $GITHUB_OUTPUT
 
-      - name: Update KNOWN_ISSUES.md
+      - name: Update known-issues.md
         id: update
         run: |
           COMPONENT="${{ steps.extract.outputs.component }}"
           ENTRY_FILE="${{ steps.extract.outputs.entry_file }}"
-          KB_FILE=".github/KNOWN_ISSUES.md"
+          KB_FILE="docs/troubleshooting/known-issues.md"
           
           # Create file if doesn't exist
           if [ ! -f "${KB_FILE}" ]; then
@@ -233,7 +233,7 @@ jobs:
           git checkout -b "${BRANCH_NAME}"
           
           # Stage changes
-          git add .github/KNOWN_ISSUES.md
+          git add docs/troubleshooting/known-issues.md
           
           # Commit with conventional commit format
           git commit -m "docs: update knowledge base from issue #${ISSUE_NUMBER}
@@ -255,7 +255,7 @@ jobs:
           ### Component: ${COMPONENT}
 
           ### Changes
-          - Added issue resolution to \`.github/KNOWN_ISSUES.md\`
+          - Added issue resolution to `/docs/troubleshooting/known-issues.md`
           - Updated last modified date
 
           ### Review
@@ -284,6 +284,6 @@ jobs:
 
           This issue's resolution has been added to the knowledge base.
 
-          **Location**: \`.github/KNOWN_ISSUES.md\` (Component: ${{ steps.extract.outputs.component }})
+          **Location**: `/docs/troubleshooting/known-issues.md` (Component: ${{ steps.extract.outputs.component }})
 
           Future similar issues will benefit from this documentation. Thank you for contributing to the knowledge base! 🎉"

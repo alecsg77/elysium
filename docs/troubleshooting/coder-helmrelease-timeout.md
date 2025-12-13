@@ -1,3 +1,37 @@
+# Investigation Report: Coder HelmRelease Timeout
+
+Migrated from root directory.
+
+**Related**: See [Resource Optimization Runbook](/docs/runbooks/resource-optimization.md) for memory tuning guidance.
+
+<details>
+<summary>Summary</summary>
+The Coder HelmRelease upgrade to version 2.28.3 is failing with "context deadline exceeded" due to insufficient memory during `RollingUpdate`.
+</details>
+
+## Root Cause
+Insufficient memory for rolling update; temporary double allocation required.
+
+## Recommended Fix
+Use `Recreate` deployment strategy or reduce memory requests. See steps below.
+
+## Implementation Steps
+- Update values in apps/kyrion/coder-values.yaml
+- Optionally increase `spec.timeout`
+- Clean up pending pod and reconcile Flux
+
+## Validation
+- `kubectl get hr coder -n coder`
+- `kubectl get pods -n coder -w`
+- `helm history coder-coder -n coder`
+
+---
+
+Full original report content is preserved below.
+
+---
+
+```
 # Investigation Report: Issue #4 - Coder HelmRelease Timeout
 
 ## Summary
@@ -16,10 +50,8 @@ The Coder deployment uses a `RollingUpdate` strategy which attempts to create ne
 - During rolling update: 2 pods × 4Gi = 8Gi required
 
 ### Kubernetes Events
-```
 0/1 nodes are available: 1 Insufficient memory.
 preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.
-```
 
 ### HelmRelease Status
 - **State**: Stalled (RetriesExceeded)
@@ -47,11 +79,10 @@ preemption: 0/1 nodes are available: 1 No preemption victims found for incoming 
 
 **Implementation:**
 Add to HelmRelease values:
-```yaml
+
 coder:
   deploymentStrategy:
-    type: Recreate
-```
+	 type: Recreate
 
 ### Option 2: Reduce Memory Request
 **Pros:**
@@ -64,14 +95,13 @@ coder:
 
 **Implementation:**
 Add to HelmRelease values:
-```yaml
+
 coder:
   resources:
-    requests:
-      memory: 2Gi
-    limits:
-      memory: 4Gi
-```
+	 requests:
+		memory: 2Gi
+	 limits:
+		memory: 4Gi
 
 ### Option 3: Increase Helm Timeout + Manual Intervention
 **Pros:**
@@ -86,10 +116,9 @@ coder:
 **Implementation:**
 1. Delete the pending pod: `kubectl delete pod coder-5df88d876c-q5w9b -n coder`
 2. Increase timeout in HelmRelease:
-```yaml
+
 spec:
   timeout: 10m
-```
 
 ## Recommended Solution
 
@@ -100,17 +129,17 @@ For a single-node cluster with limited resources, the Recreate strategy is most 
 ### Implementation Steps
 
 1. **Update HelmRelease Configuration**
-   - File: `apps/base/coder/release.yaml` or `apps/kyrion/coder-values.yaml`
-   - Add deployment strategy configuration
+	- File: `apps/base/coder/release.yaml` or `apps/kyrion/coder-values.yaml`
+	- Add deployment strategy configuration
 
 2. **Clean Up Failed State**
-   - Delete the pending pod
-   - Reset HelmRelease retry counter by suspending and resuming
+	- Delete the pending pod
+	- Reset HelmRelease retry counter by suspending and resuming
 
 3. **Verify Upgrade**
-   - Monitor HelmRelease status
-   - Confirm new pod reaches Running state
-   - Test Coder accessibility
+	- Monitor HelmRelease status
+	- Confirm new pod reaches Running state
+	- Test Coder accessibility
 
 ## Additional Observations
 
@@ -131,33 +160,27 @@ Default 5-minute timeout may be too short for resource-constrained environments.
 ## Files to Modify
 
 1. **apps/base/coder/release.yaml** or **apps/kyrion/coder-values.yaml**
-   - Add `deploymentStrategy.type: Recreate`
-   - Optionally increase `spec.timeout`
-   - Consider pinning chart version
+	- Add `deploymentStrategy.type: Recreate`
+	- Optionally increase `spec.timeout`
+	- Consider pinning chart version
 
 ## Validation Steps
 
 After implementing the fix:
 
 1. Check HelmRelease status:
-   ```bash
-   kubectl get hr coder -n coder
-   flux get hr coder -n coder
-   ```
+	kubectl get hr coder -n coder
+	flux get hr coder -n coder
 
 2. Monitor pod status:
-   ```bash
-   kubectl get pods -n coder -w
-   ```
+	kubectl get pods -n coder -w
 
 3. Verify upgrade history:
-   ```bash
-   helm history coder-coder -n coder
-   ```
+	helm history coder-coder -n coder
 
 4. Test Coder access:
-   - Access URL: https://coder.flyingfox-tailor.ts.net
-   - Verify workspaces are accessible
+	- Access URL: https://coder.flyingfox-tailor.ts.net
+	- Verify workspaces are accessible
 
 ## Timeline
 
@@ -169,5 +192,7 @@ After implementing the fix:
 
 ---
 
-**Investigation completed**: 2025-11-15T18:15:03Z
-**Investigator**: GitHub Copilot (troubleshooter agent)
+Investigation completed: 2025-11-15T18:15:03Z
+Investigator: GitHub Copilot (troubleshooter agent)
+```
+

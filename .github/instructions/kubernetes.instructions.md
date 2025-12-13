@@ -196,21 +196,21 @@ Search for known fixes before creating issues:
 
 ```bash
 # Search by component
-grep -A 20 "## Component: Kubernetes" .github/KNOWN_ISSUES.md
+grep -A 20 "## Kubernetes" docs/troubleshooting/known-issues.md
 
 # Search by error pattern
-grep -i "crashloopbackoff" .github/KNOWN_ISSUES.md
-grep -i "imagepullbackoff" .github/KNOWN_ISSUES.md
-grep -i "oomkilled" .github/KNOWN_ISSUES.md
+grep -i "crashloopbackoff" docs/troubleshooting/known-issues.md
+grep -i "imagepullbackoff" docs/troubleshooting/known-issues.md
+grep -i "oomkilled" docs/troubleshooting/known-issues.md
 
 # Search by resource type
-grep -A 20 "Pod\|Deployment\|StatefulSet" .github/KNOWN_ISSUES.md
+grep -A 20 "Pod\|Deployment\|StatefulSet" docs/troubleshooting/known-issues.md
 ```
 
 ### Additional Resources
 
-- **Troubleshooting Guide**: `.github/TROUBLESHOOTING.md` - Complete workflow examples
-- **Known Issues**: `.github/KNOWN_ISSUES.md` - Searchable database of past resolutions
+- **Troubleshooting Guide**: [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md) - Complete workflow examples
+- **Known Issues**: [Known Issues and Troubleshooting](/docs/troubleshooting/known-issues.md) - Searchable database of past resolutions
 - **Troubleshooter Agent**: `.github/agents/troubleshooter.agents.md` - Diagnostic collection
 - **Issue Coordinator**: `.github/agents/issue-coordinator.agents.md` - Resolution orchestration
 - **Knowledge Base Agent**: `.github/agents/knowledge-base.agents.md` - Pattern matching

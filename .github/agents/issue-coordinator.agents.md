@@ -55,7 +55,7 @@ grep -RIn --color=never -E 'password|secret|token|apikey|bearer' diagnostics/ lo
 ```
 
 - If you discover a leaked credential, pause automation, notify the reporter to rotate it, and document the incident before proceeding.
-- After a PR merges, remind maintainers to perform the post-incident security review documented in `.github/TROUBLESHOOTING.md` (re-run secret scan, inspect diffs, rotate keys if needed).
+- After a PR merges, remind maintainers to perform the post-incident security review documented in [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md) (re-run secret scan, inspect diffs, rotate keys if needed).
 
 ## Workflow Overview
 
