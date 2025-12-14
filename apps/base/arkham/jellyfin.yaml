@@ -31,6 +31,7 @@ spec:
       PGID: ${PGID:=1000}
       TZ: ${TZ:=Etc/UTC}
       VERSION: docker
+      JELLYFIN_PublishedServerUrl: ${JELLYFIN_PUBLISHED_SERVER_URL:-}
     podSecurityContext:
       fsGroup: ${PGID:=1000}
     volumes:
@@ -75,6 +76,17 @@ spec:
         - name: http
           containerPort: 8096
           hostPort: 8096
+        - name: https
+          containerPort: 8920
+          hostPort: 8920
+        - name: discovery
+          containerPort: 7359
+          protocol: UDP
+          hostPort: 7359
+        - name: dlna
+          containerPort: 1900
+          protocol: UDP
+          hostPort: 1900
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
