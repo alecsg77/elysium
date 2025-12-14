@@ -44,6 +44,11 @@ patches:
       name: mediamtx
       namespace: mediamtx
   - path: arkham-resources.yaml
+  - path: arkham-pihole-patch.yaml
+    target:
+      kind: HelmRelease
+      name: pihole
+      namespace: arkham
   - path: discourse-resources.yaml
 
 configMapGenerator:
