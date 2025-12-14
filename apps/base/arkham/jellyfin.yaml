@@ -74,12 +74,8 @@ spec:
         timeoutSeconds: 10
     container:
       ports:
-        - name: discovery
-          containerPort: 7359
-          protocol: UDP
-        - name: dlna
-          containerPort: 1900
-          protocol: UDP
+        - name: http
+          containerPort: 8096
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
