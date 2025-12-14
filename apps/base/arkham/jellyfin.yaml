@@ -56,6 +56,10 @@ spec:
         subPath: jellyfin
         existingClaim: pvc-backups
     containerPort: 8096
+    ingress:
+      tlsEnabled: true
+      ingressClassName: tailscale
+      host: jellyfin
     probe:
       enabled: true
       path: /health
@@ -68,25 +72,14 @@ spec:
       settings:
         initialDelaySeconds: 15
         timeoutSeconds: 10
-    podSpec:
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
     container:
       ports:
-        - name: http
-          containerPort: 8096
-          hostPort: 8096
-        - name: https
-          containerPort: 8920
-          hostPort: 8920
         - name: discovery
           containerPort: 7359
           protocol: UDP
-          hostPort: 7359
         - name: dlna
           containerPort: 1900
           protocol: UDP
-          hostPort: 1900
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
