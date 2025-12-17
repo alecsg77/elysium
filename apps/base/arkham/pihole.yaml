@@ -31,6 +31,7 @@ spec:
       FTLCONF_webserver_domain: '${ts_net}'
       FTLCONF_webserver_paths_prefix: '/pihole'
       FTLCONF_dns_listeningMode: 'ALL'
+      FTLCONF_dns_domain_name: 'cluster.local'
     podSecurityContext:
       fsGroup: ${PGID:=1000}
     volumes:
