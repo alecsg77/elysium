@@ -209,8 +209,17 @@ grep -A 20 "Pod\|Deployment\|StatefulSet" docs/troubleshooting/known-issues.md
 
 ### Additional Resources
 
+- **[Add Application Runbook](/docs/runbooks/add-application.md)** - Complete deployment workflow with step-by-step instructions
+- **[Repository Structure Standards](/docs/standards/repository-structure.md)** - File placement and organization rules
 - **Troubleshooting Guide**: [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md) - Complete workflow examples
 - **Known Issues**: [Known Issues and Troubleshooting](/docs/troubleshooting/known-issues.md) - Searchable database of past resolutions
 - **Troubleshooter Agent**: `.github/agents/troubleshooter.agents.md` - Diagnostic collection
 - **Issue Coordinator**: `.github/agents/issue-coordinator.agents.md` - Resolution orchestration
 - **Knowledge Base Agent**: `.github/agents/knowledge-base.agents.md` - Pattern matching
+
+## Application Deployment
+
+For procedures on creating and deploying Kubernetes applications:
+- **Follow**: [Add Application Runbook](/docs/runbooks/add-application.md) for step-by-step deployment
+- **Reference**: This instructions file for manifest standards and best practices
+- **Validate**: Use commands from runbook before committing changes

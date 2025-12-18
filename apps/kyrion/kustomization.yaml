@@ -55,4 +55,4 @@ configMapGenerator:
   - name: mediamtx-config
     namespace: mediamtx
     files:
-      - mediamtx.yml=mediamtx-config.yml
+      - mediamtx.yml=mediamtx-config.yaml

@@ -5,6 +5,76 @@ description: "Documentation standards for GitOps repository"
 
 # Documentation Standards
 
+## Documentation Hierarchy and Roles
+
+This repository maintains a **strict separation** between AI agent guidance and human/AI documentation:
+
+### `.github/` Folder - AI Agent Context (Machine-First)
+**Purpose**: Provide context and guidance for GitHub Copilot and automated agents
+
+| Directory | Content Type | Purpose | Audience |
+|-----------|-------------|---------|----------|
+| `.github/instructions/*.instructions.md` | **Agent instructions** | Coding standards, patterns, conventions with references to actual docs | GitHub Copilot (coding) |
+| `.github/agents/*.agents.md` | **Agent definitions** | Agent behavior, workflows, coordination logic | GitHub Copilot (agents) |
+| `.github/prompts/*.prompt.md` | **Copilot prompts** | Task-specific agent guidance with quick references | GitHub Copilot (prompts) |
+
+**Rules for `.github/` content**:
+- ✅ Provide patterns, conventions, and best practices
+- ✅ Include quick reference templates and examples
+- ✅ Link to detailed documentation in `/docs/`
+- ✅ Focus on "how to code" and "what patterns to follow"
+- ❌ **NO step-by-step procedures** (those go in `/docs/runbooks/`)
+- ❌ **NO comprehensive documentation** (that goes in `/docs/standards/`)
+- ❌ **NO duplicating information** from `/docs/`
+
+**Example content**:
+- `kubernetes.instructions.md`: Manifest patterns, security standards, resource conventions
+- `flux.instructions.md`: GitOps patterns, dependency chains, reconciliation strategies
+- `deploy-app.prompt.md`: High-level workflow, key principles, links to detailed runbook
+
+### `/docs/` Folder - Authoritative Documentation (Human-First)
+**Purpose**: Single source of truth for standards, procedures, architecture, and troubleshooting
+
+| Directory | Content Type | Purpose | Audience |
+|-----------|-------------|---------|----------|
+| `/docs/standards/` | **Standards & rules** | Repository structure, naming, best practices, anti-patterns | Humans & AI |
+| `/docs/runbooks/` | **Procedures** | Step-by-step operational guides with commands and validation | Humans & AI |
+| `/docs/architecture/` | **Architecture docs** | System design, topology, network, storage | Humans |
+| `/docs/security/` | **Security docs** | Policies, secret management, RBAC, incident response | Humans |
+| `/docs/troubleshooting/` | **Troubleshooting** | Known issues, diagnostic workflows, resolutions | Humans & AI |
+
+**Rules for `/docs/` content**:
+- ✅ Comprehensive, authoritative information
+- ✅ Step-by-step procedures with validation steps
+- ✅ Complete examples with context
+- ✅ Clear prerequisites and expected outcomes
+- ✅ Reference external official documentation
+- ❌ **NO agent-specific instructions** (those go in `.github/instructions/`)
+- ❌ **NO duplication** between standards and runbooks
+
+**Example content**:
+- `standards/repository-structure.md`: Decision tree, hygiene rules, naming conventions, anti-patterns
+- `runbooks/add-application.md`: Complete 8-step procedure with commands, validation, troubleshooting
+- `troubleshooting/known-issues.md`: Searchable knowledge base with symptoms, causes, resolutions
+
+### Cross-Reference Pattern
+
+**From `.github/` → Reference `/docs/`**:
+```markdown
+<!-- In .github/instructions/kubernetes.instructions.md -->
+For complete deployment procedures, see:
+- [Add Application Runbook](/docs/runbooks/add-application.md)
+- [Repository Structure Standards](/docs/standards/repository-structure.md)
+```
+
+**From `/docs/` → Reference other `/docs/`**:
+```markdown
+<!-- In docs/runbooks/add-application.md -->
+For file placement rules, see [Repository Structure Standards](/docs/standards/repository-structure.md)
+```
+
+**Never**: `/docs/` should NOT reference `.github/` files (those are agent-internal)
+
 ## General Guidelines
 - Centralize all documentation under `/docs` only; do not place docs in app or infrastructure directories
 - Use clear, concise language accessible to team members
@@ -145,13 +215,33 @@ Migration guide: docs/cert-manager-migration.md
 - Tag releases with comprehensive changelogs
 
 ## Runbook Documentation
-Create runbooks in `/docs/runbooks/` for common operational tasks:
+
+**Location**: `/docs/runbooks/` (NOT `.github/prompts/`)
+
+Runbooks are **step-by-step operational procedures** for humans and AI agents to follow.
+
+**Runbook structure** (required sections):
+1. **Prerequisites**: Tools, access, knowledge required
+2. **Overview**: Brief description and estimated time
+3. **Step-by-step procedure**: Numbered steps with exact commands
+4. **Validation**: How to verify success after each major step
+5. **Troubleshooting**: Common issues and their solutions
+6. **Related Documentation**: Links to relevant standards and guides
+7. **Checklist**: Pre-action and post-action verification items
+
+**Common runbook topics**:
 - Cluster bootstrap and initialization
 - Adding new applications or services
 - Secret rotation procedures
 - Scaling applications up or down
 - Troubleshooting common issues
 - Disaster recovery procedures
+- Upgrading cluster components
+- Backup and restore operations
+
+**Runbook vs Prompt distinction**:
+- **Runbook** (`/docs/runbooks/add-application.md`): Complete procedure with all commands, validation steps, troubleshooting - authoritative source
+- **Prompt** (`.github/prompts/deploy-app.prompt.md`): Agent guidance that **references** the runbook, provides high-level workflow and key principles
 
 ## Diagram Standards
 - Use mermaid diagrams for architecture visualization
@@ -218,13 +308,60 @@ Create runbooks in `/docs/runbooks/` for common operational tasks:
 - Reference security guidelines and standards
 
 ## Documentation Maintenance
-- Review documentation quarterly for accuracy
-- Remove outdated information promptly
-- Update examples when patterns change
-- Validate commands and procedures work
-- Collect feedback from documentation users
-- Maintain topic indexes and keep `/docs/README.md` navigation updated
-- Ensure code-adjacent docs remain in source directories; only general docs belong in `/docs`
+
+### Quarterly Review Checklist
+- [ ] Review documentation for accuracy
+- [ ] Remove outdated information
+- [ ] Update examples when patterns change
+- [ ] Validate all commands and procedures work
+- [ ] Collect feedback from documentation users
+- [ ] Maintain topic indexes and navigation
+- [ ] Verify `.github/instructions/` files reference (not duplicate) `/docs/`
+- [ ] Ensure code-adjacent docs remain in source directories
+
+### When Adding New Documentation
+
+**Standards document** (`/docs/standards/`):
+1. Define rules, principles, conventions
+2. Include decision trees and anti-patterns
+3. Provide quick reference templates
+4. Update `/docs/standards/README.md` index
+5. Link from `.github/instructions/` files (do not duplicate)
+
+**Runbook** (`/docs/runbooks/`):
+1. Write complete step-by-step procedure
+2. Include prerequisites, validation, troubleshooting
+3. Test all commands work as documented
+4. Add to `/docs/runbooks/README.md` with category
+5. Reference from relevant `.github/prompts/` files
+
+**Agent instructions** (`.github/instructions/`):
+1. Focus on coding patterns and conventions
+2. Reference (don't duplicate) relevant `/docs/` pages
+3. Include quick reference templates only
+4. Link to detailed standards and runbooks
+5. Update when coding patterns change, not when procedures change
+
+**Agent prompt** (`.github/prompts/`):
+1. Define agent task and workflow
+2. Reference detailed runbook for procedures
+3. Highlight key principles and validation
+4. Provide minimal templates as quick reference
+5. Link to all relevant standards and instructions
+
+### Separation of Concerns Checklist
+
+Before committing documentation changes:
+
+- [ ] **Standards** define rules and principles (not step-by-step how-to)
+- [ ] **Runbooks** provide complete procedures (not just principles)
+- [ ] **Instructions** guide agent coding (not comprehensive docs)
+- [ ] **Prompts** reference runbooks (not duplicate procedures)
+- [ ] No step-by-step procedures in `.github/` files
+- [ ] No comprehensive standards in `.github/` files
+- [ ] No agent-specific content in `/docs/` files
+- [ ] All cross-references go from `.github/` → `/docs/` (not reverse)
+- [ ] Each piece of information has exactly one authoritative home
 
 ## Comment Standards
 ```yaml

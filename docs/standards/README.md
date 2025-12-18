@@ -1,7 +1,14 @@
 # Standards
 
-Repository standards for documentation, coding, commit messages, and GitOps conventions.
+This README is the index for standards documents.
 
-- Documentation standards (see `.github/instructions/documentation.instructions.md`)
-- Conventional Commits
-- Flux, Helm, Kubernetes best practices
+## Standards index
+
+- [Repository structure (monorepo standards)](repository-structure.md)
+
+## Related standards and instructions
+
+- Repo-wide documentation conventions are in `.github/instructions/documentation.instructions.md`.
+- Flux resource conventions are in `.github/instructions/flux.instructions.md`.
+- Kustomize overlay conventions are in `.github/instructions/kustomize.instructions.md`.
+- HelmRelease conventions are in `.github/instructions/helm.instructions.md`.

@@ -25,84 +25,46 @@ Ask the user for the following if not provided:
 
 **See detailed chart selection priority in [Copilot Instructions](../copilot-instructions.md#helm--kustomize-integration).**
 
-## Implementation Steps
+## Implementation Workflow
 
-### 1. Create Base Application Directory
-Create `apps/base/<app-name>/` with:
-- `kustomization.yaml` - List all resources and dependencies
-- `namespace.yaml` - Namespace definition with labels
-- `release.yaml` or individual service YAML files
-- `ts-ingress.yaml` (if Tailscale access needed)
+**Follow the detailed step-by-step procedure**: [docs/runbooks/add-application.md](/docs/runbooks/add-application.md)
 
-### 2. Create Namespace
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: <app-name>
-  labels:
-    app.kubernetes.io/name: <app-name>
-    pod-security.kubernetes.io/enforce: restricted
-```
+The runbook covers:
+- Creating base directory structure (Helm vs Kustomize)
+- Registering in base kustomization
+- Creating environment overlays with patches
+- Creating sealed secrets
+- Validation procedures (mandatory before commit)
+- Helm rendering tests
+- Commit with conventional commit message
+- Deployment monitoring
+- Troubleshooting common issues
 
-### 3. Create HelmRelease (if applicable)
-```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
-metadata:
-  name: <app-name>
-  namespace: <app-name>
-spec:
-  interval: 30m
-  chart:
-    spec:
-      chart: <chart-name>
-      version: <version>
-      sourceRef:
-        kind: HelmRepository
-        name: <repo-name>
-        namespace: flux-system
-  values:
-    # Base values here
-```
+**Key principles to follow**:
+1. **Base directory** (`apps/base/<app>/`):
+   - One resource per YAML file
+   - Only environment-agnostic values
+   - NO patches (patches belong in overlays)
+   - Namespace only for app-specific namespaces (not `default`, `flux-system`, `kube-system`)
+   
+2. **Overlay directory** (`apps/kyrion/`):
+   - Strategic merge patches for structural changes
+   - JSON patches for precise value changes
+   - Environment-specific ConfigMaps and SealedSecrets
+   - Reference base directory, don't duplicate resources
 
-### 4. Handle Secrets
-If secrets are required:
-1. Ask user for secret values (will be encrypted)
-2. Create sealed secret:
+3. **Version management**:
+   - Pin all chart versions: `version: "1.2.3"`
+   - Pin all image tags: `tag: "v1.2.3"`
+   - Never use `latest` tags
+
+4. **Validation (mandatory before commit)**:
    ```bash
-   echo -n "value" | kubectl create secret generic <app>-secret \
-     --dry-run=client --from-file=key=/dev/stdin -o yaml | \
-     kubeseal --cert etc/certs/pub-sealed-secrets.pem -o yaml
+   kustomize build apps/base/<app>/
+   kustomize build apps/kyrion/
+   flux build kustomization apps --path clusters/kyrion
+   helm template <app> <chart> -f values.yaml  # if HelmRelease
    ```
-3. Save as `apps/base/<app>/<app>-sealed-secret.yaml`
-4. Reference in HelmRelease via `valuesFrom`
-
-### 5. Create Kustomization
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - namespace.yaml
-  - release.yaml
-  # Add other resources
-```
-
-### 6. Add to Environment Overlay
-Update `apps/kyrion/kustomization.yaml`:
-```yaml
-resources:
-  - ../base/<app-name>
-```
-
-Add environment-specific patches if needed in `apps/kyrion/<app>-patch.yaml`
-
-### 7. Commit and Deploy
-Commit changes to Git. Flux will automatically detect and deploy within 5 minutes, or trigger immediately:
-```bash
-flux reconcile source git flux-system
-flux reconcile kustomization apps
-```
 
 ## Validation Steps
 
@@ -113,37 +75,56 @@ After deployment:
 4. Test ingress access (if configured)
 5. Verify secrets mounted correctly
 
-## Common Patterns
+## Quick Reference Templates
 
-### Tailscale Ingress for Private Access
+For complete templates and examples, see [docs/runbooks/add-application.md](/docs/runbooks/add-application.md).
+
+### Base HelmRelease Template
 ```yaml
-apiVersion: tailscale.com/v1alpha1
-kind: ProxyClass
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
 metadata:
-  name: <app>-ingress
+  name: <app>
+  namespace: <namespace>
 spec:
-  statefulSet:
-    labels:
-      app: <app>
+  interval: 1h
+  timeout: 10m
+  chart:
+    spec:
+      chart: <chart-name>
+      version: "1.2.3"  # Pinned version
+      sourceRef:
+        kind: HelmRepository
+        name: <repo-name>
+        namespace: flux-system
+  values:
+    # Conservative defaults
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  valuesFrom:  # Optional environment-specific values
+    - kind: ConfigMap
+      name: <app>-config
+      optional: true
 ```
 
-### Storage with Existing PVC
-```yaml
-persistence:
-  enabled: true
-  existingClaim: pvc-storage
-  subPath: <app-data>
+### Sealed Secret Creation
+```bash
+kubectl create secret generic <app>-secret \
+  --namespace=<namespace> \
+  --from-literal=key=value \
+  --dry-run=client -o yaml | \
+  kubeseal --cert etc/certs/pub-sealed-secrets.pem \
+  --format=yaml > <app>-sealed-secret.yaml
 ```
 
-### Resource Limits
-```yaml
-resources:
-  limits:
-    cpu: 1000m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-```
+## References
 
-Ensure the application follows the [Kubernetes guidelines](../.github/instructions/kubernetes.instructions.md) and [Flux patterns](../.github/instructions/flux.instructions.md).
+- **[Repository Structure Standards](/docs/standards/repository-structure.md)** - File placement rules and best practices
+- **[Add Application Runbook](/docs/runbooks/add-application.md)** - Complete step-by-step procedure
+- **[Kubernetes Guidelines](/.github/instructions/kubernetes.instructions.md)** - Manifest best practices
+- **[Flux Patterns](/.github/instructions/flux.instructions.md)** - GitOps conventions
+- **[Helm Instructions](/.github/instructions/helm.instructions.md)** - Chart management
+- **[Kustomize Instructions](/.github/instructions/kustomize.instructions.md)** - Overlay patterns

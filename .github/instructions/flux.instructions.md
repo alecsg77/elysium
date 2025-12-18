@@ -301,5 +301,17 @@ Search for issues with "HelmRelease timeout"
 - Keep Flux components up to date
 - Use separate Kustomizations for logical component groups
 - Document dependencies clearly in README files
+- Pin chart and image versions explicitly (no `latest`)
+- Validate locally before committing: `flux build kustomization <name> --path <path>`
+- Use appropriate reconciliation intervals (balance freshness vs load)
+- Configure health checks and timeouts based on application needs
+
+## Application Deployment
+
+For complete procedures on deploying applications, see:
+- **[Add Application Runbook](/docs/runbooks/add-application.md)** - Step-by-step deployment workflow
+- **[Repository Structure Standards](/docs/standards/repository-structure.md)** - File organization and placement rules
+
+This instructions file focuses on Flux-specific patterns and conventions. For deployment procedures, follow the runbook.
 - Test changes in non-production environments first
 - Use Flux notifications for alerting on failures
