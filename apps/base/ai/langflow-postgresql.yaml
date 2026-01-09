@@ -1,0 +1,38 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: langflow-postgresql
+  namespace: ai
+spec:
+  releaseName: langflow-postgresql
+  chart:
+    spec:
+      chart: postgresql
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+        namespace: flux-system
+      version: "16.x.x"
+  interval: 12h
+  timeout: 10m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    auth:
+      username: langflow
+      password: langflow
+      database: langflow
+      existingSecret: ""
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+        storageClass: local-path
+    metrics:
+      enabled: false

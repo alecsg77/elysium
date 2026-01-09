@@ -1,0 +1,93 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: langflow
+  namespace: ai
+spec:
+  releaseName: langflow
+  chart:
+    spec:
+      chart: onechart
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+  interval: 12h
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  # Ensure PostgreSQL is ready before deploying LangFlow
+  dependsOn:
+    - name: langflow-postgresql
+      namespace: ai
+  values:
+    image:
+      repository: langflowai/langflow # {"$imagepolicy": "flux-system:langflow-policy:name"}
+      tag: "1.1.1" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
+
+    # LangFlow runs on port 7860
+    containerPort: 7860
+
+    # Environment variables for LangFlow configuration
+    vars:
+      # PostgreSQL connection string
+      LANGFLOW_DATABASE_URL: "postgresql://langflow:langflow@langflow-postgresql:5432/langflow"
+      # Directory for logs, file storage, and secret keys
+      LANGFLOW_CONFIG_DIR: "/app/langflow"
+      # Enable auto-login (set to false for production)
+      LANGFLOW_AUTO_LOGIN: "true"
+      # Cache type
+      LANGFLOW_CACHE_TYPE: "memory"
+      # Log level
+      LANGFLOW_LOG_LEVEL: "info"
+
+    # Persistent volume for LangFlow data (logs, files, etc.)
+    volumes:
+      - name: langflow-data
+        size: "10Gi"
+        path: /app/langflow
+        storageClass: local-path
+
+    # Resource requests and limits
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+    # Ingress configuration for Tailscale access
+    ingress:
+      tlsEnabled: true
+      ingressClassName: tailscale
+      host: langflow.${ts_net}
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: langflow
+  namespace: flux-system
+spec:
+  image: langflowai/langflow
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: langflow-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: langflow
+  policy:
+    semver:
+      range: ">=1.0.0 <2.0.0"  # Match 1.x versions
+  digestReflectionPolicy: Always
+  interval: 24h

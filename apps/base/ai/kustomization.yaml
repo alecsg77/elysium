@@ -11,6 +11,8 @@ resources:
   - local-ai.yaml
   - searxng.yaml
   - searxng-config-sealed-secret.yaml
+  - langflow-postgresql.yaml
+  - langflow.yaml
 
 configMapGenerator:
   - name: librechat-config
