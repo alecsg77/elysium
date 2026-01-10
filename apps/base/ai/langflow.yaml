@@ -1,4 +1,3 @@
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
@@ -40,7 +39,6 @@ spec:
         image:
           repository: langflowai/langflow # {"$imagepolicy": "flux-system:langflow-policy:name"}
           tag: "1.1.1" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
-
         # External database configuration
         externalDatabase:
           enabled: true
@@ -59,17 +57,14 @@ spec:
               secretKeyRef:
                 key: "password"
                 name: "langflow-postgresql"
-
         # Disable SQLite in favor of PostgreSQL
         sqlite:
           enabled: false
-
       # Frontend configuration
       frontend:
         image:
           repository: langflowai/langflow-frontend # {"$imagepolicy": "flux-system:langflow-frontend-policy:name"}
-          tag: "1.1.1" # {"$imagepolicy": "flux-system:langflow-frontend-policy:tag"}
-
+          tag: "1.7.2" # {"$imagepolicy": "flux-system:langflow-frontend-policy:tag"}
     # Ingress configuration for Tailscale
     ingress:
       enabled: true
@@ -82,7 +77,6 @@ spec:
       tls:
         - hosts:
             - langflow
-
     # PostgreSQL included in the chart
     postgresql:
       enabled: true
@@ -117,7 +111,7 @@ spec:
     name: langflow
   policy:
     semver:
-      range: ">=1.0.0 <2.0.0"  # Match 1.x versions
+      range: ">=1.0.0 <2.0.0" # Match 1.x versions
   digestReflectionPolicy: Always
   interval: 24h
 ---
@@ -141,6 +135,6 @@ spec:
     name: langflow-frontend
   policy:
     semver:
-      range: ">=1.0.0 <2.0.0"  # Match 1.x versions for frontend
+      range: ">=1.0.0 <2.0.0" # Match 1.x versions for frontend
   digestReflectionPolicy: Always
   interval: 24h
