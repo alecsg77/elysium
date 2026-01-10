@@ -36,7 +36,7 @@ spec:
   - kustomize:
       patches:
       - patch: |-
-          - op: replace
+          - op: add
             path: /spec/ingressClassName
             value: tailscale
         target:
