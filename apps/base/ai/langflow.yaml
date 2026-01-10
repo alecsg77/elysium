@@ -32,6 +32,22 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
+  postRenderers:
+  - kustomize:
+      patches:
+      - patch: |-
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: langflow-service
+            namespace: ai
+          spec:
+            ingressClassName: tailscale
+        target:
+          version: v1
+          kind: Ingress
+          name: langflow-service
+          namespace: ai
   values:
     langflow:
       # Backend configuration
