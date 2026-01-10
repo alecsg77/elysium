@@ -1,0 +1,146 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: langflow
+  namespace: ai
+spec:
+  type: default
+  interval: 24h
+  url: https://langflow-ai.github.io/langflow-helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: langflow
+  namespace: ai
+spec:
+  releaseName: langflow
+  chart:
+    spec:
+      chart: langflow-ide
+      version: "0.1.x"
+      sourceRef:
+        kind: HelmRepository
+        name: langflow
+        namespace: ai
+  interval: 12h
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    langflow:
+      # Backend configuration
+      backend:
+        image:
+          repository: langflowai/langflow # {"$imagepolicy": "flux-system:langflow-policy:name"}
+          tag: "1.1.1" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
+
+        # External database configuration
+        externalDatabase:
+          enabled: true
+          driver:
+            value: "postgresql"
+          host:
+            value: "langflow-postgresql"
+          port:
+            value: "5432"
+          database:
+            value: "langflow"
+          user:
+            value: "langflow"
+          password:
+            valueFrom:
+              secretKeyRef:
+                key: "password"
+                name: "langflow-postgresql"
+
+        # Disable SQLite in favor of PostgreSQL
+        sqlite:
+          enabled: false
+
+      # Frontend configuration
+      frontend:
+        image:
+          repository: langflowai/langflow-frontend # {"$imagepolicy": "flux-system:langflow-frontend-policy:name"}
+          tag: "1.1.1" # {"$imagepolicy": "flux-system:langflow-frontend-policy:tag"}
+
+    # Ingress configuration for Tailscale
+    ingress:
+      enabled: true
+      className: tailscale
+      hosts:
+        - host: langflow.${ts_net}
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - langflow
+
+    # PostgreSQL included in the chart
+    postgresql:
+      enabled: true
+      fullnameOverride: "langflow-postgresql"
+      auth:
+        username: "langflow"
+        password: "langflow"
+        database: "langflow"
+      primary:
+        persistence:
+          enabled: true
+          size: 10Gi
+          storageClass: local-path
+---
+# Image automation for backend
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: langflow
+  namespace: flux-system
+spec:
+  image: langflowai/langflow
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: langflow-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: langflow
+  policy:
+    semver:
+      range: ">=1.0.0 <2.0.0"  # Match 1.x versions
+  digestReflectionPolicy: Always
+  interval: 24h
+---
+# Image automation for frontend
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: langflow-frontend
+  namespace: flux-system
+spec:
+  image: langflowai/langflow-frontend
+  interval: 24h
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: langflow-frontend-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: langflow-frontend
+  policy:
+    semver:
+      range: ">=1.0.0 <2.0.0"  # Match 1.x versions for frontend
+  digestReflectionPolicy: Always
+  interval: 24h
