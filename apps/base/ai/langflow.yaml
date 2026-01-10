@@ -39,27 +39,14 @@ spec:
         image:
           repository: langflowai/langflow # {"$imagepolicy": "flux-system:langflow-policy:name"}
           tag: "1.7.2" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
-        # External database configuration
+        # Use bundled SQLite by default (simpler for homelab)
         externalDatabase:
-          enabled: true
-          driver:
-            value: "postgresql"
-          host:
-            value: "langflow-postgresql"
-          port:
-            value: "5432"
-          database:
-            value: "langflow"
-          user:
-            value: "langflow"
-          password:
-            valueFrom:
-              secretKeyRef:
-                key: "password"
-                name: "langflow-postgresql"
-        # Disable SQLite in favor of PostgreSQL
-        sqlite:
           enabled: false
+        sqlite:
+          enabled: true
+          volume:
+            size: "1Gi"
+          existingStorageClassName: "local-path"
       # Frontend configuration
       frontend:
         image:
@@ -77,19 +64,9 @@ spec:
       tls:
         - hosts:
             - langflow
-    # PostgreSQL included in the chart
+    # PostgreSQL included in the chart (disabled when using SQLite)
     postgresql:
-      enabled: true
-      fullnameOverride: "langflow-postgresql"
-      auth:
-        username: "langflow"
-        password: "langflow"
-        database: "langflow"
-      primary:
-        persistence:
-          enabled: true
-          size: 10Gi
-          storageClass: local-path
+      enabled: false
 ---
 # Image automation for backend
 apiVersion: image.toolkit.fluxcd.io/v1beta2

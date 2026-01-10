@@ -50,6 +50,11 @@ patches:
       name: pihole
       namespace: arkham
   - path: discourse-resources.yaml
+  - path: langflow-autologin-patch.yaml
+    target:
+      kind: HelmRelease
+      name: langflow
+      namespace: ai
 
 configMapGenerator:
   - name: mediamtx-config
