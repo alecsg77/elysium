@@ -67,7 +67,6 @@ spec:
     # Ingress configuration for Tailscale
     ingress:
       enabled: true
-      className: tailscale
       hosts:
         - host: langflow.${ts_net}
           paths:
@@ -75,10 +74,7 @@ spec:
               pathType: Prefix
       tls:
         - hosts:
-            - langflow
-    # PostgreSQL included in the chart (disabled when using SQLite)
-    postgresql:
-      enabled: false
+            - langflow.${ts_net}
 ---
 # Image automation for backend
 apiVersion: image.toolkit.fluxcd.io/v1beta2
