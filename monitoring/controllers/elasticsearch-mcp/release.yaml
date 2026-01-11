@@ -1,89 +1,96 @@
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
+apiVersion: v1
+kind: Service
 metadata:
   name: elasticsearch-mcp
   namespace: monitoring
+  labels:
+    app: elasticsearch-mcp
 spec:
-  interval: 1h
-  chart:
+  selector:
+    app: elasticsearch-mcp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch-mcp
+  namespace: monitoring
+  labels:
+    app: elasticsearch-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch-mcp
+  template:
+    metadata:
+      labels:
+        app: elasticsearch-mcp
     spec:
-      chart: onechart
-      version: "0.70.x"
-      sourceRef:
-        kind: HelmRepository
-        name: onechart
-        namespace: flux-system
-      interval: 60m
-  dependsOn:
-    - name: elastic-operator
-      namespace: elastic-system
-  values:
-    # Container image configuration
-    image:
-      repository: docker.elastic.co/mcp/elasticsearch
-      tag: latest  # {"$imagepolicy": "flux-system:elasticsearch-mcp-policy:tag"}
-
-    # Deployment configuration
-    replicas: 1
-
-    # Container args
-    extraArgs:
-      - "http"
-
-    # Environment variables
-    vars:
-      ES_URL: "https://elasticsearch-es-http.monitoring.svc.cluster.local:9200"
-
-    # Environment from secrets
-    secretsToEnvironmentVariables:
-      - elasticsearch-mcp-credentials
-
-    # Resource configuration
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
-
-    # Health probes
-    probe:
-      enabled: true
-      path: /ping
-      settings:
+      containers:
+      - name: elasticsearch-mcp
+        image: docker.elastic.co/mcp/elasticsearch:latest  # {"$imagepolicy": "flux-system:elasticsearch-mcp-policy:tag"}
+        args:
+          - "http"
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: ES_URL
+          value: "https://elasticsearch-es-http.monitoring.svc.cluster.local:9200"
+        envFrom:
+        - secretRef:
+            name: elasticsearch-mcp-credentials
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         livenessProbe:
+          httpGet:
+            path: /ping
+            port: 8080
           initialDelaySeconds: 10
           periodSeconds: 30
         readinessProbe:
+          httpGet:
+            path: /ping
+            port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
-
-    # Service configuration
-    service:
-      enabled: true
-      type: ClusterIP
-      ports:
-        - name: http
-          port: 8080
-          targetPort: 8080
-          protocol: TCP
-
-    # Ingress configuration (Tailscale)
-    ingress:
-      enabled: true
-      ingressClassName: tailscale
-      annotations:
-        tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
-      hosts:
-        - host: elasticsearch-mcp
-          paths:
-            - path: /
-              pathType: Prefix
-      tls:
-        - hosts:
-            - elasticsearch-mcp
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elasticsearch-mcp
+  namespace: monitoring
+  annotations:
+    tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+spec:
+  ingressClassName: tailscale
+  rules:
+  - host: elasticsearch-mcp
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: elasticsearch-mcp
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - elasticsearch-mcp
 ---
 # ImageRepository for automated image updates
 apiVersion: image.toolkit.fluxcd.io/v1beta2
