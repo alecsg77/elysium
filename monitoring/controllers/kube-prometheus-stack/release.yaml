@@ -51,6 +51,14 @@ spec:
         externalUrl: https://prometheus.${ts_net}
         retention: 15d
         walCompression: true
+        scrapeInterval: 60s
+        relabelConfigs:
+          - sourceLabels: [__name__]
+            regex: 'kube_pod_container_info|kube_pod_info'
+            action: drop
+          - sourceLabels: [pod]
+            regex: '.*-debug|.*-test'
+            action: drop
         storage.tsdb.max_block_duration: 4h
         storage.tsdb.min_block_duration: 2h
         storageSpec:
