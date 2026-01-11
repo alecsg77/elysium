@@ -59,6 +59,17 @@ spec:
           - sourceLabels: [pod]
             regex: '.*-debug|.*-test'
             action: drop
+          # Additional high-cardinality drops to reduce TSDB head series
+          - sourceLabels: [__name__]
+            regex: 'kube_pod_labels|kube_pod_owner|kube_pod_container_status_restarts_total'
+            action: drop
+          - sourceLabels: [container]
+            regex: '.*-debug|.*-test'
+            action: drop
+          # Remove noisy label that increases series cardinality
+          - sourceLabels: [__meta_kubernetes_pod_label_pod_template_hash]
+            regex: '(.+)'
+            action: labeldrop
         storage.tsdb.max_block_duration: 4h
         storage.tsdb.min_block_duration: 2h
         storageSpec:
