@@ -28,7 +28,7 @@ spec:
     replicas: 1
 
     # Container args
-    args:
+    extraArgs:
       - "http"
 
     # Environment variables
