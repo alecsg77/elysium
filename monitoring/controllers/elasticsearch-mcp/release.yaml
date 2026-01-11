@@ -27,9 +27,7 @@ spec:
     # Deployment configuration
     replicas: 1
 
-    # Container command and args
-    command:
-      - "/usr/local/bin/elasticsearch-mcp-server"
+    # Container args
     args:
       - "http"
 
