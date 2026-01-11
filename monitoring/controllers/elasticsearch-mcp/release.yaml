@@ -1,0 +1,111 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: elasticsearch-mcp
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: onechart
+      version: "0.70.x"
+      sourceRef:
+        kind: HelmRepository
+        name: onechart
+        namespace: flux-system
+      interval: 60m
+  dependsOn:
+    - name: elastic-operator
+      namespace: elastic-system
+  values:
+    # Container image configuration
+    image:
+      repository: docker.elastic.co/mcp/elasticsearch
+      tag: latest  # {"$imagepolicy": "flux-system:elasticsearch-mcp-policy:tag"}
+
+    # Deployment configuration
+    replicas: 1
+
+    # Container command and args
+    command:
+      - "/usr/local/bin/elasticsearch-mcp-server"
+    args:
+      - "http"
+
+    # Environment variables
+    vars:
+      ES_URL: "https://elasticsearch-es-http.monitoring.svc.cluster.local:9200"
+
+    # Environment from secrets
+    secretsToEnvironmentVariables:
+      - elasticsearch-mcp-credentials
+
+    # Resource configuration
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    # Health probes
+    probe:
+      enabled: true
+      path: /ping
+      settings:
+        livenessProbe:
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+    # Service configuration
+    service:
+      enabled: true
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 8080
+          targetPort: 8080
+          protocol: TCP
+
+    # Ingress configuration (Tailscale)
+    ingress:
+      enabled: true
+      ingressClassName: tailscale
+      annotations:
+        tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+      hosts:
+        - host: elasticsearch-mcp
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - elasticsearch-mcp
+---
+# ImageRepository for automated image updates
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: elasticsearch-mcp
+  namespace: flux-system
+spec:
+  image: docker.elastic.co/mcp/elasticsearch
+  interval: 24h
+---
+# ImagePolicy for automated image updates
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: elasticsearch-mcp-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: elasticsearch-mcp
+  policy:
+    semver:
+      range: "*"
