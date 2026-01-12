@@ -68,13 +68,13 @@ spec:
     ingress:
       enabled: true
       hosts:
-        - host: langflow.${ts_net}
+        - host: langflow
           paths:
             - path: /
               pathType: Prefix
       tls:
         - hosts:
-            - langflow.${ts_net}
+            - langflow
 ---
 # Image automation for backend
 apiVersion: image.toolkit.fluxcd.io/v1beta2

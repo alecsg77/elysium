@@ -45,13 +45,13 @@ spec:
       enabled: true
       className: tailscale
       hosts:
-        - host: local-ai.${ts_net}
+        - host: local-ai
           paths:
             - path: /
               pathType: ImplementationSpecific
       tls:
         - hosts:
-            - local-ai.${ts_net}
+            - local-ai
     modelsConfigs:
       paola: |
         name: paola

@@ -31,7 +31,7 @@ spec:
     ingress:
       enabled: true
       class: tailscale
-      host: openwebui.${ts_net}
+      host: openwebui
       tls: true
     openaiBaseApiUrl: https://alecsg77-1293-resource.openai.azure.com/v1
     extraEnv:
