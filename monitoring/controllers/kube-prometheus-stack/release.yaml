@@ -28,7 +28,7 @@ spec:
       ingress:
         enabled: true
         hosts:
-          - alertmanager.${ts_net}
+          - alertmanager
         ingressClassName: tailscale
         paths:
           - /
@@ -92,7 +92,7 @@ spec:
       ingress:
         enabled: true
         hosts:
-          - prometheus.${ts_net}
+          - prometheus
         ingressClassName: tailscale
         paths:
           - /
@@ -104,7 +104,7 @@ spec:
       ingress:
         enabled: true
         hosts:
-          - grafana.${ts_net}
+          - grafana
         ingressClassName: tailscale
         tls:
           - hosts:
