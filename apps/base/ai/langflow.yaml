@@ -50,7 +50,7 @@ spec:
       backend:
         image:
           repository: langflowai/langflow # {"$imagepolicy": "flux-system:langflow-policy:name"}
-          tag: "1.7.2" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
+          tag: "1.7.3" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
         # Use bundled SQLite by default (simpler for homelab)
         externalDatabase:
           enabled: false
@@ -68,13 +68,13 @@ spec:
     ingress:
       enabled: true
       hosts:
-        - host: langflow
-          paths:
-            - path: /
-              pathType: Prefix
+      - host: langflow
+        paths:
+        - path: /
+          pathType: Prefix
       tls:
-        - hosts:
-            - langflow
+      - hosts:
+        - langflow
 ---
 # Image automation for backend
 apiVersion: image.toolkit.fluxcd.io/v1beta2
