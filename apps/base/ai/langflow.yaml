@@ -63,7 +63,7 @@ spec:
       frontend:
         image:
           repository: langflowai/langflow-frontend # {"$imagepolicy": "flux-system:langflow-frontend-policy:name"}
-          tag: "1.7.2" # {"$imagepolicy": "flux-system:langflow-frontend-policy:tag"}
+          tag: "1.7.3" # {"$imagepolicy": "flux-system:langflow-frontend-policy:tag"}
     # Ingress configuration for Tailscale
     ingress:
       enabled: true
