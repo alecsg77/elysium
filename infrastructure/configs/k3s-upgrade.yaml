@@ -21,6 +21,11 @@ spec:
   cordon: true
   upgrade:
     image: rancher/k3s-upgrade
+
+  # Increase the default 15 minute timeout for the entire upgrade process to 30 minutes to allow for larger clusters and/or slower nodes to complete the upgrade without being marked as failed.
+  # The default is 900 seconds (15 minutes) which may not be sufficient for all environments, especially if there are many nodes or if the nodes have limited resources.
+  # Adjusting this value can help prevent premature timeouts during the upgrade process, allowing for a more successful upgrade in environments where the process may take longer than the default timeout period.
+  jobActiveDeadlineSecs: 1800  # 30 minuti
 ---
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
