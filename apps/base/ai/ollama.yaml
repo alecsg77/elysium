@@ -34,15 +34,14 @@ spec:
   values:
     ollama:
       models:
+        clean: true
         pull:
-          - phi3
-          - phi3:14b
-          - gpt-oss
-          - deepseek-v3.1
-          - llama4
-          - mistral
+          - llama4:scout
+          - gemma3:12b
+          - qwen3-coder:30b
+          - gemma3:1b
         run:
-          - phi3
+          - gemma3:1b
 
     ingress:
       enabled: true
