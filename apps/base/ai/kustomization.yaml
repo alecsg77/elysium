@@ -4,20 +4,10 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - ollama.yaml
-  - librechat.yaml
-  - librechat-credentials-env-sealed-secret.yaml
   - openwebui.yaml
   - openwebui-credentials-env-sealed-secret.yaml
   - local-ai.yaml
-  - searxng.yaml
-  - searxng-config-sealed-secret.yaml
   - langflow.yaml
-
-configMapGenerator:
-  - name: librechat-config
-    namespace: ai
-    files:
-      - librechat.yaml=librechat-config.yaml
 
 configurations:
   - kustomizeconfig.yaml
