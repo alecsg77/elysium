@@ -31,15 +31,20 @@ spec:
     ingress:
       enabled: true
       class: tailscale
-      host: openwebui
+      host: chat.${ts_net}
       tls: true
-    openaiBaseApiUrl: https://alecsg77-1293-resource.openai.azure.com/v1
-    extraEnv:
-      OPENID_PROVIDER_URL: https://accounts.google.com/.well-known/openid-configuration
-      WEBHOOK_URL: https://openwebui.${ts_net}/webhook
-      ENABLE_PERSISTENT_CONFIG: "False"
-    extraEnvFrom:
-      - secretRef:
-          name: openwebui-credentials-env
+    tika:
+      enabled: true
     sso:
       enabled: true
+      enableSignup: true
+      mergeAccountsByEmail: true
+      github:
+        enabled: true
+        clientId: Iv23li9lZj5gR8CHTERs
+        clientExistingSecret: openwebui-credentials-env
+        clientExistingSecretKey: GITHUB_CLIENT_SECRET
+      trustedHeader:
+        enabled: true
+        emailHeader: Tailscale-User-Login
+        nameHeader: Tailscale-User-Name
