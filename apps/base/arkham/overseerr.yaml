@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "flux-system:overseerr-policy:name"}
-      tag: "version-v1.34.0" # {"$imagepolicy": "flux-system:overseerr-policy:tag"}
+      tag: "version-v1.35.0" # {"$imagepolicy": "flux-system:overseerr-policy:tag"}
     resources:
       limits:
         cpu: "1"
