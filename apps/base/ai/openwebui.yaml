@@ -48,3 +48,6 @@ spec:
         enabled: true
         emailHeader: Tailscale-User-Login
         nameHeader: Tailscale-User-Name
+    extraEnvVars:
+      - name: EXTRA_PIP_PACKAGES
+        value: datasets==3.6.0
