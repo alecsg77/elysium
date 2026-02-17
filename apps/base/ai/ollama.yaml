@@ -34,14 +34,10 @@ spec:
   values:
     ollama:
       models:
-        clean: true
         pull:
-          - llama4:scout
           - gemma3:12b
-          - qwen3-coder:30b
-          - gemma3:1b
         run:
-          - gemma3:1b
+          - gemma3:12b
 
     ingress:
       enabled: true
