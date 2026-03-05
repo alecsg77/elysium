@@ -490,52 +490,7 @@ module "git-config" {
   allow_email_change = true
 }
 
-resource "coder_ai_task" "task" {
-  app_id = module.copilot.task_app_id
-}
-
-module "copilot" {
-  source   = "registry.coder.com/coder-labs/copilot/coder"
-  version  = "0.3.0"
-  agent_id = coder_agent.main.id
-  workdir  = local.workspace_folder
-  ai_prompt = coder_ai_task.task.prompt != null ? coder_ai_task.task.prompt : ""
-  allow_all_tools = true
-  resume_session  = true
-  
-  # MCP server configuration
-  mcp_config = jsonencode({
-    mcpServers = {
-      filesystem = {
-        command     = "npx"
-        args        = ["-y", "@modelcontextprotocol/server-filesystem", local.workspace_folder]
-        description = "Provides file system access to the workspace"
-        name        = "Filesystem"
-        timeout     = 3000
-        type        = "local"
-        tools       = ["*"]
-        trust       = true
-      }
-      playwright = {
-        command     = "npx"
-        args        = ["-y", "@playwright/mcp@latest", "--headless", "--isolated"]
-        description = "Browser automation for testing and previewing changes"
-        name        = "Playwright"
-        timeout     = 5000
-        type        = "local"
-        tools       = ["*"]
-        trust       = false
-      }
-    }
-  })
-
-  # Pre-install Node.js if needed
-  pre_install_script = <<-EOT
-    #!/bin/bash
-    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-  EOT
-}
+data "coder_task" "me" {}
 
 module "mux" {
   count    = data.coder_workspace.me.start_count
@@ -545,33 +500,4 @@ module "mux" {
   add_project = local.workspace_folder
   subdomain = false
   use_cached = true
-}
-
-module "opencode" {
-  source   = "registry.coder.com/coder-labs/opencode/coder"
-  version  = "0.1.1"
-  agent_id = coder_agent.main.id
-  workdir  = local.workspace_folder
-
-  config_json = jsonencode({
-    "$schema" = "https://opencode.ai/config.json"
-    mcp = {
-      filesystem = {
-        command = ["npx", "-y", "@modelcontextprotocol/server-filesystem", local.workspace_folder]
-        enabled = true
-        type    = "local"
-      }
-      playwright = {
-        command = ["npx", "-y", "@playwright/mcp@latest", "--headless", "--isolated"]
-        enabled = true
-        type    = "local"
-      }
-    }
-  })
-
-  pre_install_script = <<-EOT
-    #!/bin/bash
-    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-  EOT
 }
