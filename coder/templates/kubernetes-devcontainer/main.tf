@@ -227,6 +227,11 @@ resource "kubernetes_persistent_volume_claim_v1" "workspaces" {
     }
   }
   wait_until_bound = false
+  lifecycle {
+    # Prevent Terraform from deleting and recreating the PVC on template upgrades,
+    # which would cause an "object is being deleted" race condition.
+    ignore_changes = [metadata, spec]
+  }
   spec {
     access_modes = ["ReadWriteOnce"]
     resources {
@@ -494,7 +499,7 @@ module "copilot" {
   version  = "0.3.0"
   agent_id = coder_agent.main.id
   workdir  = local.workspace_folder
-  ai_prompt = coder_ai_task.task.prompt
+  ai_prompt = coder_ai_task.task.prompt != null ? coder_ai_task.task.prompt : ""
   allow_all_tools = true
   resume_session  = true
   
