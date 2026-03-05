@@ -12,7 +12,6 @@ resources:
   - ../base/ai
   - arc-runner-set.yaml
   - web-public.yaml
-  - capacitor-ingress.yaml
   - fission-runner-set.yaml
   - coder-runner-set.yaml
   - copilot-runner-set.yaml
