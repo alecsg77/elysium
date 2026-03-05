@@ -14,7 +14,7 @@ spec:
     kind: GitRepository
     name: flux-system
   prune: true
-  wait: true
+  wait: false
   path: ./apps/kyrion
   postBuild:
     substituteFrom:
