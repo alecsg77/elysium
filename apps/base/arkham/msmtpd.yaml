@@ -51,7 +51,7 @@ spec:
         periodSeconds: 10
         timeoutSeconds: 5
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: msmtpd
@@ -60,7 +60,7 @@ spec:
   image: crazymax/msmtpd
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: msmtpd-policy

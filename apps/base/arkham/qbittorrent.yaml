@@ -65,7 +65,7 @@ spec:
           containerPort: 51413
           hostPort: 51413
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: qbittorrent
@@ -74,7 +74,7 @@ spec:
   image: lscr.io/linuxserver/qbittorrent
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: qbittorrent-policy

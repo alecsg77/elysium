@@ -68,7 +68,7 @@ spec:
         initialDelaySeconds: 30
         timeoutSeconds: 10
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: radarr
@@ -77,7 +77,7 @@ spec:
   image: lscr.io/linuxserver/radarr
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: radarr-policy

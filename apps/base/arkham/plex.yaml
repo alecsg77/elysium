@@ -76,7 +76,7 @@ spec:
           containerPort: 32400
           hostPort: 32400
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: plex
@@ -85,7 +85,7 @@ spec:
   image: lscr.io/linuxserver/plex
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: plex-policy

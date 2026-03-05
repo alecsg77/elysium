@@ -51,7 +51,7 @@ spec:
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
       host: home.${DOMAIN}
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: overseerr
@@ -60,7 +60,7 @@ spec:
   image: lscr.io/linuxserver/overseerr
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: overseerr-policy

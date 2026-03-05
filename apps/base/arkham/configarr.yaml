@@ -35,7 +35,7 @@ spec:
         subPath: configarr/config
         existingClaim: pvc-storage
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: configarr
@@ -44,7 +44,7 @@ spec:
   image: ghcr.io/raydak-labs/configarr
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: configarr-policy

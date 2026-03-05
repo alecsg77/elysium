@@ -43,7 +43,7 @@ spec:
         initialDelaySeconds: 5
         timeoutSeconds: 10
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: apprise-api
@@ -52,7 +52,7 @@ spec:
   image: lscr.io/linuxserver/apprise-api
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: apprise-api-policy

@@ -77,7 +77,7 @@ spec:
         - langflow
 ---
 # Image automation for backend
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: langflow
@@ -86,7 +86,7 @@ spec:
   image: langflowai/langflow
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: langflow-policy
@@ -101,7 +101,7 @@ spec:
   interval: 24h
 ---
 # Image automation for frontend
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: langflow-frontend
@@ -110,7 +110,7 @@ spec:
   image: langflowai/langflow-frontend
   interval: 24h
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: langflow-frontend-policy
