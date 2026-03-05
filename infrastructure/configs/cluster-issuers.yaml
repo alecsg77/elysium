@@ -11,27 +11,13 @@ spec:
     # The server is replaced in /clusters/production/infrastructure.yaml
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: letsencrypt-azure
+      name: letsencrypt-cloudflare
     solvers:
       - dns01:
-          azureDNS:
-            clientID: ${dns_azure_clientID}
-            clientSecretSecretRef:
-              name: dns-azure-secret
-              key: clientSecret
-            subscriptionID: ${dns_azure_subscriptionID}
-            tenantID: ${dns_azure_tenantID}
-            resourceGroupName: ${dns_azure_resourceGroupName}
-            hostedZoneName: ${DOMAIN}
+          cloudflare:
+            apiTokenSecretRef:
+              name: dns-cloudflare-secret
+              key: api-token
         selector:
           dnsZones:
             - '${DOMAIN}'
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: dns-azure-secret
-  namespace: cert-manager
-type: Opaque
-stringData:
-  clientSecret: ${dns_azure_clientSecret}

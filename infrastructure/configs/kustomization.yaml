@@ -6,6 +6,7 @@ resources:
   - ts-dns.yaml
   - k3s-upgrade.yaml
   - cluster-issuers.yaml
+  - dns-cloudflare-sealed-secret.yaml
   - traefik-config.yaml
   - connector.yaml
   - imageupdateautomation.yaml
