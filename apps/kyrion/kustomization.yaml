@@ -17,7 +17,6 @@ resources:
   - copilot-runner-set.yaml
   - raiplaysoundrss-runner-set.yaml
   - arkham-unmonitorr-sealed-secret.yaml
-  - discourse
 
 patches:
   - path: coder-values.yaml
@@ -48,7 +47,6 @@ patches:
       kind: HelmRelease
       name: pihole
       namespace: arkham
-  - path: discourse-resources.yaml
   - path: langflow-autologin-patch.yaml
     target:
       kind: HelmRelease

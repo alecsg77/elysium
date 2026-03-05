@@ -82,7 +82,7 @@ The cluster uses 25+ namespaces for logical separation:
 | **Monitoring** | `monitoring`, `elastic-system`, `opentelemetry-operator-system` | Observability stack |
 | **CI/CD** | `arc-system`, `arc-runners` | GitHub Actions runner infrastructure |
 | **Azure** | `azure-arc`, `azure-arc-release`, `arc-workload-identity` | Azure Arc hybrid management (optional) |
-| **Applications** | `ai`, `arkham`, `coder`, `fission`, `n8n`, `discourse`, `registry`, `romm`, `mediamtx`, `raiplaysoundrss` | User workloads |
+| **Applications** | `ai`, `arkham`, `coder`, `fission`, `n8n`, `registry`, `romm`, `mediamtx`, `raiplaysoundrss` | User workloads |
 | **Development** | `airflow`, `error-pages` | Development and utility applications |
 | **Upgrades** | `system-upgrade` | K3s automatic upgrade controller |
 | **Device Plugins** | `intel-device-plugins-system` | Hardware device management |
