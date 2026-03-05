@@ -40,7 +40,7 @@ variable "use_kubeconfig" {
 
 variable "namespace" {
   type        = string
-  default     = "default"
+  default     = "coder"
   description = "The Kubernetes namespace to create workspaces in (must exist prior to creating workspaces). If the Coder host is itself running as a Pod on the same Kubernetes cluster as you are deploying workspaces to, set this to the same namespace."
 }
 
@@ -62,7 +62,7 @@ data "coder_parameter" "cpu" {
   display_name = "CPU"
   description  = "CPU limit (cores)."
   default      = "2"
-  icon         = "/emojis/1f5a5.png"
+  icon         = "/icon/memory.svg"
   mutable      = true
   validation {
     min = 1
@@ -139,7 +139,7 @@ variable "cache_repo_secret_name" {
   type        = string
 }
 
-data "kubernetes_secret" "cache_repo_dockerconfig_secret" {
+data "kubernetes_secret_v1" "cache_repo_dockerconfig_secret" {
   count = var.cache_repo_secret_name == "" ? 0 : 1
   metadata {
     name      = var.cache_repo_secret_name
@@ -178,16 +178,22 @@ locals {
     # ENVBUILDER_GIT_URL and ENVBUILDER_CACHE_REPO will be overridden by the provider
     # if the cache repo is enabled.
     "ENVBUILDER_GIT_URL" : var.cache_repo == "" ? local.repo_url : "",
+    # Used for when SSH is an available authentication mechanism for git providers
+    "ENVBUILDER_GIT_SSH_PRIVATE_KEY_BASE64" : base64encode(try(data.coder_workspace_owner.me.ssh_private_key, "")),
     # Use the docker gateway if the access URL is 127.0.0.1
     "ENVBUILDER_INIT_SCRIPT" : replace(coder_agent.main.init_script, "/localhost|127\\.0\\.0\\.1/", "host.docker.internal"),
     "ENVBUILDER_FALLBACK_IMAGE" : data.coder_parameter.fallback_image.value,
-    "ENVBUILDER_DOCKER_CONFIG_BASE64" : base64encode(try(data.kubernetes_secret.cache_repo_dockerconfig_secret[0].data[".dockerconfigjson"], "")),
+    "ENVBUILDER_DOCKER_CONFIG_BASE64" : base64encode(try(data.kubernetes_secret_v1.cache_repo_dockerconfig_secret[0].data[".dockerconfigjson"], "")),
     "ENVBUILDER_PUSH_IMAGE" : var.cache_repo == "" ? "" : "true"
     # You may need to adjust this if you get an error regarding deleting files when building the workspace.
     # For example, when testing in KinD, it was necessary to set `/product_name` and `/product_uuid` in
     # addition to `/var/run`.
     # "ENVBUILDER_IGNORE_PATHS": "/product_name,/product_uuid,/var/run",
   }
+  # This assumes that the repo URL ends with the repo name (e.g. "https://github.com/user/repo.git" -> "repo")
+  workspace_name = split("/", replace(local.repo_url, ".git", ""))[length(split("/", replace(local.repo_url, ".git", ""))) - 1]
+  # This is the path to the workspace folder that envbuilder will use when building the devcontainer. You can change this if you want envbuilder to use a different folder.
+  workspace_folder = "/workspaces/${local.workspace_name}"
 }
 
 # Check for the presence of a prebuilt image in the cache repo
@@ -201,7 +207,7 @@ resource "envbuilder_cached_image" "cached" {
   insecure      = var.insecure_cache_repo
 }
 
-resource "kubernetes_persistent_volume_claim" "workspaces" {
+resource "kubernetes_persistent_volume_claim_v1" "workspaces" {
   metadata {
     name      = "coder-${lower(data.coder_workspace.me.id)}-workspaces"
     namespace = var.namespace
@@ -232,10 +238,10 @@ resource "kubernetes_persistent_volume_claim" "workspaces" {
   }
 }
 
-resource "kubernetes_deployment" "main" {
+resource "kubernetes_deployment_v1" "main" {
   count = data.coder_workspace.me.start_count
   depends_on = [
-    kubernetes_persistent_volume_claim.workspaces
+    kubernetes_persistent_volume_claim_v1.workspaces
   ]
   wait_for_rollout = false
   metadata {
@@ -281,9 +287,10 @@ resource "kubernetes_deployment" "main" {
         container {
           name              = "dev"
           image             = var.cache_repo == "" ? local.devcontainer_builder_image : envbuilder_cached_image.cached.0.image
-          image_pull_policy = "Always"
-          security_context {}
-
+          image_pull_policy = "IfNotPresent"
+          security_context {
+            privileged = true
+          }
           # Set the environment using cached_image.cached.0.env if the cache repo is enabled.
           # Otherwise, use the local.envbuilder_env.
           # You could alternatively write the environment variables to a ConfigMap or Secret
@@ -316,7 +323,7 @@ resource "kubernetes_deployment" "main" {
         volume {
           name = "workspaces"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.workspaces.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.workspaces.metadata.0.name
             read_only  = false
           }
         }
@@ -367,8 +374,9 @@ resource "coder_agent" "main" {
   # if you don't want to display any information.
   # For basic resources, you can use the `coder stat` command.
   # If you need more control, you can write your own script.
+  # Note: May not work on AWS Linux Nodes See: https://github.com/coder/clistat/issues/17
   metadata {
-    display_name = "CPU Usage"
+     display_name = "CPU Usage"
     key          = "0_cpu_usage"
     script       = "coder stat cpu"
     interval     = 10
@@ -439,6 +447,7 @@ module "code-server" {
 
   agent_id = coder_agent.main.id
   order    = 1
+  folder   = local.workspace_folder
 }
 
 # See https://registry.coder.com/modules/coder/jetbrains
@@ -448,7 +457,7 @@ module "jetbrains" {
   version    = "~> 1.0"
   agent_id   = coder_agent.main.id
   agent_name = "main"
-  folder     = "/home/coder"
+  folder     = local.workspace_folder
 }
 
 resource "coder_metadata" "container_info" {
@@ -471,7 +480,93 @@ resource "coder_metadata" "container_info" {
 module "git-config" {
   count    = data.coder_workspace.me.start_count
   source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.15"
+  version  = "1.0.33"
   agent_id = coder_agent.main.id
   allow_email_change = true
+}
+
+resource "coder_ai_task" "task" {
+  app_id = module.copilot.task_app_id
+}
+
+module "copilot" {
+  source   = "registry.coder.com/coder-labs/copilot/coder"
+  version  = "0.3.0"
+  agent_id = coder_agent.main.id
+  workdir  = local.workspace_folder
+  ai_prompt = coder_ai_task.task.prompt
+  allow_all_tools = true
+  resume_session  = true
+  
+  # MCP server configuration
+  mcp_config = jsonencode({
+    mcpServers = {
+      filesystem = {
+        command     = "npx"
+        args        = ["-y", "@modelcontextprotocol/server-filesystem", local.workspace_folder]
+        description = "Provides file system access to the workspace"
+        name        = "Filesystem"
+        timeout     = 3000
+        type        = "local"
+        tools       = ["*"]
+        trust       = true
+      }
+      playwright = {
+        command     = "npx"
+        args        = ["-y", "@playwright/mcp@latest", "--headless", "--isolated"]
+        description = "Browser automation for testing and previewing changes"
+        name        = "Playwright"
+        timeout     = 5000
+        type        = "local"
+        tools       = ["*"]
+        trust       = false
+      }
+    }
+  })
+
+  # Pre-install Node.js if needed
+  pre_install_script = <<-EOT
+    #!/bin/bash
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+  EOT
+}
+
+module "mux" {
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/mux/coder"
+  version  = "1.3.1"
+  agent_id = coder_agent.main.id
+  add_project = local.workspace_folder
+  subdomain = false
+  use_cached = true
+}
+
+module "opencode" {
+  source   = "registry.coder.com/coder-labs/opencode/coder"
+  version  = "0.1.1"
+  agent_id = coder_agent.main.id
+  workdir  = local.workspace_folder
+
+  config_json = jsonencode({
+    "$schema" = "https://opencode.ai/config.json"
+    mcp = {
+      filesystem = {
+        command = ["npx", "-y", "@modelcontextprotocol/server-filesystem", local.workspace_folder]
+        enabled = true
+        type    = "local"
+      }
+      playwright = {
+        command = ["npx", "-y", "@playwright/mcp@latest", "--headless", "--isolated"]
+        enabled = true
+        type    = "local"
+      }
+    }
+  })
+
+  pre_install_script = <<-EOT
+    #!/bin/bash
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+  EOT
 }
