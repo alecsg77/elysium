@@ -157,7 +157,7 @@ data "coder_parameter" "use_service_account" {
   order        = 8
 }
 
-data "kubernetes_service_account" "me" {
+data "kubernetes_service_account_v1" "me" {
   count = data.coder_parameter.use_service_account.value ? 1 : 0
   metadata {
     name = data.coder_workspace_owner.me.name
@@ -285,7 +285,7 @@ resource "kubernetes_deployment_v1" "main" {
         }
       }
       spec {
-        service_account_name = data.coder_parameter.use_service_account.value ? data.kubernetes_service_account.me[0].metadata.0.name : null
+        service_account_name = data.coder_parameter.use_service_account.value ? data.kubernetes_service_account_v1.me[0].metadata.0.name : null
         
         security_context {}
 
