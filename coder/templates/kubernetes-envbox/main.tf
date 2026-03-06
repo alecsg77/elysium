@@ -73,24 +73,6 @@ variable "min_memory" {
   description = "Minimum amount of memory to allocate the workspace (in GB)."
 }
 
-data "coder_parameter" "git_repo" {
-  name         = "git_repo"
-  display_name = "Git repository"
-  default      = ""
-  description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
-  icon         = "/icon/git.svg"
-  type         = "string"
-  validation {
-    regex = "^(https?|git|ssh)://.*|^git@.*|^$"
-    error = "Please enter a valid git repository URL."
-  }
-}
-
-data "coder_external_auth" "github" {
-  id = "github"
-  optional = true
-}
-
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
   config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
@@ -116,30 +98,6 @@ resource "coder_agent" "main" {
   EOT
 }
 
-module "github-upload-public-key" {
-  count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
-  source           = "registry.coder.com/coder/github-upload-public-key/coder"
-  version          = "1.0.15"
-  agent_id         = coder_agent.main.id
-  external_auth_id = data.coder_external_auth.github.id
-}
-
-module "git-config" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.15"
-  agent_id = coder_agent.main.id
-  allow_email_change = true
-}
-
-module "git_clone" {
-  count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
-  source   = "registry.coder.com/coder/git-clone/coder"
-  version  = "1.0.18"
-  agent_id = coder_agent.main.id
-  url      = data.coder_parameter.git_repo.value
-}
-
 # See https://registry.coder.com/modules/coder/code-server
 module "code-server" {
   count  = data.coder_workspace.me.start_count
@@ -148,8 +106,9 @@ module "code-server" {
   # This ensures that the latest non-breaking version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
   version = "~> 1.0"
 
-  agent_id   = coder_agent.main.id
-  order      = 1
+  agent_id = coder_agent.main.id
+  order    = 1
+  folder   = data.coder_parameter.git_repo.value != "" ? module.git_clone[0].repo_dir : "/home/coder"
 }
 
 # See https://registry.coder.com/modules/coder/jetbrains
@@ -159,10 +118,10 @@ module "jetbrains" {
   version    = "~> 1.0"
   agent_id   = coder_agent.main.id
   agent_name = "main"
-  folder     = "/home/coder"
+  folder     = data.coder_parameter.git_repo.value != "" ? module.git_clone[0].repo_dir : "/home/coder"
 }
 
-resource "kubernetes_persistent_volume_claim" "home" {
+resource "kubernetes_persistent_volume_claim_v1" "home" {
   metadata {
     name      = "coder-${lower(data.coder_workspace_owner.me.name)}-${lower(data.coder_workspace.me.name)}-home"
     namespace = var.namespace
@@ -178,7 +137,7 @@ resource "kubernetes_persistent_volume_claim" "home" {
   }
 }
 
-resource "kubernetes_pod" "main" {
+resource "kubernetes_pod_v1" "main" {
   count = data.coder_workspace.me.start_count
 
   metadata {
@@ -275,6 +234,11 @@ resource "kubernetes_pod" "main" {
         }
       }
 
+      env {
+        name = "CODER_AGENT_DEVCONTAINERS_DISCOVERY_AUTOSTART_ENABLE"
+        value = "true"
+      }
+
       volume_mount {
         mount_path = "/home/coder"
         name       = "home"
@@ -325,7 +289,7 @@ resource "kubernetes_pod" "main" {
     volume {
       name = "home"
       persistent_volume_claim {
-        claim_name = kubernetes_persistent_volume_claim.home.metadata.0.name
+        claim_name = kubernetes_persistent_volume_claim_v1.home.metadata.0.name
         read_only  = false
       }
     }
@@ -351,4 +315,53 @@ resource "kubernetes_pod" "main" {
       }
     }
   }
+}
+
+data "coder_parameter" "git_repo" {
+  name         = "git_repo"
+  display_name = "Git repository"
+  default      = ""
+  description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
+  icon         = "/icon/git.svg"
+  type         = "string"
+  validation {
+    regex = "^(https?|git|ssh)://.*|^git@.*|^$"
+    error = "Please enter a valid git repository URL."
+  }
+}
+
+data "coder_external_auth" "github" {
+  id = "github"
+  optional = true
+}
+
+module "github-upload-public-key" {
+  count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
+  source           = "registry.coder.com/coder/github-upload-public-key/coder"
+  version          = "1.0.15"
+  agent_id         = coder_agent.main.id
+  external_auth_id = data.coder_external_auth.github.id
+}
+
+module "git-config" {
+  count    = data.coder_workspace.me.start_count
+  source   = "registry.coder.com/coder/git-config/coder"
+  version  = "1.0.15"
+  agent_id = coder_agent.main.id
+  allow_email_change = true
+}
+
+module "git_clone" {
+  count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
+  source   = "registry.coder.com/coder/git-clone/coder"
+  version  = "1.0.18"
+  agent_id = coder_agent.main.id
+  url      = data.coder_parameter.git_repo.value
+}
+
+module "devcontainers-cli" {
+  count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
+  source   = "registry.coder.com/coder/devcontainers-cli/coder"
+  version  = "~> 1.0"
+  agent_id = coder_agent.main.id
 }
