@@ -50,7 +50,7 @@ spec:
       backend:
         image:
           repository: langflowai/langflow # {"$imagepolicy": "flux-system:langflow-policy:name"}
-          tag: "1.8.0" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
+          tag: "1.8.1" # {"$imagepolicy": "flux-system:langflow-policy:tag"}
         # Use bundled SQLite by default (simpler for homelab)
         externalDatabase:
           enabled: false
