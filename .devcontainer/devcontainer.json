@@ -21,7 +21,7 @@
 		"ghcr.io/devcontainers/features/terraform": {},
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale": {},
-		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/devcontainers/features/node:2": {},
 		"./features/flux-operator-mcp": {}
 	},
 
