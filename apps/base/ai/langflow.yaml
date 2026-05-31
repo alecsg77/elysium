@@ -64,6 +64,9 @@ spec:
         image:
           repository: langflowai/langflow-frontend # {"$imagepolicy": "flux-system:langflow-frontend-policy:name"}
           tag: "1.9.5" # {"$imagepolicy": "flux-system:langflow-frontend-policy:tag"}
+    # Disable postgresql subchart (app uses sqlite)
+    postgresql:
+      enabled: false
     # Ingress configuration for Tailscale
     ingress:
       enabled: true
