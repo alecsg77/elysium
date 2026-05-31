@@ -17,7 +17,7 @@ spec:
     image:
       repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "flux-system:configarr-policy:name"}
       tag: "1.28.0" # {"$imagepolicy": "flux-system:configarr-policy:tag"}
-    schedule: "0 */24 * * *" # Runs every 24 hours
+    schedule: "0 0 * * *" # Runs every 24 hours (daily at midnight)
     overrideCommand: false
     vars:
       PUID: ${PUID:=1000}
