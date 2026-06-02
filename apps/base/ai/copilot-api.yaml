@@ -34,8 +34,6 @@ spec:
         app.kubernetes.io/name: copilot-api
         app.kubernetes.io/instance: copilot-api
     spec:
-      securityContext:
-        runAsNonRoot: true
       containers:
         - name: copilot-api
           image: ghcr.io/ericc-ch/copilot-api:v0.7
