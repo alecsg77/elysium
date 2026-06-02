@@ -8,6 +8,8 @@ resources:
   - openwebui-credentials-env-sealed-secret.yaml
   - local-ai.yaml
   - langflow.yaml
+  - copilot-api.yaml
+  - copilot-api-sealed-secret.yaml
 
 configurations:
   - kustomizeconfig.yaml
