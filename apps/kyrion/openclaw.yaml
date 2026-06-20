@@ -1,0 +1,115 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: openclaw
+  namespace: ai
+spec:
+  interval: 24h
+  retryInterval: 5m
+  timeout: 10m
+  targetNamespace: ai
+  sourceRef:
+    kind: GitRepository
+    name: openclaw
+  path: ./scripts/k8s/manifests
+  prune: true
+  wait: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: openclaw
+      namespace: ai
+  patches:
+    - patch: |-
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: openclaw-config
+        data:
+          openclaw.json: |
+            {
+              "gateway": {
+                "mode": "local",
+                "bind": "lan",
+                "port": 18789,
+                "auth": {
+                  "mode": "token"
+                },
+                "controlUi": {
+                  "enabled": true
+                }
+              },
+              "agents": {
+                "defaults": {
+                  "workspace": "~/.openclaw/workspace",
+                  "model": {
+                    "primary": "github-copilot/gpt-5.5"
+                  }
+                },
+                "list": [
+                  {
+                    "id": "default",
+                    "name": "OpenClaw Assistant",
+                    "workspace": "~/.openclaw/workspace"
+                  }
+                ]
+              },
+              "cron": {
+                "enabled": false
+              }
+            }
+          AGENTS.md: |
+            # OpenClaw Assistant
+
+            You are a helpful AI assistant running in Kubernetes.
+      target:
+        kind: ConfigMap
+        name: openclaw-config
+    - patch: |-
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: openclaw
+        spec:
+          template:
+            spec:
+              containers:
+                - name: gateway
+                  env:
+                    # Keep the Copilot credential optional so the gateway can
+                    # start before the real SealedSecret is provisioned.
+                    - name: COPILOT_GITHUB_TOKEN
+                      valueFrom:
+                        secretKeyRef:
+                          name: openclaw-copilot-auth
+                          key: COPILOT_GITHUB_TOKEN
+                          optional: true
+                    - name: GH_TOKEN
+                      valueFrom:
+                        secretKeyRef:
+                          name: openclaw-copilot-auth
+                          key: GH_TOKEN
+                          optional: true
+      target:
+        kind: Deployment
+        name: openclaw
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openclaw
+  namespace: ai
+  labels:
+    app.kubernetes.io/name: openclaw
+    app.kubernetes.io/instance: openclaw
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: openclaw
+      port:
+        number: 18789
+  tls:
+    - hosts:
+        - openclaw

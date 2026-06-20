@@ -10,6 +10,9 @@ resources:
   - ../base/fission
   - ../base/mediamtx
   - ../base/ai
+  - openclaw.yaml
+  - openclaw-sealed-secret.yaml
+  - openclaw-copilot-auth-secret.yaml
   - arc-runner-set.yaml
   - web-public.yaml
   - fission-runner-set.yaml
