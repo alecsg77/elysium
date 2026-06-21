@@ -79,7 +79,9 @@ spec:
                     - -c
                     - |
                       mkdir -p /home/node/.openclaw/workspace
+                      mkdir -p /home/node/.openclaw/.npm
                       chown 1000:1000 /home/node/.openclaw /home/node/.openclaw/workspace
+                      chown 1000:1000 /home/node/.openclaw/.npm
                       if [ ! -f /home/node/.openclaw/openclaw.json ]; then
                         cp /config/openclaw.json /home/node/.openclaw/openclaw.json
                       fi
@@ -89,6 +91,10 @@ spec:
               containers:
                 - name: gateway
                   env:
+                    - name: NPM_CONFIG_CACHE
+                      value: /home/node/.openclaw/.npm
+                    - name: npm_config_cache
+                      value: /home/node/.openclaw/.npm
                     # Keep the Copilot credential optional so the gateway can
                     # start before the real SealedSecret is provisioned.
                     - name: COPILOT_GITHUB_TOKEN
