@@ -8,13 +8,3 @@ spec:
   type: "oci"
   interval: 24h
   url: oci://registry-1.docker.io/bitnamicharts
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: onechart
-  namespace: flux-system
-spec:
-  type: "default"
-  interval: 24h
-  url: https://chart.onechart.dev
