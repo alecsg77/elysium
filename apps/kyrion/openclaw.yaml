@@ -42,10 +42,7 @@ spec:
               },
               "agents": {
                 "defaults": {
-                  "workspace": "~/.openclaw/workspace",
-                  "model": {
-                    "primary": "github-copilot/gpt-5.5"
-                  }
+                  "workspace": "~/.openclaw/workspace"
                 },
                 "list": [
                   {
@@ -55,9 +52,7 @@ spec:
                   }
                 ]
               },
-              "cron": {
-                "enabled": false
-              }
+              "cron": { "enabled": false }
             }
           AGENTS.md: |
             # OpenClaw Assistant
@@ -74,6 +69,19 @@ spec:
         spec:
           template:
             spec:
+              initContainers:
+                - name: init-config
+                  command:
+                    - sh
+                    - -c
+                    - |
+                      mkdir -p /home/node/.openclaw/workspace
+                      if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+                        cp /config/openclaw.json /home/node/.openclaw/openclaw.json
+                      fi
+                      if [ ! -f /home/node/.openclaw/workspace/AGENTS.md ]; then
+                        cp /config/AGENTS.md /home/node/.openclaw/workspace/AGENTS.md
+                      fi
               containers:
                 - name: gateway
                   env:
