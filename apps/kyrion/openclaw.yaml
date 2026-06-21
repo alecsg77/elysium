@@ -71,11 +71,15 @@ spec:
             spec:
               initContainers:
                 - name: init-config
+                  securityContext:
+                    runAsUser: 0
+                    runAsGroup: 0
                   command:
                     - sh
                     - -c
                     - |
                       mkdir -p /home/node/.openclaw/workspace
+                      chown 1000:1000 /home/node/.openclaw /home/node/.openclaw/workspace
                       if [ ! -f /home/node/.openclaw/openclaw.json ]; then
                         cp /config/openclaw.json /home/node/.openclaw/openclaw.json
                       fi
