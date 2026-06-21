@@ -7,10 +7,11 @@ spec:
   releaseName: apprise-api
   chart:
     spec:
-      chart: onechart
+      chart: ./charts/onechart
+      reconcileStrategy: Revision
       sourceRef:
-        kind: HelmRepository
-        name: onechart
+        kind: GitRepository
+        name: flux-system
         namespace: flux-system
   interval: 12h
   values:
