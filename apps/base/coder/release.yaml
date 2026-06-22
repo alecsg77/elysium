@@ -98,6 +98,8 @@ spec:
           value: "true"
         - name: CODER_LOGGING_HUMAN
           value: "/dev/stderr"
+        - name: CODER_EXPERIMENTS
+          value: "oauth2,mcp-server-http"
       podAnnotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "2112"
