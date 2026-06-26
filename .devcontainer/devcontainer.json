@@ -22,7 +22,8 @@
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale": {},
 		"ghcr.io/devcontainers/features/node:2": {},
-		"./features/flux-operator-mcp": {}
+		"./features/flux-operator-mcp": {},
+		"ghcr.io/devcontainers/features/copilot-cli:1": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
