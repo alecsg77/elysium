@@ -23,6 +23,16 @@ spec:
         kind: HelmRepository
         name: open-webui
   interval: 12h
+  # Open WebUI upgrades can exceed Flux's default 5m wait while the StatefulSet
+  # reinitializes cached data and comes back Ready.
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
   values:
     ollama:
       enabled: false
