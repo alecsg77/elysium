@@ -9,12 +9,13 @@
       "type": "stdio"
     },
     "flux-operator-mcp": {
-      "command": "/usr/bin/env",
+      "command": "/usr/local/bin/flux-operator-mcp",
       "args": [
-        "KUBECONFIG=etc/kubeconfig",
-        "/usr/local/bin/flux-operator-mcp",
         "serve"
       ],
+      "env": {
+        "KUBECONFIG": "etc/kubeconfig"
+      },
       "type": "stdio"
     },
     "grafana": {
