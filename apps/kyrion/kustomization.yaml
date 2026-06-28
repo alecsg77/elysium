@@ -44,8 +44,3 @@ patches:
       kind: HelmRelease
       name: pihole
       namespace: arkham
-  - path: langflow-autologin-patch.yaml
-    target:
-      kind: HelmRelease
-      name: langflow
-      namespace: ai
