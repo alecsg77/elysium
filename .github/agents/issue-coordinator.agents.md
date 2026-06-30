@@ -1,6 +1,8 @@
 ---
+name: 'Issue Coordinator'
+user-invocable: false
 description: 'Coordinate issue resolution workflow from root cause analysis to coding agent request (orchestration only, no code changes)'
-tools: ['runTasks', 'runSubagent', 'fetch', 'githubRepo', 'github.vscode-pull-request-github/copilotCodingAgent', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/doSearch', 'github.vscode-pull-request-github/openPullRequest']
+tools: ['agent', 'execute', 'read', 'search', 'todo', 'web/fetch', 'github/*']
 ---
 
 # Issue Coordinator Agent

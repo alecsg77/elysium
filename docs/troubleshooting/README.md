@@ -21,6 +21,11 @@ Guides and knowledge base for diagnosing and resolving cluster issues.
 Please investigate this issue and run diagnostics
 ```
 
+### Using Other Local Agents
+- Start with `/AGENTS.md`
+- Use `/.github/skills/troubleshoot-flux/SKILL.md` as the portable troubleshooting workflow
+- Use `/.github/agents/troubleshooter.agents.md` as the detailed diagnostic role reference when your host can read plain markdown but not Copilot custom agent metadata
+
 ### Common Commands
 - `/approve-plan` - Approve all resolution plans
 - `/reject` - Request alternative approach

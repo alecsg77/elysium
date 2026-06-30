@@ -1,7 +1,12 @@
 ---
+name: 'Troubleshooter'
 description: 'Diagnose and analyze Flux GitOps and Kubernetes issues (read-only diagnostics and root cause analysis)'
-tools:
-  [execute/testFailure, execute/getTerminalOutput, execute/runInTerminal, read/problems, read/readFile, read/terminalSelection, read/terminalLastCommand, agent/runSubagent, search/changes, search/codebase, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch, search/usages, web/fetch, web/githubRepo, flux-operator-mcp/get_flux_instance, flux-operator-mcp/get_kubernetes_api_versions, flux-operator-mcp/get_kubernetes_logs, flux-operator-mcp/get_kubernetes_metrics, flux-operator-mcp/get_kubernetes_resources, flux-operator-mcp/search_flux_docs, grafana/get_dashboard_by_uid, grafana/get_dashboard_panel_queries, grafana/get_dashboard_property, grafana/get_dashboard_summary, grafana/get_datasource_by_name, grafana/get_datasource_by_uid, grafana/list_datasources, grafana/list_loki_label_names, grafana/list_loki_label_values, grafana/list_prometheus_label_names, grafana/list_prometheus_label_values, grafana/list_prometheus_metric_metadata, grafana/list_prometheus_metric_names, grafana/query_loki_logs, grafana/query_loki_stats, grafana/query_prometheus, grafana/search_dashboards, grafana/search_folders, kubernetes/events_list, kubernetes/helm_list, kubernetes/namespaces_list, kubernetes/nodes_log, kubernetes/nodes_stats_summary, kubernetes/nodes_top, kubernetes/pods_get, kubernetes/pods_list, kubernetes/pods_list_in_namespace, kubernetes/pods_log, kubernetes/pods_top, kubernetes/resources_get, kubernetes/resources_list, io.github.upstash/context7/get-library-docs, io.github.upstash/context7/resolve-library-id, github.vscode-pull-request-github/issue_fetch, github.vscode-pull-request-github/doSearch, todo]
+tools: ['agent', 'execute', 'read', 'search', 'todo', 'web/fetch', 'github/*', 'flux-operator-mcp/*', 'grafana/*', 'kubernetes/*', 'io.github.upstash/context7/*']
+handoffs:
+  - label: Coordinate resolution
+    agent: 'Issue Coordinator'
+    prompt: 'Use the diagnostic findings above to prepare resolution coordination and approval steps.'
+    send: false
 ---
 
 # Troubleshooter Mode

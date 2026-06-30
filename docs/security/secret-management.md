@@ -339,9 +339,9 @@ kubectl create secret tls sealed-secrets-new-key \
 
 ## Guided Workflows
 
-For interactive guidance, use the Copilot prompt:
+For interactive guidance, use the Copilot skill:
 ```
-Use prompts/manage-secrets.prompt.md to guide secret creation
+Use the manage-sealed-secrets skill to guide secret creation
 ```
 
 ## Related Documentation

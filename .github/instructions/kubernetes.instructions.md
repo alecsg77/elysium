@@ -92,6 +92,8 @@ For pod failures, CrashLoopBackOff, ImagePullBackOff, or resource issues, use Gi
    Please run Kubernetes pod diagnostics for namespace <namespace>
    ```
 
+   If you are using Claude Code or another local agent instead of Copilot Chat, use `/AGENTS.md` plus `.github/skills/troubleshoot-flux/SKILL.md` and provide the same namespace and symptom details.
+
 3. **Automated Diagnostic Collection**:
    - **Pod Status**: Get pod conditions, phase, container states
    - **Logs**: Extract recent logs and error patterns from containers
@@ -215,7 +217,7 @@ grep -A 20 "Pod\|Deployment\|StatefulSet" docs/troubleshooting/known-issues.md
 - **Known Issues**: [Known Issues and Troubleshooting](/docs/troubleshooting/known-issues.md) - Searchable database of past resolutions
 - **Troubleshooter Agent**: `.github/agents/troubleshooter.agents.md` - Diagnostic collection
 - **Issue Coordinator**: `.github/agents/issue-coordinator.agents.md` - Resolution orchestration
-- **Knowledge Base Agent**: `.github/agents/knowledge-base.agents.md` - Pattern matching
+- **knowledge-base-search skill**: `.github/skills/knowledge-base-search/SKILL.md` - Pattern matching
 
 ## Application Deployment
 

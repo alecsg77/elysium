@@ -2,6 +2,10 @@
 
 This document provides essential context for GitHub Copilot when working with the Elysium Kubernetes homelab cluster.
 
+Copilot is the primary integration target for this repository. For Claude Code and other agents, use `AGENTS.md` as the portable baseline and `CLAUDE.md` as the Claude-specific entry point.
+
+Use this file for Copilot-specific operating context and high-signal repository guidance. Shared repository rules, validation expectations, and cross-agent portability live in `AGENTS.md`.
+
 **For detailed documentation, see**: [/docs/README.md](/docs/README.md)
 
 ## Quick Reference
@@ -57,7 +61,7 @@ docs/                   # Authoritative documentation
 └── troubleshooting/  # Known issues and workflows
 ```
 
-**Key Principle**: Authoritative documentation lives in `/docs/`, agent guidance in `.github/`.
+**Key Principle**: Authoritative documentation lives in `/docs/`, Copilot customizations live in `.github/`, and cross-agent compatibility entry points live in `/AGENTS.md` and `/CLAUDE.md`.
 
 ### Dependency Chain
 
@@ -164,7 +168,7 @@ echo -n "secret-value" | kubectl create secret generic app-secret \
 
 **Complete Guide**: [Secret Management](/docs/security/secret-management.md)
 
-**For guided workflow**: Use `prompts/manage-secrets.prompt.md`
+**For guided workflow**: Use the `manage-sealed-secrets` skill
 
 ### Flux Status Detection
 
@@ -182,36 +186,7 @@ If these show healthy resources, Flux is working correctly.
 
 See [Flux Status Detection](/docs/architecture/cluster-architecture.md#flux-cd-architecture) for details.
 
-## Development Workflows
-
-### Creating/Modifying Apps
-
-**Complete Procedure**: [Application Deployment Runbook](/docs/runbooks/add-application.md)
-
-**Quick Steps**:
-1. Plan: Review repository structure standards
-2. Create base: `apps/base/<app>/` with environment-agnostic values
-3. Create overlay: `apps/kyrion/` with patches
-4. **Validate locally** (mandatory): `kustomize build`, `flux build`
-5. Commit with Conventional Commits format
-6. Monitor Flux reconciliation
-
-### Managing Secrets
-
-**Quick Reference**: Use guided workflow in `prompts/manage-secrets.prompt.md`
-
-**Commands**:
-```bash
-# Generic secret
-kubectl create secret generic app-secret \
-  --namespace=<namespace> --from-literal=key=value \
-  --dry-run=client -o yaml | \
-  kubeseal --cert etc/certs/pub-sealed-secrets.pem -o yaml > sealed-secret.yaml
-```
-
-**Complete Guide**: [Secret Management](/docs/security/secret-management.md)
-
-### Advanced Flux Operations
+## Advanced Flux Operations
 
 | Operation | Command |
 |-----------|---------|
@@ -223,7 +198,7 @@ kubectl create secret generic app-secret \
 | **Preview changes** | `flux diff kustomization apps --path clusters/kyrion` |
 | **Build locally** | `flux build kustomization apps --path clusters/kyrion` |
 
-### Common Commands
+## Common Commands
 
 ```bash
 # Validate YAML
@@ -246,7 +221,7 @@ watch flux get kustomizations -A
 
 ## Troubleshooting
 
-**For comprehensive troubleshooting**: Use troubleshooter chat mode or `prompts/troubleshoot-flux.prompt.md`
+**For comprehensive troubleshooting**: Use the `troubleshoot-flux` skill or the `Troubleshooter` agent mode
 
 ### Quick Diagnostics
 
@@ -290,74 +265,34 @@ The cluster supports complete troubleshooting via GitHub Issues and Copilot Chat
 
 **Complete Workflow**: [Web-Based Troubleshooting](/docs/troubleshooting/web-troubleshooting.md)
 
-## Security
+## Shared Baseline
 
-### Secrets
-- **Never** commit plain text secrets
-- **Always** use Sealed Secrets
-- **Backup** sealed-secrets key quarterly
-- See [Secret Management](/docs/security/secret-management.md)
+The following repository-wide rules are intentionally centralized in `AGENTS.md` to avoid drift across hosts:
+- GitOps constraints and base/overlay rules
+- Validation expectations before finalizing changes
+- Secret handling and security baseline
+- Commit and push approval workflow
+- Cross-agent compatibility notes
 
-### Troubleshooting
-- **Treat** all diagnostics as sensitive
-- **Redact** secrets, tokens, IPs before sharing
-- **Scan** with `rg -n 'password|secret|token|apikey' diagnostics/`
-- See [Secure Troubleshooting](/docs/security/secure-troubleshooting.md)
-
-## Operational Best Practices
-
-### Before Committing
-- [ ] YAML syntax valid (`yamllint`)
-- [ ] Kustomize builds successfully
-- [ ] Helm templates render correctly
-- [ ] No plain text secrets
-- [ ] Resource limits defined
-- [ ] Changes tested locally
-
-### Git Workflow
-
-**⚠️ NEVER automatically push without user approval.**
-
-**Required Flow**:
-1. Make changes
-2. Stage: `git add <files>`
-3. Commit: `git commit -m "message"`
-4. **STOP and show user what was committed**
-5. **Wait for explicit approval**
-6. Only push after confirmation: `git push`
-
-**Commit Format**: Follow [Conventional Commits](https://www.conventionalcommits.org/)
-- `feat(scope):` New features
-- `fix(scope):` Bug fixes
-- `docs(scope):` Documentation
-- `refactor(scope):` Code restructuring
-- `chore(scope):` Maintenance
-
-### Smart Commit Management
-
-When fixing the **most recent unpushed commit**, offer choices:
-1. **Amend** - Modify existing commit (cleaner history)
-2. **Reset** - Undo commit, keep changes (start over)
-3. **New commit** - Separate fix commit (preserves history)
-
-## Related Instruction Files
-
-When working with specific file types, consult:
-- `.github/instructions/flux.instructions.md` - Flux patterns
-- `.github/instructions/kubernetes.instructions.md` - K8s manifests
-- `.github/instructions/kustomize.instructions.md` - Kustomize overlays
-- `.github/instructions/helm.instructions.md` - Helm charts
-- `.github/instructions/security.instructions.md` - Security practices
-- `.github/instructions/testing.instructions.md` - Testing strategies
-- `.github/instructions/documentation.instructions.md` - Documentation standards
+For authoritative procedures and detailed standards, prefer:
+- [AGENTS.md](/workspaces/elysium/AGENTS.md)
+- [Repository Structure](/docs/standards/repository-structure.md)
+- [Application Deployment Runbook](/docs/runbooks/add-application.md)
+- [Secret Management](/docs/security/secret-management.md)
+- [Secure Troubleshooting](/docs/security/secure-troubleshooting.md)
 
 ## Support Resources
 
-### Quick Help Prompts
-- **Deploy app**: `prompts/deploy-app.prompt.md`
-- **Debug issue**: `prompts/troubleshoot-flux.prompt.md`
-- **Review config**: `prompts/review-config.prompt.md`
-- **Manage secrets**: `prompts/manage-secrets.prompt.md`
+### Quick Help Skills
+- **Deploy app**: `deploy-application`
+- **Debug issue**: `troubleshoot-flux`
+- **Review config**: `review-gitops-config`
+- **Manage secrets**: `manage-sealed-secrets`
+- **Plan a change**: `gitops-implementation-planning`
+
+### Cross-Agent Entry Points
+- **Portable baseline**: `/AGENTS.md`
+- **Claude Code entry point**: `/CLAUDE.md`
 
 ### Documentation
 - **[Main Documentation](/docs/README.md)** - Documentation hub

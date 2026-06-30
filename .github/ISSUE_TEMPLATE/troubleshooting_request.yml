@@ -12,10 +12,12 @@ body:
         
         **Workflow**:
         1. Submit this request with symptom details
-        2. Use GitHub Copilot Chat to analyze and diagnose
+        2. Use GitHub Copilot Chat to analyze and diagnose (primary hosted workflow)
         3. Agent will create child bug issues for identified root causes
         4. Review and approve resolution plans
         5. GitHub Coding Agent implements fixes
+
+        For local agents such as Claude Code, start from `AGENTS.md` and `.github/skills/troubleshoot-flux/SKILL.md`.
 
   - type: markdown
     attributes:

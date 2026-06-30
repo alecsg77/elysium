@@ -2,6 +2,8 @@
 
 Centralized documentation for the Elysium GitOps-managed Kubernetes homelab. Use the topic indexes below.
 
+For AI coding agents, `AGENTS.md` at the repository root is the portable entry point. GitHub Copilot additionally uses `/.github/copilot-instructions.md`, while Claude Code can bootstrap from `/CLAUDE.md`.
+
 ## Topics
 - **[Architecture](architecture/README.md)** - Cluster topology, network design, storage architecture, and security boundaries
 - **[Standards](standards/README.md)** - Repository structure, coding standards, and best practices

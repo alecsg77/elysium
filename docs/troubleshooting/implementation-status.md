@@ -18,7 +18,6 @@ Web-based troubleshooting system implementation for cluster issue resolution via
 ### 2. Copilot Agents
 - **Troubleshooter**: 5-phase diagnostics + root cause analysis + child bug creation
 - **Issue Coordinator**: Resolution planning, approval workflow, circuit breaker, validation
-- **Knowledge Base**: Search for similar issues with confidence scoring
 
 **Location**: `.github/agents/`
 
@@ -27,11 +26,12 @@ Web-based troubleshooting system implementation for cluster issue resolution via
 
 **Location**: `.github/workflows/`
 
-### 4. Guidance Documents
-- **analyze-root-cause.prompt.md**: 7-step root cause methodology
-- **request-resolution.prompt.md**: Token optimization for coding agent
+### 4. Guidance Workflows
+- **troubleshoot-flux** skill: User-invocable troubleshooting workflow
+- **review-gitops-config** skill: User-invocable GitOps review workflow
+- **knowledge-base-search** skill: Search for similar historical incidents
 
-**Location**: `.github/prompts/`
+**Location**: `.github/skills/`
 
 ### 5. Documentation
 - **Web-Based Troubleshooting Guide**: Complete user workflow ([docs/troubleshooting/web-troubleshooting.md](/docs/troubleshooting/web-troubleshooting.md))
@@ -43,6 +43,7 @@ Web-based troubleshooting system implementation for cluster issue resolution via
 - **documentation.instructions.md**: Updated with troubleshooting workflow
 - **copilot-instructions.md**: Added web troubleshooting section
 - **flux.instructions.md, kubernetes.instructions.md, helm.instructions.md**: Enhanced with patterns
+- **agents.instructions.md, prompt.instructions.md, instructions.instructions.md**: Maintenance standards for Copilot customization files
 
 **Location**: `.github/instructions/`
 
@@ -81,17 +82,18 @@ User Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Codi
 - `.github/ISSUE_TEMPLATE/feature_request.yml` - Enhancement requests
 - `.github/agents/troubleshooter.agents.md` - Diagnostics + analysis
 - `.github/agents/issue-coordinator.agents.md` - Resolution orchestration
-- `.github/agents/knowledge-base.agents.md` - KB search
-- `.github/agents/reviewer.agents.md` - Config review agent
-- `.github/agents/planner.agents.md` - Planning agent
 - `.github/workflows/update-knowledge-base.yml` - KB automation
-- `.github/prompts/analyze-root-cause.prompt.md` - Analysis guide
-- `.github/prompts/request-resolution.prompt.md` - Request optimization
-- `.github/prompts/deploy-app.prompt.md` - App deployment guide (cross-reference)
-- `.github/prompts/troubleshoot-flux.prompt.md` - Flux-specific guidance
-- `.github/prompts/manage-secrets.prompt.md` - Secret management guide
-- `.github/prompts/generate-docs.prompt.md` - Documentation generation
-- `.github/prompts/review-config.prompt.md` - Config review checklist
+- `.github/skills/deploy-application/SKILL.md` - App deployment workflow
+- `.github/skills/troubleshoot-flux/SKILL.md` - Troubleshooting workflow
+- `.github/skills/manage-sealed-secrets/SKILL.md` - Secret management workflow
+- `.github/skills/generate-gitops-docs/SKILL.md` - Documentation workflow
+- `.github/skills/review-gitops-config/SKILL.md` - Review workflow
+- `.github/skills/gitops-implementation-planning/SKILL.md` - Planning workflow
+- `.github/skills/knowledge-base-search/SKILL.md` - Historical incident search workflow
+- `.github/instructions/agents.instructions.md` - Custom agent maintenance rules
+- `.github/instructions/prompt.instructions.md` - Prompt deprecation and maintenance rules
+- `.github/instructions/skills.instructions.md` - Skill maintenance rules
+- `.github/instructions/instructions.instructions.md` - Instruction maintenance rules
 - `.github/instructions/documentation.instructions.md` - Updated with workflow
 - `.github/instructions/flux.instructions.md` - Enhanced patterns
 - `.github/instructions/kubernetes.instructions.md` - Enhanced patterns
@@ -124,5 +126,5 @@ User Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Codi
 
 - **User Guide**: [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md)
 - **Known Issues**: [Known Issues and Solutions](/docs/troubleshooting/known-issues.md)
-- **Analysis Methodology**: `.github/prompts/analyze-root-cause.prompt.md`
-- **Request Optimization**: `.github/prompts/request-resolution.prompt.md`
+- **Diagnostics Entry Point**: `.github/skills/troubleshoot-flux/SKILL.md`
+- **Resolution Coordination**: `.github/agents/issue-coordinator.agents.md`

@@ -189,6 +189,8 @@ For cluster issues, use GitHub Issues with structured templates instead of manua
    Please run comprehensive Flux diagnostics
    ```
 
+  If you are using Claude Code or another local agent instead of Copilot Chat, use `/AGENTS.md` plus `.github/skills/troubleshoot-flux/SKILL.md` as the portable workflow entry point.
+
 3. **Review Diagnostic Phases**:
    - **Health Check**: Flux controller status, Git sync, reconciliation state
    - **Resource Status**: Kustomization/HelmRelease conditions and inventory
@@ -290,11 +292,10 @@ grep -i "timeout" docs/troubleshooting/known-issues.md
 grep -A 20 "HelmRelease" docs/troubleshooting/known-issues.md
 ```
 
-Or use knowledge-base agent in Copilot Chat:
+Or use the knowledge-base-search skill:
 
 ```
-#file:.github/agents/knowledge-base.agents.md
-Search for issues with "HelmRelease timeout"
+Use the knowledge-base-search skill and search for issues with "HelmRelease timeout"
 ```
 
 ## Best Practices

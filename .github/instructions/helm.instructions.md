@@ -252,6 +252,8 @@ For comprehensive HelmRelease diagnostics and automated resolution, use the GitH
    Please investigate this HelmRelease failure
    ```
 
+  If you are using Claude Code or another local agent instead of Copilot Chat, use `/AGENTS.md` plus `.github/skills/troubleshoot-flux/SKILL.md` and keep the same failing-resource context.
+
 3. **Automated Diagnostic Collection**:
    - HelmRelease status conditions and inventory
    - Helm controller logs filtered by namespace/release

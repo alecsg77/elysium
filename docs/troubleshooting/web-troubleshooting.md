@@ -2,6 +2,8 @@
 
 Guide for diagnosing and resolving Kubernetes cluster issues using GitHub Issues and Copilot Chat from any web browser.
 
+This is a Copilot-primary hosted workflow. Local agents such as Claude Code can follow the same troubleshooting logic by reading `/AGENTS.md`, `/.github/skills/troubleshoot-flux/SKILL.md`, and `/.github/agents/troubleshooter.agents.md`, but the issue-page chat and coding-agent automation described here are Copilot-specific.
+
 ## Quick Start (5 Steps)
 
 ```

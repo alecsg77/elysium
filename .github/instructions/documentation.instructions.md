@@ -9,6 +9,14 @@ description: "Documentation standards for GitOps repository"
 
 This repository maintains a **strict separation** between AI agent guidance and human/AI documentation:
 
+### Root Agent Entry Points - Cross-Agent Compatibility
+**Purpose**: Provide portable starting points for agent hosts that do not natively consume GitHub Copilot customization files
+
+| File | Content Type | Purpose | Audience |
+|------|-------------|---------|----------|
+| `AGENTS.md` | **Portable agent guide** | Repository-wide rules, workflow map, and compatibility notes | Claude Code and other agents |
+| `CLAUDE.md` | **Claude entry point** | Thin Claude Code bootstrap that points to `AGENTS.md` | Claude Code |
+
 ### `.github/` Folder - AI Agent Context (Machine-First)
 **Purpose**: Provide context and guidance for GitHub Copilot and automated agents
 
@@ -16,21 +24,30 @@ This repository maintains a **strict separation** between AI agent guidance and 
 |-----------|-------------|---------|----------|
 | `.github/instructions/*.instructions.md` | **Agent instructions** | Coding standards, patterns, conventions with references to actual docs | GitHub Copilot (coding) |
 | `.github/agents/*.agents.md` | **Agent definitions** | Agent behavior, workflows, coordination logic | GitHub Copilot (agents) |
-| `.github/prompts/*.prompt.md` | **Copilot prompts** | Task-specific agent guidance with quick references | GitHub Copilot (prompts) |
+| `.github/skills/<name>/SKILL.md` | **Agent skills** | On-demand reusable workflows with optional bundled assets | GitHub Copilot (skills) |
+| `.github/prompts/*.prompt.md` | **Copilot prompts** | Thin task entry points only when a full skill is unnecessary | GitHub Copilot (prompts) |
 
 **Rules for `.github/` content**:
 - ✅ Provide patterns, conventions, and best practices
 - ✅ Include quick reference templates and examples
 - ✅ Link to detailed documentation in `/docs/`
 - ✅ Focus on "how to code" and "what patterns to follow"
+- ✅ Prefer skills over prompts for user-invocable multi-step workflows
+- ✅ Keep markdown bodies readable by non-Copilot agents even when frontmatter is Copilot-specific
 - ❌ **NO step-by-step procedures** (those go in `/docs/runbooks/`)
 - ❌ **NO comprehensive documentation** (that goes in `/docs/standards/`)
 - ❌ **NO duplicating information** from `/docs/`
 
+**Rules for root compatibility files**:
+- ✅ Keep `AGENTS.md` vendor-neutral and repository-wide
+- ✅ Keep `CLAUDE.md` thin and aligned with `AGENTS.md`
+- ✅ Preserve Copilot as the primary supported hosted workflow
+- ❌ Do not fork the repository rules between `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`
+
 **Example content**:
 - `kubernetes.instructions.md`: Manifest patterns, security standards, resource conventions
 - `flux.instructions.md`: GitOps patterns, dependency chains, reconciliation strategies
-- `deploy-app.prompt.md`: High-level workflow, key principles, links to detailed runbook
+- `skills/deploy-application/SKILL.md`: Reusable deployment workflow that references the authoritative runbook
 
 ### `/docs/` Folder - Authoritative Documentation (Human-First)
 **Purpose**: Single source of truth for standards, procedures, architecture, and troubleshooting
@@ -239,9 +256,9 @@ Runbooks are **step-by-step operational procedures** for humans and AI agents to
 - Upgrading cluster components
 - Backup and restore operations
 
-**Runbook vs Prompt distinction**:
+**Runbook vs Skill distinction**:
 - **Runbook** (`/docs/runbooks/add-application.md`): Complete procedure with all commands, validation steps, troubleshooting - authoritative source
-- **Prompt** (`.github/prompts/deploy-app.prompt.md`): Agent guidance that **references** the runbook, provides high-level workflow and key principles
+- **Skill** (`.github/skills/deploy-application/SKILL.md`): On-demand workflow guidance that **references** the runbook and repository rules without duplicating them
 
 ## Diagram Standards
 - Use mermaid diagrams for architecture visualization
@@ -333,7 +350,7 @@ Runbooks are **step-by-step operational procedures** for humans and AI agents to
 2. Include prerequisites, validation, troubleshooting
 3. Test all commands work as documented
 4. Add to `/docs/runbooks/README.md` with category
-5. Reference from relevant `.github/prompts/` files
+5. Reference from relevant `.github/skills/` files, or from prompts only when a thin prompt still exists
 
 **Agent instructions** (`.github/instructions/`):
 1. Focus on coding patterns and conventions
@@ -342,12 +359,17 @@ Runbooks are **step-by-step operational procedures** for humans and AI agents to
 4. Link to detailed standards and runbooks
 5. Update when coding patterns change, not when procedures change
 
-**Agent prompt** (`.github/prompts/`):
-1. Define agent task and workflow
+**Agent skill** (`.github/skills/<name>/SKILL.md`):
+1. Define the reusable workflow and when to invoke it
 2. Reference detailed runbook for procedures
 3. Highlight key principles and validation
-4. Provide minimal templates as quick reference
+4. Provide minimal checklists or templates as quick reference
 5. Link to all relevant standards and instructions
+
+**Agent prompt** (`.github/prompts/`):
+1. Keep it thin and entry-point only
+2. Prefer delegating the real workflow to a skill or agent
+3. Avoid duplicating runbook steps inside the prompt body
 
 ### Separation of Concerns Checklist
 
