@@ -4,9 +4,6 @@ kind: Kustomization
 resources:
   - pvc.yaml
   - qbittorrent.yaml
-  - plex.yaml
-  - jellyfin.yaml
-  - overseerr.yaml
   - apprise-api.yaml
   - tautulli.yaml
   - msmtpd.yaml

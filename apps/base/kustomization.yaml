@@ -12,7 +12,10 @@ resources:
   - error-pages
   - fission
   - n8n
+  - jellyfin
+  - overseerr
   - pihole
+  - plex
   - raiplaysoundrss
   - registry
   - romm

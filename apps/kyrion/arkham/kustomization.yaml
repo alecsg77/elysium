@@ -4,7 +4,10 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - ../../base/arkham
+  - ../../base/jellyfin
+  - ../../base/overseerr
   - ../../base/pihole
+  - ../../base/plex
   - arkham-unmonitorr-sealed-secret.yaml
 
 patches:
