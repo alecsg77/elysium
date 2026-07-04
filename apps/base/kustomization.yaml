@@ -7,13 +7,16 @@ kind: Kustomization
 resources:
   - ai
   - airflow
+  - apprise-api
   - arkham
   - bazarr
   - coder
+  - configarr
   - error-pages
   - fission
   - jellyfin
   - lidarr
+  - msmtpd
   - n8n
   - overseerr
   - pihole
@@ -25,3 +28,5 @@ resources:
   - registry
   - romm
   - sonarr
+  - tautulli
+  - unmonitorr

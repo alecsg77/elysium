@@ -3,10 +3,13 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - ../../base/apprise-api
   - ../../base/arkham
   - ../../base/bazarr
+  - ../../base/configarr
   - ../../base/jellyfin
   - ../../base/lidarr
+  - ../../base/msmtpd
   - ../../base/overseerr
   - ../../base/pihole
   - ../../base/plex
@@ -14,6 +17,8 @@ resources:
   - ../../base/qbittorrent
   - ../../base/radarr
   - ../../base/sonarr
+  - ../../base/tautulli
+  - ../../base/unmonitorr
   - arkham-unmonitorr-sealed-secret.yaml
 
 patches:
