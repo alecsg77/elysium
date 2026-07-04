@@ -12,6 +12,7 @@ resources:
   - error-pages
   - fission
   - n8n
+  - pihole
   - raiplaysoundrss
   - registry
   - romm
