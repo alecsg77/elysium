@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - ../base
-  - ../base/coder
+  - ./coder
   - ./registry
   - ./raiplaysoundrss
   - ../base/arkham
@@ -18,23 +18,6 @@ resources:
   - arkham-unmonitorr-sealed-secret.yaml
 
 patches:
-  - path: coder-values.yaml
-    target:
-      kind: HelmRelease
-      name: coder
-  - patch: |-
-      - op: add
-        path: "/spec/values/coder/env/-"
-        value:
-          name: CODER_ACCESS_URL
-          value: "https://coder.${ts_net}"
-    target:
-      kind: HelmRelease
-      name: coder
-  - path: coder-logstream-kube-values.yaml
-    target:
-      kind: HelmRelease
-      name: coder-logstream-kube
   - path: arkham-resources.yaml
   - path: arkham-pihole-patch.yaml
     target:
