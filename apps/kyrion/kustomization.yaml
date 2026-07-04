@@ -2,17 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../base
+  - ./default
   - ./coder
   - ./registry
   - ./raiplaysoundrss
   - ./arkham
   - ./fission
   - ./ai
-  - arc-runner-set.yaml
-  - web-public.yaml
-  - fission-runner-set.yaml
-  - coder-runner-set.yaml
-  - copilot-runner-set.yaml
-  - raiplaysoundrss-runner-set.yaml
-
+  - ./arc-runners
