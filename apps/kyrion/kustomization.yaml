@@ -5,9 +5,9 @@ resources:
   - ../base
   - ../base/coder
   - ./registry
-  - ../base/raiplaysoundrss
+  - ./raiplaysoundrss
   - ../base/arkham
-  - ../base/fission
+  - ./fission
   - ./ai
   - arc-runner-set.yaml
   - web-public.yaml
