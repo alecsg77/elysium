@@ -4,6 +4,6 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - ../../base/ai
-  - openclaw.yaml
+  - openclaw-ingress.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-copilot-auth-secret.yaml

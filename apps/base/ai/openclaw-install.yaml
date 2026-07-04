@@ -112,22 +112,3 @@ spec:
       target:
         kind: Deployment
         name: openclaw
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: openclaw
-  namespace: ai
-  labels:
-    app.kubernetes.io/name: openclaw
-    app.kubernetes.io/instance: openclaw
-spec:
-  ingressClassName: tailscale
-  defaultBackend:
-    service:
-      name: openclaw
-      port:
-        number: 18789
-  tls:
-    - hosts:
-        - openclaw
