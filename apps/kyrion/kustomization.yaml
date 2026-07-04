@@ -6,7 +6,7 @@ resources:
   - ./coder
   - ./registry
   - ./raiplaysoundrss
-  - ../base/arkham
+  - ./arkham
   - ./fission
   - ./ai
   - arc-runner-set.yaml
@@ -15,12 +15,4 @@ resources:
   - coder-runner-set.yaml
   - copilot-runner-set.yaml
   - raiplaysoundrss-runner-set.yaml
-  - arkham-unmonitorr-sealed-secret.yaml
 
-patches:
-  - path: arkham-resources.yaml
-  - path: arkham-pihole-patch.yaml
-    target:
-      kind: HelmRelease
-      name: pihole
-      namespace: arkham

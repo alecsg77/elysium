@@ -1,0 +1,105 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sonarr
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "384Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: radarr
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "384Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: qbittorrent
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "4"
+        memory: "4Gi"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bazarr
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "384Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: lidarr
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "384Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prowlarr
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "384Mi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: unmonitorr
+  namespace: arkham
+spec:
+  values:
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "384Mi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
