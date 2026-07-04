@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - pvc.yaml
-  - ts-ingress.yaml
   - qbittorrent.yaml
   - plex.yaml
   - jellyfin.yaml

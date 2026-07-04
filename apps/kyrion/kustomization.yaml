@@ -9,4 +9,3 @@ resources:
   - ./arkham
   - ./fission
   - ./ai
-  - ./arc-runners

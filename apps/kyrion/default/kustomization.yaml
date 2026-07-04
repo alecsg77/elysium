@@ -3,4 +3,3 @@ kind: Kustomization
 
 resources:
   - ../../base/error-pages
-  - web-public.yaml

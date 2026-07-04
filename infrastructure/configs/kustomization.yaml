@@ -13,6 +13,9 @@ resources:
   - local-storage-class.yaml
   - ts-default-proxy-class.yaml
   - copilot-agent-rbac
+  - web-public.yaml
+  - ts-ingress-arkham.yaml
+  - arc-runners
 
 
 configMapGenerator:
