@@ -8,10 +8,7 @@ resources:
   - ../base/raiplaysoundrss
   - ../base/arkham
   - ../base/fission
-  - ../base/ai
-  - openclaw.yaml
-  - openclaw-sealed-secret.yaml
-  - openclaw-copilot-auth-secret.yaml
+  - ./ai
   - arc-runner-set.yaml
   - web-public.yaml
   - fission-runner-set.yaml
