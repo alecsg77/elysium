@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - ../base
   - ../base/coder
-  - ../base/registry
+  - ./registry
   - ../base/raiplaysoundrss
   - ../base/arkham
   - ../base/fission
