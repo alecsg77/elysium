@@ -8,14 +8,20 @@ resources:
   - ai
   - airflow
   - arkham
+  - bazarr
   - coder
   - error-pages
   - fission
-  - n8n
   - jellyfin
+  - lidarr
+  - n8n
   - overseerr
   - pihole
   - plex
+  - prowlarr
+  - qbittorrent
+  - radarr
   - raiplaysoundrss
   - registry
   - romm
+  - sonarr
