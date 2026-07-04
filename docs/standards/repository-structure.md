@@ -94,11 +94,14 @@ Use this quick guide when adding or changing manifests.
 
 Use the base/overlay pattern everywhere it makes sense:
 
-- `apps/base/<app>/` contains reusable manifests: `namespace.yaml`, `release.yaml`, service/ingress, dashboards, etc.
-- `apps/<env>/` contains only environment-specific deltas: patches, env-only config, and env-only sealed secrets.
+- `apps/base/<app>/` is the **application catalog**: environment-agnostic, reusable definitions. Each app gets its own directory. `apps/base/kustomization.yaml` is the index of all installable units.
+- `apps/<cluster>/<namespace>/` is the **cluster installation layer**: one folder per namespace per cluster, each with an explicit `kustomization.yaml`. This is where apps are selected, namespaced, and configured for a specific cluster.
+
+**Separation principle**: The catalog does not know which namespace an app will be installed into. The cluster overlay decides the target namespace, creates the `Namespace` resource, and applies all cluster-specific patches.
 
 **Base directory rules (MUST follow):**
 
+- ✅ **Namespace-agnostic**: No `namespace.yaml` in base — the target namespace is decided by the cluster overlay
 - ✅ **Environment-agnostic resources only**: No cluster-specific values (hostnames, node names, storage class names)
 - ✅ **Complete, functional resources**: Base should work with sensible defaults
 - ✅ **One resource per file**: Each YAML file contains exactly one Kubernetes resource
@@ -109,6 +112,9 @@ Use the base/overlay pattern everywhere it makes sense:
 
 **Overlay directory rules (MUST follow):**
 
+- ✅ **Per-namespace folders**: Each namespace gets its own folder `apps/<cluster>/<namespace>/` with an explicit `kustomization.yaml`
+- ✅ **Namespace resource ownership**: `namespace.yaml` lives in the overlay, not the catalog base
+- ✅ **Pragmatic app structure**: Simple apps are a single file in the namespace folder; complex apps that need multiple resources or patches get their own subfolder
 - ✅ **Patches only**: Use Kustomize patches to modify base resources
 - ✅ **Environment-specific resources**: ConfigMaps, Secrets, resource limits specific to this environment
 - ✅ **Small and focused**: Overlay should be minimal - only what differs from base
@@ -131,23 +137,27 @@ Use the base/overlay pattern everywhere it makes sense:
 | **JSON Patch (6902)** | Precise single-value changes | Change image tag, set replica count, update one annotation |
 | **Inline patch (patchesStrategicMerge)** | Simple field overrides | Small value changes inline in kustomization.yaml |
 
-**Example: Good base structure**
+**Example: Good base (catalog) structure**
 ```
 apps/base/myapp/
-├── kustomization.yaml       # Lists all resources, no patches
-├── namespace.yaml           # (only for app-specific namespaces)
-├── helmrelease.yaml         # HelmRelease with generic values
+├── kustomization.yaml       # Lists all resources, no patches — NO namespace.yaml
+├── helmrelease.yaml         # HelmRelease with generic values (namespace set by overlay)
 ├── service.yaml             # Service definition
 └── ingress.yaml             # Ingress template without specific host
 ```
 
-**Example: Good overlay structure**
+**Example: Good overlay structure (per namespace)**
 ```
 apps/kyrion/
-├── kustomization.yaml       # References base, applies patches
-├── myapp-host-patch.yaml    # Adds environment-specific hostname
-├── myapp-resources-patch.yaml # Overrides resource limits
-└── myapp-sealed-secret.yaml # Environment-specific secret
+├── kustomization.yaml           # References namespace folders only
+├── myapp-namespace/
+│   ├── kustomization.yaml       # References ../../base/myapp + applies patches
+│   ├── namespace.yaml           # Creates the namespace in this cluster
+│   ├── myapp-patch.yaml         # Cluster-specific overrides
+│   └── myapp-sealed-secret.yaml # Cluster-specific secrets
+└── another-namespace/
+    ├── kustomization.yaml
+    └── simple-app.yaml          # Single-file install for simple apps
 ```
 
 ### 3) Naming conventions

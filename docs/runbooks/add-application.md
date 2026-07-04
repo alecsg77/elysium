@@ -12,11 +12,22 @@ Step-by-step runbook for adding new applications to the cluster or modifying exi
 - `kubeseal` CLI installed - if creating sealed secrets
 - Access to sealed-secrets public key: `etc/certs/pub-sealed-secrets.pem`
 
-## Overview
+## Model Overview
 
-This runbook covers the complete workflow for adding a new application using Flux CD, Kustomize base/overlay pattern, and Helm (when applicable).
+This repository uses a **two-layer model**:
 
-**Estimated Time**: 30-60 minutes for a new application
+| Layer | Location | Purpose |
+|-------|----------|---------|
+| **Application catalog** | `apps/base/<app>/` | Reusable, namespace-agnostic definitions |
+| **Cluster installation** | `apps/<cluster>/<namespace>/` | Per-namespace selection, patches, secrets |
+
+**Adding an app has two phases:**
+1. **Catalog phase**: Define the app in `apps/base/<app>/` (no namespace assumptions)
+2. **Install phase**: Enable it in a cluster namespace under `apps/<cluster>/<namespace>/`
+
+---
+
+## Phase 1: Add to Catalog
 
 ## Step 1: Create Base Directory Structure
 
@@ -34,9 +45,8 @@ cd <app>
 **Directory structure:**
 ```
 apps/base/<app>/
-├── kustomization.yaml       # Resource list (NO patches)
-├── namespace.yaml           # Only if new app-specific namespace
-├── helmrelease.yaml         # HelmRelease with base values
+├── kustomization.yaml       # Resource list (NO patches, NO namespace.yaml)
+├── helmrelease.yaml         # HelmRelease — namespace set by overlay, not here
 └── <resource>.yaml          # Additional K8s resources (Service, Ingress, etc.)
 ```
 
@@ -112,7 +122,7 @@ metadata:
     app: <app>
 ```
 
-**⚠️ Important**: Do NOT create namespace.yaml for system namespaces (`default`, `kube-system`, `flux-system`).
+**⚠️ No `namespace.yaml` in base.** The namespace is decided by the cluster overlay, not the catalog.
 
 ### For Kustomize-based Applications
 
@@ -134,7 +144,7 @@ apps/base/<app>/
 
 **Create individual resource files** (one Kubernetes resource per file).
 
-## Step 2: Register in Base Kustomization
+## Step 2: Register in Catalog Index
 
 Edit `apps/base/kustomization.yaml`:
 
@@ -146,58 +156,53 @@ resources:
   - <app>/                   # Add new app directory
 ```
 
-## Step 3: Create Environment Overlay
+## Phase 2: Enable in Cluster Namespace
+
+## Step 3: Create Namespace Overlay
 
 ```bash
-cd apps/kyrion/  # Or your environment name
+# Navigate to the target namespace folder (create if new)
+cd apps/kyrion/<namespace>/
 ```
 
-**Overlay structure:**
+**Per-namespace overlay structure:**
 ```
-apps/kyrion/
-├── kustomization.yaml
-├── <app>-<purpose>-patch.yaml    # Patches for base resources
-├── <app>-config.yaml             # Environment-specific ConfigMap
-└── <app>-sealed-secret.yaml      # Environment-specific secrets
+apps/kyrion/<namespace>/
+├── kustomization.yaml           # Aggregates all apps in this namespace + patches
+├── namespace.yaml               # Creates the Namespace in this cluster
+├── <app>.yaml                   # Single-file install (simple apps)
+└── <app>-sealed-secret.yaml     # Cluster-specific secrets
 ```
 
-**Create/update `kustomization.yaml`:**
+**For simple apps**, add a single file directly in the namespace folder and list it in `kustomization.yaml`:
 ```yaml
+# apps/kyrion/<namespace>/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../base/<app>         # Reference base directory
-  - <app>-config.yaml        # Env-specific resources
-  - <app>-sealed-secret.yaml
-
-# Strategic merge patches (for adding/modifying sections)
-patchesStrategicMerge:
-  - <app>-resources-patch.yaml
-  - <app>-ingress-patch.yaml
-
-# JSON patches (for precise value changes)
-patchesJson6902:
-  - target:
+  - namespace.yaml
+  - ../../base/<app>           # Install from catalog
+  - <app>-sealed-secret.yaml  # Env-specific secrets
+patches:
+  - path: <app>-patch.yaml    # Env-specific overrides
+    target:
       kind: HelmRelease
       name: <app>
-    path: <app>-replicas-json-patch.yaml
 ```
 
-**Example strategic merge patch** (`<app>-ingress-patch.yaml`):
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: <app>
-spec:
-  rules:
-  - host: <app>.kyrion.example.com  # Environment-specific hostname
+**For complex apps** (many resources or patches), create a subfolder:
+```
+apps/kyrion/<namespace>/<app>/
+├── kustomization.yaml
+├── <app>-values-patch.yaml
+└── <app>-sealed-secret.yaml
 ```
 
-**Example JSON patch** (`<app>-replicas-json-patch.yaml`):
+**Also update `apps/kyrion/kustomization.yaml`** if adding a new namespace:
 ```yaml
-- op: replace
-  path: /spec/values/replicaCount
+resources:
+  - ./<namespace>   # Add the new namespace folder
+```
   value: 3
 ```
 
