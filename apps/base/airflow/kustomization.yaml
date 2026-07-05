@@ -5,4 +5,3 @@ resources:
   - namespace.yaml
   - repository.yaml
   - release.yaml
-  - airflow-webserver-secret-key-sealed.yaml

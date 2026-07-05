@@ -3,10 +3,11 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - pvc.yaml
   - ../../base/apprise-api
-  - ../../base/arkham
   - ../../base/bazarr
   - ../../base/configarr
+  - ../../base/flaresolverr
   - ../../base/jellyfin
   - ../../base/lidarr
   - ../../base/msmtpd

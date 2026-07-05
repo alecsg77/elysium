@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - ../../base/coder
+  - sealed-secrets.yaml
 
 patches:
   - path: coder-values.yaml

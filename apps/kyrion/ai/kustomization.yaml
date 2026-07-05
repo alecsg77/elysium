@@ -3,7 +3,13 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - ../../base/ai
+  - ../../base/copilot-api
+  - ../../base/local-ai
+  - ../../base/ollama
+  - ../../base/openclaw
+  - ../../base/openwebui
+  - copilot-api-sealed-secret.yaml
   - openclaw-ingress.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-copilot-auth-secret.yaml
+  - openwebui-credentials-env-sealed-secret.yaml

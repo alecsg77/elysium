@@ -5,7 +5,6 @@ resources:
   - release.yaml
   - repository.yaml
   - secret.yaml
-  - sealed-secrets.yaml
   - coder-prom.yaml
 
 configMapGenerator:
