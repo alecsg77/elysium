@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: bazarr
-  namespace: arkham
 spec:
   releaseName: bazarr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: lscr.io/linuxserver/bazarr # {"$imagepolicy": "flux-system:bazarr-policy:name"}
-      tag: "1.6.0" # {"$imagepolicy": "flux-system:bazarr-policy:tag"}
+      repository: lscr.io/linuxserver/bazarr # {"$imagepolicy": "arkham:bazarr-policy:name"}
+      tag: "1.6.0" # {"$imagepolicy": "arkham:bazarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
@@ -69,7 +68,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: bazarr
-  namespace: flux-system
 spec:
   image: lscr.io/linuxserver/bazarr
   interval: 24h
@@ -78,7 +76,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: bazarr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: bazarr

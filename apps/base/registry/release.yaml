@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: registry
-  namespace: registry
 spec:
   releaseName: registry
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: registry # {"$imagepolicy": "flux-system:registry-policy:name"}
-      tag: "2.8.3" # {"$imagepolicy": "flux-system:registry-policy:tag"}
+      repository: registry # {"$imagepolicy": "registry:registry-policy:name"}
+      tag: "2.8.3" # {"$imagepolicy": "registry:registry-policy:tag"}
     volumes:
       - name: registry
         size: "100Mi"

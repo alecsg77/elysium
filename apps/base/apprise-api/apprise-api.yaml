@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: apprise-api
-  namespace: arkham
 spec:
   releaseName: apprise-api
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: lscr.io/linuxserver/apprise-api # {"$imagepolicy": "flux-system:apprise-api-policy:name"}
-      tag: "version-v1.5.1" # {"$imagepolicy": "flux-system:apprise-api-policy:tag"}
+      repository: lscr.io/linuxserver/apprise-api # {"$imagepolicy": "arkham:apprise-api-policy:name"}
+      tag: "version-v1.5.1" # {"$imagepolicy": "arkham:apprise-api-policy:tag"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -48,7 +47,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: apprise-api
-  namespace: flux-system
 spec:
   image: lscr.io/linuxserver/apprise-api
   interval: 24h
@@ -57,7 +55,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: apprise-api-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: apprise-api

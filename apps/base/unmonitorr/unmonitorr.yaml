@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: unmonitorr
-  namespace: arkham
 spec:
   releaseName: unmonitorr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: shraymonks/unmonitorr # {"$imagepolicy": "flux-system:unmonitorr-policy:name"}
-      tag: "v1.2.0" # {"$imagepolicy": "flux-system:unmonitorr-policy:tag"}
+      repository: shraymonks/unmonitorr # {"$imagepolicy": "arkham:unmonitorr-policy:name"}
+      tag: "v1.2.0" # {"$imagepolicy": "arkham:unmonitorr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
@@ -38,7 +37,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: unmonitorr
-  namespace: flux-system
 spec:
   image: shraymonks/unmonitorr
   interval: 24h
@@ -47,7 +45,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: unmonitorr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: unmonitorr

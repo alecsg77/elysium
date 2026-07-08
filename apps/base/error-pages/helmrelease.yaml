@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: error-pages
-  namespace: default
 spec:
   releaseName: error-pages
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: ghcr.io/tarampampam/error-pages # {"$imagepolicy": "flux-system:error-pages-policy:name"}
-      tag: "3.8.1" # {"$imagepolicy": "flux-system:error-pages-policy:tag"}
+      repository: ghcr.io/tarampampam/error-pages # {"$imagepolicy": "default:error-pages-policy:name"}
+      tag: "3.8.1" # {"$imagepolicy": "default:error-pages-policy:tag"}
     vars:
       TEMPLATES_ROTATION_MODE: "random-on-each-request"
     containerPort: 8080

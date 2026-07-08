@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: raiplaysoundrss
-  namespace: raiplaysoundrss
 spec:
   releaseName: raiplaysoundrss
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: ghcr.io/alecsg77/raiplaysoundrss # {"$imagepolicy": "flux-system:raiplaysoundrss-policy:name"}
-      tag: "0.7.5" # {"$imagepolicy": "flux-system:raiplaysoundrss-policy:tag"}
+      repository: ghcr.io/alecsg77/raiplaysoundrss # {"$imagepolicy": "raiplaysoundrss:raiplaysoundrss-policy:name"}
+      tag: "0.7.5" # {"$imagepolicy": "raiplaysoundrss:raiplaysoundrss-policy:tag"}
     imagePullSecrets:
       - regcred
     containerPort: 3000

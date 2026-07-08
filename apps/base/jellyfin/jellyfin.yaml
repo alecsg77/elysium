@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: jellyfin
-  namespace: arkham
 spec:
   releaseName: jellyfin
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: lscr.io/linuxserver/jellyfin # {"$imagepolicy": "flux-system:jellyfin-policy:name"}
-      tag: "10.11.11" # {"$imagepolicy": "flux-system:jellyfin-policy:tag"}
+      repository: lscr.io/linuxserver/jellyfin # {"$imagepolicy": "arkham:jellyfin-policy:name"}
+      tag: "10.11.11" # {"$imagepolicy": "arkham:jellyfin-policy:tag"}
     resources:
       requests:
         cpu: "1"
@@ -82,7 +81,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: jellyfin
-  namespace: flux-system
 spec:
   image: lscr.io/linuxserver/jellyfin
   interval: 24h
@@ -91,7 +89,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: jellyfin-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: jellyfin

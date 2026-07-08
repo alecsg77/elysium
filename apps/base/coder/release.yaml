@@ -3,7 +3,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: db
-  namespace: coder
 spec:
   chart:
     spec:
@@ -27,7 +26,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: coder
-  namespace: coder
 spec:
   chart:
     spec:
@@ -108,7 +106,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: coder-logstream-kube
-  namespace: coder
 spec:
   chart:
     spec:

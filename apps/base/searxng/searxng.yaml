@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: searxng
-  namespace: ai
 spec:
   releaseName: searxng
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: ghcr.io/searxng/searxng # {"$imagepolicy": "flux-system:searxng-policy:name"}
-      tag: "2026.2.11-970f2b843" # {"$imagepolicy": "flux-system:searxng-policy:tag"}
+      repository: ghcr.io/searxng/searxng # {"$imagepolicy": "ai:searxng-policy:name"}
+      tag: "2026.2.11-970f2b843" # {"$imagepolicy": "ai:searxng-policy:tag"}
     resources:
       requests:
         cpu: "250m"
@@ -42,7 +41,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: searxng
-  namespace: flux-system
 spec:
   image: ghcr.io/searxng/searxng
   interval: 24h
@@ -51,7 +49,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: searxng-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: searxng

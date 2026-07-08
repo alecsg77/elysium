@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: db
-  namespace: romm
 spec:
   chart:
     spec:
@@ -30,7 +29,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: romm
-  namespace: romm
 spec:
   dependsOn:
     - name: db

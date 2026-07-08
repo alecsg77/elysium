@@ -3,7 +3,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: romm
-  namespace: flux-system
 spec:
   image: rommapp/romm
   interval: 24h

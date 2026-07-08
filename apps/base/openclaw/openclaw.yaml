@@ -3,7 +3,6 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: openclaw
-  namespace: ai
 spec:
   interval: 24h
   url: https://github.com/openclaw/openclaw

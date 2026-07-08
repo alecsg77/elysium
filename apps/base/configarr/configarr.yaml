@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: configarr
-  namespace: arkham
 spec:
   releaseName: configarr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "flux-system:configarr-policy:name"}
-      tag: "1.29.1" # {"$imagepolicy": "flux-system:configarr-policy:tag"}
+      repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "arkham:configarr-policy:name"}
+      tag: "1.29.1" # {"$imagepolicy": "arkham:configarr-policy:tag"}
     schedule: "0 0 * * *" # Runs every 24 hours (daily at midnight)
     overrideCommand: false
     vars:
@@ -40,7 +39,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: configarr
-  namespace: flux-system
 spec:
   image: ghcr.io/raydak-labs/configarr
   interval: 24h
@@ -49,7 +47,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: configarr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: configarr

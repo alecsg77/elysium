@@ -9,7 +9,6 @@ resources:
 
 configMapGenerator:
   - name: coder-grafana-dashboards
-    namespace: coder
     files:
       - dashboards/coderd.json
       - dashboards/prebuilds.json

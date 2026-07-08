@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: overseerr
-  namespace: arkham
 spec:
   releaseName: overseerr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "flux-system:overseerr-policy:name"}
-      tag: "version-v1.35.0" # {"$imagepolicy": "flux-system:overseerr-policy:tag"}
+      repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "arkham:overseerr-policy:name"}
+      tag: "version-v1.35.0" # {"$imagepolicy": "arkham:overseerr-policy:tag"}
     resources:
       limits:
         cpu: "1"
@@ -56,7 +55,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: overseerr
-  namespace: flux-system
 spec:
   image: lscr.io/linuxserver/overseerr
   interval: 24h
@@ -65,7 +63,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: overseerr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: overseerr

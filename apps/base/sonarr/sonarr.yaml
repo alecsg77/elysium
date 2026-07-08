@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: sonarr
-  namespace: arkham
 spec:
   releaseName: sonarr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: lscr.io/linuxserver/sonarr # {"$imagepolicy": "flux-system:sonarr-policy:name"}
-      tag: "4.0.19" # {"$imagepolicy": "flux-system:sonarr-policy:tag"}
+      repository: lscr.io/linuxserver/sonarr # {"$imagepolicy": "arkham:sonarr-policy:name"}
+      tag: "4.0.19" # {"$imagepolicy": "arkham:sonarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
@@ -73,7 +72,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: sonarr
-  namespace: flux-system
 spec:
   image: lscr.io/linuxserver/sonarr
   interval: 24h
@@ -82,7 +80,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: sonarr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: sonarr

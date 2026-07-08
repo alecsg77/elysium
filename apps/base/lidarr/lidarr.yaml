@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: lidarr
-  namespace: arkham
 spec:
   releaseName: lidarr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: lscr.io/linuxserver/lidarr # {"$imagepolicy": "flux-system:lidarr-policy:name"}
-      tag: "2.14.5" # {"$imagepolicy": "flux-system:lidarr-policy:tag"}
+      repository: lscr.io/linuxserver/lidarr # {"$imagepolicy": "arkham:lidarr-policy:name"}
+      tag: "2.14.5" # {"$imagepolicy": "arkham:lidarr-policy:tag"}
     resources:
       requests:
         cpu: "500m"
@@ -73,7 +72,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: lidarr
-  namespace: flux-system
 spec:
   image: lscr.io/linuxserver/lidarr
   interval: 24h
@@ -82,7 +80,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: lidarr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: lidarr

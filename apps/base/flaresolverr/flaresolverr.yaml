@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: flaresolverr
-  namespace: arkham
 spec:
   releaseName: flaresolverr
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: ghcr.io/flaresolverr/flaresolverr # {"$imagepolicy": "flux-system:flaresolverr-policy:name"}
-      tag: "v3.5.0" # {"$imagepolicy": "flux-system:flaresolverr-policy:tag"}
+      repository: ghcr.io/flaresolverr/flaresolverr # {"$imagepolicy": "arkham:flaresolverr-policy:name"}
+      tag: "v3.5.0" # {"$imagepolicy": "arkham:flaresolverr-policy:tag"}
     resources:
       requests:
         cpu: "2"
@@ -47,7 +46,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: flaresolverr
-  namespace: flux-system
 spec:
   image: ghcr.io/flaresolverr/flaresolverr
   interval: 24h
@@ -56,7 +54,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: flaresolverr-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: flaresolverr

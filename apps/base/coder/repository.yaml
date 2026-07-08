@@ -3,7 +3,6 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: coder-v2
-  namespace: coder
 spec:
   interval: 24h
   url: https://helm.coder.com/v2
@@ -12,7 +11,6 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: coder-logstream-kube
-  namespace: coder
 spec:
   interval: 24h
   url: https://helm.coder.com/logstream-kube

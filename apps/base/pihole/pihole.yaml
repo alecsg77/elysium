@@ -2,7 +2,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: pihole
-  namespace: arkham
 spec:
   releaseName: pihole
   chart:
@@ -16,8 +15,8 @@ spec:
   interval: 12h
   values:
     image:
-      repository: pihole/pihole # {"$imagepolicy": "flux-system:pihole-policy:name"}
-      tag: "2025.11.1" # {"$imagepolicy": "flux-system:pihole-policy:tag"}
+      repository: pihole/pihole # {"$imagepolicy": "arkham:pihole-policy:name"}
+      tag: "2025.11.1" # {"$imagepolicy": "arkham:pihole-policy:tag"}
     resources:
       requests:
         cpu: "100m"
@@ -74,7 +73,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: pihole
-  namespace: flux-system
 spec:
   image: pihole/pihole
   interval: 24h
@@ -83,7 +81,6 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: pihole-policy
-  namespace: flux-system
 spec:
   imageRepositoryRef:
     name: pihole
