@@ -485,7 +485,7 @@ resource "coder_metadata" "container_info" {
 module "git-config" {
   count    = data.coder_workspace.me.start_count
   source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.33"
+  version  = "~> 1.0"
   agent_id = coder_agent.main.id
   allow_email_change = true
 }
@@ -495,7 +495,7 @@ data "coder_task" "me" {}
 module "mux" {
   count    = data.coder_workspace.me.start_count
   source   = "registry.coder.com/coder/mux/coder"
-  version  = "1.3.1"
+  version  = "~> 1.4"
   agent_id = coder_agent.main.id
   add_project = local.workspace_folder
   subdomain = false
