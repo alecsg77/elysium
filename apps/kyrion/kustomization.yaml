@@ -11,3 +11,4 @@ resources:
   - ./ai
   - ./romm
   - ./n8n
+  - ./mux
