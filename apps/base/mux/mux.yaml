@@ -53,20 +53,25 @@ spec:
               fi
 
               apt-get update -qq
-              apt-get install -y --no-install-recommends curl ca-certificates npm nodejs 2>/dev/null
+              apt-get install -y --no-install-recommends curl ca-certificates gnupg 2>/dev/null
 
-              # Docker CLI (client only)
-              DOCKER_VERSION=$$(curl -fsSL https://api.github.com/repos/moby/moby/releases/latest | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/')
-              curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-$${DOCKER_VERSION}.tgz" \
-                | tar -xz --strip-components=1 -C "$TOOLS_DIR" docker/docker
+              # Docker CLI (client only) via official apt repo
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              chmod a+r /etc/apt/keyrings/docker.gpg
+              echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" \
+                > /etc/apt/sources.list.d/docker.list
+              apt-get update -qq
+              apt-get install -y --no-install-recommends docker-ce-cli 2>/dev/null
+              cp $$(which docker) "$TOOLS_DIR/docker"
 
               # Coder CLI
               curl -fsSL "https://coder.com/install.sh" | sh -s -- --method=standalone --prefix=/tools 2>/dev/null
 
               # Dev Container CLI
               npm install -g --prefix /tools @devcontainers/cli 2>/dev/null
-              # Expose devcontainer binary directly
-              ln -sf /tools/lib/node_modules/@devcontainers/cli/devcontainer.js "$TOOLS_DIR/devcontainer" 2>/dev/null || true
+              # Ensure devcontainer binary is executable in PATH
+              chmod +x /tools/bin/devcontainer 2>/dev/null || true
 
               touch "$TOOLS_DIR/.installed"
               echo "All tools installed."
