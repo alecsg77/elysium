@@ -56,8 +56,8 @@ spec:
               apt-get install -y --no-install-recommends curl ca-certificates npm nodejs 2>/dev/null
 
               # Docker CLI (client only)
-              DOCKER_VERSION=$(curl -fsSL https://api.github.com/repos/moby/moby/releases/latest | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/')
-              curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+              DOCKER_VERSION=$$(curl -fsSL https://api.github.com/repos/moby/moby/releases/latest | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/')
+              curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-$${DOCKER_VERSION}.tgz" \
                 | tar -xz --strip-components=1 -C "$TOOLS_DIR" docker/docker
 
               # Coder CLI
