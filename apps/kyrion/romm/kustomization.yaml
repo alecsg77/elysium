@@ -11,6 +11,6 @@ resources:
 configMapGenerator:
   - name: romm-helm-values
     files:
-      - romm-values.yaml
+      - values.yaml=romm-values.yaml
     options:
       disableNameSuffixHash: true

@@ -29,81 +29,81 @@ patches: []
 configMapGenerator:
   - name: apprise-api-helm-values
     files:
-      - apprise-api-values.yaml
+      - values.yaml=apprise-api-values.yaml
     options:
       disableNameSuffixHash: true
   - name: bazarr-helm-values
     files:
-      - bazarr-values.yaml
+      - values.yaml=bazarr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: configarr-helm-values
     files:
-      - configarr-values.yaml
+      - values.yaml=configarr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: flaresolverr-helm-values
     files:
-      - flaresolverr-values.yaml
+      - values.yaml=flaresolverr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: jellyfin-helm-values
     files:
-      - jellyfin-values.yaml
+      - values.yaml=jellyfin-values.yaml
     options:
       disableNameSuffixHash: true
   - name: lidarr-helm-values
     files:
-      - lidarr-values.yaml
+      - values.yaml=lidarr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: msmtpd-helm-values
     files:
-      - msmtpd-values.yaml
+      - values.yaml=msmtpd-values.yaml
     options:
       disableNameSuffixHash: true
   - name: overseerr-helm-values
     files:
-      - overseerr-values.yaml
+      - values.yaml=overseerr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: pihole-helm-values
     files:
-      - pihole-values.yaml
+      - values.yaml=pihole-values.yaml
     options:
       disableNameSuffixHash: true
   - name: plex-helm-values
     files:
-      - plex-values.yaml
+      - values.yaml=plex-values.yaml
     options:
       disableNameSuffixHash: true
   - name: prowlarr-helm-values
     files:
-      - prowlarr-values.yaml
+      - values.yaml=prowlarr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: qbittorrent-helm-values
     files:
-      - qbittorrent-values.yaml
+      - values.yaml=qbittorrent-values.yaml
     options:
       disableNameSuffixHash: true
   - name: radarr-helm-values
     files:
-      - radarr-values.yaml
+      - values.yaml=radarr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: sonarr-helm-values
     files:
-      - sonarr-values.yaml
+      - values.yaml=sonarr-values.yaml
     options:
       disableNameSuffixHash: true
   - name: tautulli-helm-values
     files:
-      - tautulli-values.yaml
+      - values.yaml=tautulli-values.yaml
     options:
       disableNameSuffixHash: true
   - name: unmonitorr-helm-values
     files:
-      - unmonitorr-values.yaml
+      - values.yaml=unmonitorr-values.yaml
     options:
       disableNameSuffixHash: true

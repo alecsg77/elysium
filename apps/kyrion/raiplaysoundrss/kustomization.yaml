@@ -11,6 +11,6 @@ resources:
 configMapGenerator:
   - name: raiplaysoundrss-helm-values
     files:
-      - raiplaysoundrss-values.yaml
+      - values.yaml=raiplaysoundrss-values.yaml
     options:
       disableNameSuffixHash: true

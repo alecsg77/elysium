@@ -28,11 +28,11 @@ configMapGenerator:
       disableNameSuffixHash: true
   - name: coder-helm-values
     files:
-      - coder-overlay-values.yaml
+      - values.yaml=coder-overlay-values.yaml
     options:
       disableNameSuffixHash: true
   - name: coder-logstream-kube-helm-values
     files:
-      - coder-logstream-kube-overlay-values.yaml
+      - values.yaml=coder-logstream-kube-overlay-values.yaml
     options:
       disableNameSuffixHash: true

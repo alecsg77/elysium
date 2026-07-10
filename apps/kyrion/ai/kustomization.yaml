@@ -19,16 +19,16 @@ resources:
 configMapGenerator:
   - name: local-ai-helm-values
     files:
-      - local-ai-values.yaml
+      - values.yaml=local-ai-values.yaml
     options:
       disableNameSuffixHash: true
   - name: ollama-helm-values
     files:
-      - ollama-values.yaml
+      - values.yaml=ollama-values.yaml
     options:
       disableNameSuffixHash: true
   - name: openwebui-helm-values
     files:
-      - openwebui-values.yaml
+      - values.yaml=openwebui-values.yaml
     options:
       disableNameSuffixHash: true

@@ -10,6 +10,6 @@ resources:
 configMapGenerator:
   - name: fission-helm-values
     files:
-      - fission-values.yaml
+      - values.yaml=fission-values.yaml
     options:
       disableNameSuffixHash: true
