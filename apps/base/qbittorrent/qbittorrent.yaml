@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: qbittorrent-helm-values
+      valuesKey: qbittorrent-values.yaml
       optional: true
   values:
     image:

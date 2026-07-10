@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: pihole-helm-values
+      valuesKey: pihole-values.yaml
       optional: true
   values:
     image:

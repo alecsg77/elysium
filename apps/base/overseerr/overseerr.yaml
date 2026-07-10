@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: overseerr-helm-values
+      valuesKey: overseerr-values.yaml
       optional: true
   values:
     image:

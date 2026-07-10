@@ -15,6 +15,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: fission-helm-values
+      valuesKey: fission-values.yaml
       optional: true
   values:
     routerServiceType: ClusterIP

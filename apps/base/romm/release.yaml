@@ -45,6 +45,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: romm-helm-values
+      valuesKey: romm-values.yaml
       optional: true
   values:
     image:
@@ -82,4 +83,3 @@ spec:
         size: "100Mi"
         path: /romm/config
     containerPort: 8080
-    ingress:

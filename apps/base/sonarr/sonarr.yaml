@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: sonarr-helm-values
+      valuesKey: sonarr-values.yaml
       optional: true
   values:
     image:

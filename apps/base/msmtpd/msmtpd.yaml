@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: msmtpd-helm-values
+      valuesKey: msmtpd-values.yaml
       optional: true
   values:
     image:

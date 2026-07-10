@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: jellyfin-helm-values
+      valuesKey: jellyfin-values.yaml
       optional: true
   values:
     image:

@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: apprise-api-helm-values
+      valuesKey: apprise-api-values.yaml
       optional: true
   values:
     image:

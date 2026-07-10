@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: prowlarr-helm-values
+      valuesKey: prowlarr-values.yaml
       optional: true
   values:
     image:

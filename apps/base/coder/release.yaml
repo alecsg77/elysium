@@ -45,6 +45,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: coder-helm-values
+      valuesKey: coder-overlay-values.yaml
       optional: true
   values:
     coder:
@@ -127,4 +128,5 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: coder-logstream-kube-helm-values
+      valuesKey: coder-logstream-kube-overlay-values.yaml
       optional: true

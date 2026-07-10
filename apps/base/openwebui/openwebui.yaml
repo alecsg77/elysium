@@ -34,6 +34,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: openwebui-helm-values
+      valuesKey: openwebui-values.yaml
       optional: true
   values:
     ollama:

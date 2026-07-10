@@ -16,6 +16,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: configarr-helm-values
+      valuesKey: configarr-values.yaml
       optional: true
   values:
     image:
