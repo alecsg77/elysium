@@ -54,7 +54,7 @@ spec:
               fi
 
               apt-get update -qq
-              apt-get install -y --no-install-recommends curl ca-certificates gnupg 2>/dev/null
+              apt-get install -y --no-install-recommends curl ca-certificates gnupg npm nodejs 2>/dev/null
 
               # Docker CLI (client only) via official apt repo
               install -m 0755 -d /etc/apt/keyrings
