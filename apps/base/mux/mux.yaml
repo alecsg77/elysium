@@ -36,6 +36,43 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+      initContainers:
+        - name: install-tools
+          image: debian:bookworm-slim
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              TOOLS_DIR=/tools/bin
+
+              # Skip if already installed (cache across restarts)
+              if [ -f "$TOOLS_DIR/.installed" ]; then
+                echo "Tools already installed, skipping."
+                exit 0
+              fi
+
+              apt-get update -qq
+              apt-get install -y --no-install-recommends curl ca-certificates npm nodejs 2>/dev/null
+
+              # Docker CLI (client only)
+              DOCKER_VERSION=$(curl -fsSL https://api.github.com/repos/moby/moby/releases/latest | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/')
+              curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+                | tar -xz --strip-components=1 -C "$TOOLS_DIR" docker/docker
+
+              # Coder CLI
+              curl -fsSL "https://coder.com/install.sh" | sh -s -- --method=standalone --prefix=/tools 2>/dev/null
+
+              # Dev Container CLI
+              npm install -g --prefix /tools @devcontainers/cli 2>/dev/null
+              # Expose devcontainer binary directly
+              ln -sf /tools/lib/node_modules/@devcontainers/cli/devcontainer.js "$TOOLS_DIR/devcontainer" 2>/dev/null || true
+
+              touch "$TOOLS_DIR/.installed"
+              echo "All tools installed."
+          volumeMounts:
+            - name: tools
+              mountPath: /tools
       containers:
         - name: mux
           image: ghcr.io/coder/mux:latest
@@ -46,9 +83,13 @@ spec:
           env:
             - name: DOCKER_HOST
               value: "tcp://localhost:2375"
+            - name: PATH
+              value: "/tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           volumeMounts:
             - name: mux-data
               mountPath: /root/.mux
+            - name: tools
+              mountPath: /tools
           resources:
             requests:
               cpu: 100m
@@ -93,6 +134,8 @@ spec:
           persistentVolumeClaim:
             claimName: mux-data
         - name: docker-storage
+          emptyDir: {}
+        - name: tools
           emptyDir: {}
 ---
 apiVersion: v1
