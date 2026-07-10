@@ -7,3 +7,10 @@ resources:
   - namespace.yaml
   - ../../base/raiplaysoundrss
   - sealed-secrets.yaml
+
+configMapGenerator:
+  - name: raiplaysoundrss-helm-values
+    files:
+      - raiplaysoundrss-values.yaml
+    options:
+      disableNameSuffixHash: true

@@ -9,10 +9,8 @@ resources:
   - sealed-secrets.yaml
 
 patches:
-  - path: coder-values.yaml
-    target:
-      kind: HelmRelease
-      name: coder
+  # JSON Patch to append CODER_ACCESS_URL to the env array defined in base.
+  # Array append cannot be expressed as a Helm values override, so we keep this patch.
   - patch: |-
       - op: add
         path: "/spec/values/coder/env/-"
@@ -22,7 +20,19 @@ patches:
     target:
       kind: HelmRelease
       name: coder
-  - path: coder-logstream-kube-values.yaml
-    target:
-      kind: HelmRelease
-      name: coder-logstream-kube
+
+configMapGenerator:
+  - name: coder-db-helm-values
+    literals: []
+    options:
+      disableNameSuffixHash: true
+  - name: coder-helm-values
+    files:
+      - coder-overlay-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: coder-logstream-kube-helm-values
+    files:
+      - coder-logstream-kube-overlay-values.yaml
+    options:
+      disableNameSuffixHash: true

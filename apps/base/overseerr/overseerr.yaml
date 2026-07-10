@@ -13,6 +13,10 @@ spec:
         name: flux-system
         namespace: flux-system
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: overseerr-helm-values
+      optional: true
   values:
     image:
       repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "arkham:overseerr-policy:name"}

@@ -9,3 +9,5 @@ resources:
   - ./arkham
   - ./fission
   - ./ai
+  - ./romm
+  - ./n8n

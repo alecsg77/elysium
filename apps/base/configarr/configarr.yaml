@@ -13,6 +13,10 @@ spec:
         name: flux-system
         namespace: flux-system
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: configarr-helm-values
+      optional: true
   values:
     image:
       repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "arkham:configarr-policy:name"}

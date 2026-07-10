@@ -13,6 +13,10 @@ spec:
         name: flux-system
         namespace: flux-system
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: raiplaysoundrss-helm-values
+      optional: true
   values:
     image:
       repository: ghcr.io/alecsg77/raiplaysoundrss # {"$imagepolicy": "raiplaysoundrss:raiplaysoundrss-policy:name"}

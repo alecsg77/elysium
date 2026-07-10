@@ -30,3 +30,85 @@ patches:
     target:
       kind: HelmRelease
       name: pihole
+
+configMapGenerator:
+  - name: apprise-api-helm-values
+    files:
+      - apprise-api-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: bazarr-helm-values
+    files:
+      - bazarr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: configarr-helm-values
+    files:
+      - configarr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: flaresolverr-helm-values
+    files:
+      - flaresolverr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: jellyfin-helm-values
+    files:
+      - jellyfin-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: lidarr-helm-values
+    files:
+      - lidarr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: msmtpd-helm-values
+    files:
+      - msmtpd-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: overseerr-helm-values
+    files:
+      - overseerr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: pihole-helm-values
+    files:
+      - pihole-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: plex-helm-values
+    files:
+      - plex-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: prowlarr-helm-values
+    files:
+      - prowlarr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: qbittorrent-helm-values
+    files:
+      - qbittorrent-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: radarr-helm-values
+    files:
+      - radarr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: sonarr-helm-values
+    files:
+      - sonarr-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: tautulli-helm-values
+    files:
+      - tautulli-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: unmonitorr-helm-values
+    files:
+      - unmonitorr-values.yaml
+    options:
+      disableNameSuffixHash: true

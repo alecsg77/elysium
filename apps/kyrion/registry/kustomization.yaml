@@ -6,3 +6,9 @@ namespace: registry
 resources:
   - namespace.yaml
   - ../../base/registry
+
+configMapGenerator:
+  - name: registry-helm-values
+    literals: []
+    options:
+      disableNameSuffixHash: true

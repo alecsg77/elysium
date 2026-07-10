@@ -12,6 +12,10 @@ spec:
         name: fission-charts
         kind: HelmRepository
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: fission-helm-values
+      optional: true
   values:
     routerServiceType: ClusterIP
     serviceMonitor:

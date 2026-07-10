@@ -13,6 +13,10 @@ spec:
         name: flux-system
         namespace: flux-system
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: apprise-api-helm-values
+      optional: true
   values:
     image:
       repository: lscr.io/linuxserver/apprise-api # {"$imagepolicy": "arkham:apprise-api-policy:name"}

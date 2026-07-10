@@ -21,6 +21,10 @@ spec:
         kind: HelmRepository
         name: go-skynet
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: local-ai-helm-values
+      optional: true
   values:
     deployment:
       image:

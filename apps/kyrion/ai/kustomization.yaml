@@ -15,3 +15,20 @@ resources:
   - openclaw-sealed-secret.yaml
   - openclaw-copilot-auth-secret.yaml
   - openwebui-credentials-env-sealed-secret.yaml
+
+configMapGenerator:
+  - name: local-ai-helm-values
+    files:
+      - local-ai-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: ollama-helm-values
+    files:
+      - ollama-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: openwebui-helm-values
+    files:
+      - openwebui-values.yaml
+    options:
+      disableNameSuffixHash: true

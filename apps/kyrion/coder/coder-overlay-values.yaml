@@ -1,0 +1,20 @@
+deploymentStrategy:
+  type: Recreate
+coder:
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  service:
+    type: ClusterIP
+  ingress:
+    enable: true
+    annotations:
+      tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+    className: tailscale
+    host: coder
+    tls:
+      enable: true

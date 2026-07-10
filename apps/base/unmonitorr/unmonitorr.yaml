@@ -13,6 +13,10 @@ spec:
         name: flux-system
         namespace: flux-system
   interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: unmonitorr-helm-values
+      optional: true
   values:
     image:
       repository: shraymonks/unmonitorr # {"$imagepolicy": "arkham:unmonitorr-policy:name"}

@@ -1,14 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: fission
+namespace: romm
 
 resources:
   - namespace.yaml
-  - ../../base/fission
+  - ../../base/romm
+  - romm-db-secret-values.yaml
 
 configMapGenerator:
-  - name: fission-helm-values
+  - name: romm-helm-values
     literals: []
     options:
       disableNameSuffixHash: true

@@ -1,0 +1,3 @@
+# Kyrion environment-specific Helm values for unmonitorr.
+# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
+# Add overrides here as plain Helm values (YAML).

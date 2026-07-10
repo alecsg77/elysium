@@ -5,3 +5,9 @@ namespace: default
 
 resources:
   - ../../base/error-pages
+
+configMapGenerator:
+  - name: error-pages-helm-values
+    literals: []
+    options:
+      disableNameSuffixHash: true
