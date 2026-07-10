@@ -24,7 +24,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: local-ai-helm-values
-      valuesKey: local-ai-values.yaml
       optional: true
   values:
     deployment:

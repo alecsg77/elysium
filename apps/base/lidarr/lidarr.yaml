@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: lidarr-helm-values
-      valuesKey: lidarr-values.yaml
       optional: true
   values:
     image:

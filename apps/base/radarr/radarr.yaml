@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: radarr-helm-values
-      valuesKey: radarr-values.yaml
       optional: true
   values:
     image:

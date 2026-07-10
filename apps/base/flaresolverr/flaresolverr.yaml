@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: flaresolverr-helm-values
-      valuesKey: flaresolverr-values.yaml
       optional: true
   values:
     image:

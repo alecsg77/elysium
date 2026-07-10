@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: tautulli-helm-values
-      valuesKey: tautulli-values.yaml
       optional: true
   values:
     image:

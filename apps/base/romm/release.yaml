@@ -45,7 +45,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: romm-helm-values
-      valuesKey: romm-values.yaml
       optional: true
   values:
     image:

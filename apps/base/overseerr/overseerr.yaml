@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: overseerr-helm-values
-      valuesKey: overseerr-values.yaml
       optional: true
   values:
     image:
@@ -47,7 +46,6 @@ spec:
       settings:
         initialDelaySeconds: 30
         timeoutSeconds: 10
-    ingress:
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository

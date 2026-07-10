@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: raiplaysoundrss-helm-values
-      valuesKey: raiplaysoundrss-values.yaml
       optional: true
   values:
     image:

@@ -16,7 +16,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: plex-helm-values
-      valuesKey: plex-values.yaml
       optional: true
   values:
     image:

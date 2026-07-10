@@ -32,7 +32,6 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: ollama-helm-values
-      valuesKey: ollama-values.yaml
       optional: true
   values:
     ollama:
