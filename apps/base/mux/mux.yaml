@@ -45,6 +45,7 @@ spec:
             - |
               set -e
               TOOLS_DIR=/tools/bin
+              mkdir -p "$TOOLS_DIR"
 
               # Skip if already installed (cache across restarts)
               if [ -f "$TOOLS_DIR/.installed" ]; then
