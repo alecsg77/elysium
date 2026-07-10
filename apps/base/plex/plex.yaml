@@ -21,15 +21,6 @@ spec:
     image:
       repository: lscr.io/linuxserver/plex # {"$imagepolicy": "arkham:plex-policy:name"}
       tag: "1.43.2" # {"$imagepolicy": "arkham:plex-policy:tag"}
-    resources:
-      requests:
-        cpu: "1"
-        memory: "512Mi"
-        gpu.intel.com/i915: "1"
-      limits:
-        cpu: "8"
-        memory: "4Gi"
-        gpu.intel.com/i915: "1"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -50,9 +41,6 @@ spec:
       - name: transcode
         size: "10Gi"
         path: /transcode
-        hostPath:
-          path: /tmp/plex
-          type: DirectoryOrCreate
       - name: backups
         size: "500Mi"
         path: /backups

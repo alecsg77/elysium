@@ -20,7 +20,6 @@ spec:
     routerServiceType: ClusterIP
     serviceMonitor:
       enabled: true
-      namespace: monitoring
     grafana:
       dashboards:
         enable: true

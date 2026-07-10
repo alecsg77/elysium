@@ -10,6 +10,7 @@ resources:
 
 configMapGenerator:
   - name: romm-helm-values
-    literals: []
+    files:
+      - romm-values.yaml
     options:
       disableNameSuffixHash: true

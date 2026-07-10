@@ -21,13 +21,6 @@ spec:
     image:
       repository: lscr.io/linuxserver/prowlarr # {"$imagepolicy": "arkham:prowlarr-policy:name"}
       tag: "1.37.0" # {"$imagepolicy": "arkham:prowlarr-policy:tag"}
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "1Gi"
-      limits:
-        cpu: "2"
-        memory: "4Gi"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -47,9 +40,6 @@ spec:
         existingClaim: pvc-backups
     containerPort: 9696
     ingress:
-      annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: web
-      host: arkham.${ts_net}
       path: /prowlarr
     probe:
       enabled: true

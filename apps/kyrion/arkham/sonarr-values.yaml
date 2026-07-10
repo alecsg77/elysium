@@ -1,3 +1,11 @@
-# Kyrion environment-specific Helm values for sonarr.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  host: arkham.${ts_net}

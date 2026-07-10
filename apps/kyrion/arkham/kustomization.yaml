@@ -24,12 +24,7 @@ resources:
   - ../../base/unmonitorr
   - arkham-unmonitorr-sealed-secret.yaml
 
-patches:
-  - path: arkham-resources.yaml
-  - path: arkham-pihole-patch.yaml
-    target:
-      kind: HelmRelease
-      name: pihole
+patches: []
 
 configMapGenerator:
   - name: apprise-api-helm-values

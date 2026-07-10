@@ -1,3 +1,20 @@
-# Kyrion environment-specific Helm values for jellyfin.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  requests:
+    cpu: "1"
+    memory: "512Mi"
+    gpu.intel.com/i915: "1"
+  limits:
+    cpu: "8"
+    memory: "4Gi"
+    gpu.intel.com/i915: "1"
+volumes:
+  - name: transcode
+    size: "10Gi"
+    path: /transcode
+    hostPath:
+      path: /tmp/jellyfin
+      type: DirectoryOrCreate
+ingress:
+  tlsEnabled: true
+  ingressClassName: tailscale
+  host: jellyfin

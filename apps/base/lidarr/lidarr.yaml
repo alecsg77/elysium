@@ -21,13 +21,6 @@ spec:
     image:
       repository: lscr.io/linuxserver/lidarr # {"$imagepolicy": "arkham:lidarr-policy:name"}
       tag: "2.14.5" # {"$imagepolicy": "arkham:lidarr-policy:tag"}
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "1Gi"
-      limits:
-        cpu: "2"
-        memory: "4Gi"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -55,9 +48,6 @@ spec:
         existingClaim: pvc-backups
     containerPort: 8686
     ingress:
-      annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: web
-      host: arkham.${ts_net}
       path: /lidarr
     probe:
       enabled: true

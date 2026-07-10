@@ -1,3 +1,15 @@
-# Kyrion environment-specific Helm values for local-ai.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  requests:
+    gpu.intel.com/i915: "1"
+  limits:
+    gpu.intel.com/i915: "1"
+ingress:
+  className: tailscale
+  hosts:
+    - host: local-ai
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - local-ai

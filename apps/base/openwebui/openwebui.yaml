@@ -42,9 +42,6 @@ spec:
       - http://ollama.ai.svc:11434
     ingress:
       enabled: true
-      class: tailscale
-      host: chat.${ts_net}
-      tls: true
     tika:
       enabled: true
     sso:
@@ -53,9 +50,6 @@ spec:
       mergeAccountsByEmail: true
       github:
         enabled: true
-        clientId: Iv23li9lZj5gR8CHTERs
-        clientExistingSecret: openwebui-credentials-env
-        clientExistingSecretKey: GITHUB_CLIENT_SECRET
       trustedHeader:
         enabled: true
         emailHeader: Tailscale-User-Login

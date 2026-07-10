@@ -1,3 +1,25 @@
-# Kyrion environment-specific Helm values for ollama.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+ollama:
+  models:
+    pull:
+      - gemma3:12b
+    run:
+      - gemma3:12b
+ingress:
+  className: tailscale
+  hosts:
+    - paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - ollama
+persistentVolume:
+  enabled: true
+extraEnv:
+  - name: OLLAMA_INTEL_GPU
+    value: "1"
+resources:
+  requests:
+    gpu.intel.com/i915: "1"
+  limits:
+    gpu.intel.com/i915: "1"

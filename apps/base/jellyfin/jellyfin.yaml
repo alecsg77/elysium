@@ -21,15 +21,6 @@ spec:
     image:
       repository: lscr.io/linuxserver/jellyfin # {"$imagepolicy": "arkham:jellyfin-policy:name"}
       tag: "10.11.11" # {"$imagepolicy": "arkham:jellyfin-policy:tag"}
-    resources:
-      requests:
-        cpu: "1"
-        memory: "512Mi"
-        gpu.intel.com/i915: "1"
-      limits:
-        cpu: "8"
-        memory: "4Gi"
-        gpu.intel.com/i915: "1"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -51,9 +42,6 @@ spec:
       - name: transcode
         size: "10Gi"
         path: /transcode
-        hostPath:
-          path: /tmp/jellyfin
-          type: DirectoryOrCreate
       - name: backups
         size: "500Mi"
         path: /backups
@@ -61,9 +49,7 @@ spec:
         existingClaim: pvc-backups
     containerPort: 8096
     ingress:
-      tlsEnabled: true
-      ingressClassName: tailscale
-      host: jellyfin
+      path: /
     probe:
       enabled: true
       path: /health

@@ -27,4 +27,3 @@ spec:
     ingress:
       annotations:
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      host: rss.${DOMAIN}

@@ -31,11 +31,6 @@ spec:
         tag: latest-aio-gpu-intel
       env:
         DEBUG: true
-    resources:
-      requests:
-        gpu.intel.com/i915: "1"
-      limits:
-        gpu.intel.com/i915: "1"
     persistence:
       models:
         accessModes:
@@ -45,15 +40,6 @@ spec:
           - ReadWriteOnce
     ingress:
       enabled: true
-      className: tailscale
-      hosts:
-        - host: local-ai
-          paths:
-            - path: /
-              pathType: ImplementationSpecific
-      tls:
-        - hosts:
-            - local-ai
     modelsConfigs:
       paola: |
         name: paola

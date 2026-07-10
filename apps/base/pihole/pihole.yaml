@@ -21,18 +21,10 @@ spec:
     image:
       repository: pihole/pihole # {"$imagepolicy": "arkham:pihole-policy:name"}
       tag: "2025.11.1" # {"$imagepolicy": "arkham:pihole-policy:tag"}
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "256Mi"
-      limits:
-        cpu: "1"
-        memory: "1Gi"
     vars:
       TZ: ${TZ:=Etc/UTC}
       FTLCONF_webserver_api_password: ''
       FTLCONF_webserver_port: '80'
-      FTLCONF_webserver_domain: '${ts_net}'
       FTLCONF_webserver_paths_prefix: '/pihole'
       FTLCONF_dns_listeningMode: 'ALL'
       FTLCONF_dns_domain_name: 'cluster.local'
@@ -57,10 +49,6 @@ spec:
           containerPort: 53
           protocol: UDP
     ingress:
-      annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: web
-        traefik.ingress.kubernetes.io/router.middlewares: arkham-strip-prefix@kubernetescrd
-      host: arkham.${ts_net}
       path: /pihole
     ports:
       - name: http

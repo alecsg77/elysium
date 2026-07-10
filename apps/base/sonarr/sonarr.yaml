@@ -21,13 +21,6 @@ spec:
     image:
       repository: lscr.io/linuxserver/sonarr # {"$imagepolicy": "arkham:sonarr-policy:name"}
       tag: "4.0.19" # {"$imagepolicy": "arkham:sonarr-policy:tag"}
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "1Gi"
-      limits:
-        cpu: "2"
-        memory: "4Gi"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -55,9 +48,6 @@ spec:
         existingClaim: pvc-backups
     containerPort: 8989
     ingress:
-      annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: web
-      host: arkham.${ts_net}
       path: /sonarr
     probe:
       enabled: true

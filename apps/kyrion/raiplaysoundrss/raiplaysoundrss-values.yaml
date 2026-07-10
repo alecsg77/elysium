@@ -1,6 +1,2 @@
-# Kyrion environment-specific values for raiplaysoundrss.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add any environment overrides here as plain Helm values (YAML).
-# Example:
-# ingress:
-#   host: rss.my-custom-domain.com
+ingress:
+  host: rss.${DOMAIN}

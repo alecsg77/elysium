@@ -51,11 +51,6 @@ spec:
       repository: rommapp/romm
       tag: "3.7.0-beta.1"
     vars:
-      TZ: "Europe/Rome"
-      ENABLE_RESCAN_ON_FILESYSTEM_CHANGE: "true"
-      ENABLE_SCHEDULED_RESCAN: "true"
-      ENABLE_SCHEDULED_UPDATE_MAME_XML: "true"
-      GUNICORN_WORKERS: "4"
       DB_HOST: romm-db-mariadb.romm.svc.cluster.local
     sealedSecrets:
       DB_USER: AgA9HrkcQUgHZVw0aouj1uM1VVkuOFY4ICehkNmyWEUdGF/FpEQzxyN1L9iRJH3u3hXmNxQuR8xv4inP9fZZNvD32BFqj8TqzA5ChFTRlOk229uABvt7Saw+RGyNArZX0yEK6bUf1K2z6TMRbVNZIUQ8ywT8iq8NCyKBqjCWbUCUfo6dG7s3JVfpTYKWVos4/xGKkLw43HgURASBy/4kUl9FFj/wVXutBujLCYe/BeIlikWS6cYlQrE6DGMKgZzh8abPEKTkqkaySXg5+G4zlpFQD3fdpyIB8gZnE+bT3mJISPapWVFzPrifNJgiXM0cJrOeS7p/UNqIcNDd6xw0DHinL6KSMXt/JnZHEabirSZLS+uaB5v5xyTCfFBGUugBaFpW583YpbvkTuKA6op9apOron+4snLnb878xUWcEeZmJd0JDCVBKckMLtRFQqXnOFdOX3RVOVGtQWuQEny3z4ebzj3I6OXjut00Vl75gv7rgiO2xaq/nttE86vu51hdr4wLyMKP4Ozsmhq6ij3nnSbRpjk2IN3h/03AdtR7nhlVLnMYIVvccq7qgEW50UZAKQoH9S8FvBsbMURnI5FndNNL4FnE3NEIFFOontXz532tbeFHqWsxZq0NfQ4/8noUGTpvBfa80ih7ZJnFtqcxpzQYoEa8MJyV1XgJTlBEBozZZObpgRKFBZVz4gBpfdY2SDPdEWMS
@@ -80,23 +75,11 @@ spec:
       - name: library
         size: "100Mi"
         path: /romm/library
-        hostPath:
-          path: /mnt/library/arkham/romm/library
-          type: DirectoryOrCreate
       - name: assets
         size: "100Mi"
         path: /romm/assets
-        hostPath:
-          path: /mnt/library/arkham/romm/assets
-          type: DirectoryOrCreate
       - name: config
         size: "100Mi"
         path: /romm/config
-        hostPath:
-          path: /mnt/library/arkham/romm/config
-          type: DirectoryOrCreate
     containerPort: 8080
     ingress:
-      tlsEnabled: true
-      ingressClassName: tailscale
-      host: romm

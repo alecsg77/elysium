@@ -35,30 +35,6 @@ spec:
       optional: true
   values:
     ollama:
-      models:
-        pull:
-          - gemma3:12b
-        run:
-          - gemma3:12b
-
+      models: {}
     ingress:
       enabled: true
-      className: tailscale
-      hosts:
-        - paths:
-            - path: /
-              pathType: Prefix
-      tls:
-        - hosts:
-            - ollama
-
-    persistentVolume:
-      enabled: true
-    extraEnv:
-      - name: OLLAMA_INTEL_GPU
-        value: "1"
-    resources:
-      requests:
-        gpu.intel.com/i915: "1"
-      limits:
-        gpu.intel.com/i915: "1"

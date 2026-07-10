@@ -1,0 +1,29 @@
+vars:
+  TZ: "Europe/Rome"
+  ENABLE_RESCAN_ON_FILESYSTEM_CHANGE: "true"
+  ENABLE_SCHEDULED_RESCAN: "true"
+  ENABLE_SCHEDULED_UPDATE_MAME_XML: "true"
+  GUNICORN_WORKERS: "4"
+volumes:
+  - name: library
+    size: "100Mi"
+    path: /romm/library
+    hostPath:
+      path: /mnt/library/arkham/romm/library
+      type: DirectoryOrCreate
+  - name: assets
+    size: "100Mi"
+    path: /romm/assets
+    hostPath:
+      path: /mnt/library/arkham/romm/assets
+      type: DirectoryOrCreate
+  - name: config
+    size: "100Mi"
+    path: /romm/config
+    hostPath:
+      path: /mnt/library/arkham/romm/config
+      type: DirectoryOrCreate
+ingress:
+  tlsEnabled: true
+  ingressClassName: tailscale
+  host: romm

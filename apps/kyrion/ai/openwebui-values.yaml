@@ -1,3 +1,9 @@
-# Kyrion environment-specific Helm values for openwebui.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+ingress:
+  class: tailscale
+  host: chat.${ts_net}
+  tls: true
+sso:
+  github:
+    clientId: Iv23li9lZj5gR8CHTERs
+    clientExistingSecret: openwebui-credentials-env
+    clientExistingSecretKey: GITHUB_CLIENT_SECRET

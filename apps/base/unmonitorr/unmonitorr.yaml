@@ -21,17 +21,8 @@ spec:
     image:
       repository: shraymonks/unmonitorr # {"$imagepolicy": "arkham:unmonitorr-policy:name"}
       tag: "v1.2.0" # {"$imagepolicy": "arkham:unmonitorr-policy:tag"}
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "1Gi"
-      limits:
-        cpu: "2"
-        memory: "4Gi"
     vars:
       PLEX_PORT: 9797
-      RADARR_HOST: http://radarr.arkham.svc:7878
-      SONARR_HOST: http://sonarr.arkham.svc:8989
     existingSecrets:
       - name: unmonitorr
         optional: true

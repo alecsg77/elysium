@@ -21,13 +21,6 @@ spec:
     image:
       repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "arkham:qbittorrent-policy:name"}
       tag: "5.2.3" # {"$imagepolicy": "arkham:qbittorrent-policy:tag"}
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "1Gi"
-      limits:
-        cpu: "4"
-        memory: "4Gi"
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -51,10 +44,6 @@ spec:
         existingClaim: pvc-watch
     containerPort: 8080
     ingress:
-      annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: web
-        traefik.ingress.kubernetes.io/router.middlewares: arkham-strip-prefix@kubernetescrd
-      host: arkham.${ts_net}
       path: /qbittorrent
     container:
       ports:

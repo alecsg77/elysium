@@ -1,3 +1,12 @@
-# Kyrion environment-specific Helm values for qbittorrent.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "4"
+    memory: "4Gi"
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: arkham-strip-prefix@kubernetescrd
+  host: arkham.${ts_net}

@@ -1,3 +1,8 @@
-# Kyrion environment-specific Helm values for overseerr.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  host: home.${DOMAIN}

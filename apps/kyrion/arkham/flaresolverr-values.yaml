@@ -1,3 +1,7 @@
-# Kyrion environment-specific Helm values for flaresolverr.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  requests:
+    cpu: "2"
+    memory: "2Gi"
+  limits:
+    cpu: "8"
+    memory: "8Gi"

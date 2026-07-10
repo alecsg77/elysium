@@ -21,13 +21,6 @@ spec:
     image:
       repository: ghcr.io/flaresolverr/flaresolverr # {"$imagepolicy": "arkham:flaresolverr-policy:name"}
       tag: "v3.5.0" # {"$imagepolicy": "arkham:flaresolverr-policy:tag"}
-    resources:
-      requests:
-        cpu: "2"
-        memory: "2Gi"
-      limits:
-        cpu: "8"
-        memory: "8Gi"
     vars:
       TZ: ${TZ:=Etc/UTC}
       LOG_LEVEL: debug

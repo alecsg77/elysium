@@ -1,3 +1,18 @@
-# Kyrion environment-specific Helm values for pihole.
-# These are merged after spec.values in the base HelmRelease (valuesFrom wins).
-# Add overrides here as plain Helm values (YAML).
+resources:
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+vars:
+  FTLCONF_webserver_domain: '${ts_net}'
+  # Conditional forwarding for Kubernetes cluster domains to CoreDNS
+  # Service network (10.43.0.0/24) forwards svc.cluster.local to CoreDNS
+  # Pod network (10.42.0.0/24) forwards pod.cluster.local to CoreDNS
+  FTLCONF_dns_revServers: "true,10.43.0.0/24,10.43.0.10#53,svc.cluster.local;true,10.42.0.0/24,10.43.0.10#53,pod.cluster.local"
+ingress:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: arkham-strip-prefix@kubernetescrd
+  host: arkham.${ts_net}
