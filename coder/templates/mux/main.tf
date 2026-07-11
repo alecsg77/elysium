@@ -74,6 +74,17 @@ resource "coder_agent" "main" {
   os   = "linux"
   arch = "amd64"
 
+  # codercom/enterprise-base:ubuntu does not ship with Node.js.
+  # This script installs it system-wide via NodeSource before any coder_script
+  # resources run (startup_script executes first in Coder's startup sequence).
+  startup_script = <<-EOT
+    set -e
+    if ! command -v npm > /dev/null 2>&1; then
+      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 2>/dev/null
+      sudo apt-get install -y nodejs 2>/dev/null
+    fi
+  EOT
+
   metadata {
     display_name = "CPU Usage"
     key          = "0_cpu_usage"
@@ -127,12 +138,14 @@ module "mux" {
   use_cached     = true
 }
 
-# Installs @devcontainers/cli via npm. npm is pre-installed in codercom/enterprise-base:ubuntu.
+# Installs @devcontainers/cli via npm. Node.js is installed by startup_script above.
+# start_blocks_login=false: script failure does not mark workspace unhealthy.
 module "devcontainers-cli" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/devcontainers-cli/coder"
-  version  = "1.1.0"
-  agent_id = coder_agent.main.id
+  count              = data.coder_workspace.me.start_count
+  source             = "registry.coder.com/coder/devcontainers-cli/coder"
+  version            = "1.1.0"
+  agent_id           = coder_agent.main.id
+  start_blocks_login = false
 }
 
 module "git-config" {
