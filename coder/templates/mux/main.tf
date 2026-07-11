@@ -239,11 +239,11 @@ resource "kubernetes_pod" "main" {
       }
       env {
         name  = "CODER_INNER_IMAGE"
-        value = "mcr.microsoft.com/devcontainers/javascript-node:0-20-bookworm"
+        value = "codercom/enterprise-node:ubuntu"
       }
       env {
         name  = "CODER_INNER_USERNAME"
-        value = "vscode"
+        value = "coder"
       }
       env {
         name  = "CODER_BOOTSTRAP_SCRIPT"
@@ -251,7 +251,7 @@ resource "kubernetes_pod" "main" {
       }
       env {
         name  = "CODER_MOUNTS"
-        value = "/home/vscode:/home/vscode"
+        value = "/home/coder:/home/coder"
       }
       env {
         name  = "CODER_ADD_FUSE"
@@ -283,7 +283,7 @@ resource "kubernetes_pod" "main" {
       }
 
       volume_mount {
-        mount_path = "/home/vscode"
+        mount_path = "/home/coder"
         name       = "home"
         sub_path   = "home"
       }
