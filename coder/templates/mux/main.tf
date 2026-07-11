@@ -122,13 +122,13 @@ module "mux" {
   restart_on_kill = true
   # Store binary and log on the persistent PVC (home dir) so they survive workspace restarts.
   # use_cached skips reinstall when the binary is already present.
-  install_prefix = "/home/coder/.local/bin"
-  log_path       = "/home/coder/.mux/mux.log"
+  install_prefix = "/home/vscode/.local/bin"
+  log_path       = "/home/vscode/.mux/mux.log"
   use_cached     = true
 }
 
-# Installs @devcontainers/cli via npm. Node.js is installed by startup_script above.
-# start_blocks_login=false: script failure does not mark workspace unhealthy.
+# Installs @devcontainers/cli via npm. npm is pre-installed in the inner image.
+# start_blocks_login=false so a transient failure does not mark workspace unhealthy.
 module "devcontainers-cli" {
   count              = data.coder_workspace.me.start_count
   source             = "registry.coder.com/coder/devcontainers-cli/coder"
@@ -239,35 +239,19 @@ resource "kubernetes_pod" "main" {
       }
       env {
         name  = "CODER_INNER_IMAGE"
-        value = "codercom/enterprise-base:ubuntu"
+        value = "mcr.microsoft.com/devcontainers/javascript-node:0-20-bookworm"
       }
       env {
         name  = "CODER_INNER_USERNAME"
-        value = "coder"
+        value = "vscode"
       }
       env {
         name  = "CODER_BOOTSTRAP_SCRIPT"
-        # Wraps the agent init_script to install Node.js first.
-        # CODER_BOOTSTRAP_SCRIPT runs as root inside the inner container during
-        # envbox bootstrap — before the Coder agent starts, and therefore before
-        # any coder_script resources (devcontainers-cli, mux, etc.) run.
-        # This eliminates the race condition between startup_script and coder_scripts.
-        value = <<-EOT
-          #!/bin/sh
-          if ! command -v npm >/dev/null 2>&1; then
-            echo "=== Installing Node.js (required for devcontainers-cli) ==="
-            apt-get update -q
-            apt-get install -y nodejs npm
-            echo "=== Node.js installed: $(node --version 2>&1), npm: $(npm --version 2>&1) ==="
-          else
-            echo "=== npm already present: $(npm --version) ==="
-          fi
-          ${coder_agent.main.init_script}
-        EOT
+        value = coder_agent.main.init_script
       }
       env {
         name  = "CODER_MOUNTS"
-        value = "/home/coder:/home/coder"
+        value = "/home/vscode:/home/vscode"
       }
       env {
         name  = "CODER_ADD_FUSE"
@@ -299,7 +283,7 @@ resource "kubernetes_pod" "main" {
       }
 
       volume_mount {
-        mount_path = "/home/coder"
+        mount_path = "/home/vscode"
         name       = "home"
         sub_path   = "home"
       }
@@ -373,7 +357,7 @@ resource "coder_metadata" "workspace_info" {
   }
   item {
     key   = "inner_image"
-    value = "codercom/enterprise-base:ubuntu"
+    value = "mcr.microsoft.com/devcontainers/javascript-node:0-20-bookworm"
   }
   item {
     key   = "cpu"
