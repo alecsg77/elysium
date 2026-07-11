@@ -106,6 +106,8 @@ spec:
           value: "/dev/stderr"
         - name: CODER_EXPERIMENTS
           value: "oauth2,mcp-server-http"
+        - name: CODER_MAX_TOKEN_LIFETIME
+          value: "8760h"
       podAnnotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "2112"
