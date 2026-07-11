@@ -74,17 +74,6 @@ resource "coder_agent" "main" {
   os   = "linux"
   arch = "amd64"
 
-  # codercom/enterprise-base:ubuntu does not ship with Node.js.
-  # This script installs it system-wide via NodeSource before any coder_script
-  # resources run (startup_script executes first in Coder's startup sequence).
-  startup_script = <<-EOT
-    set -e
-    if ! command -v npm > /dev/null 2>&1; then
-      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 2>/dev/null
-      sudo apt-get install -y nodejs 2>/dev/null
-    fi
-  EOT
-
   metadata {
     display_name = "CPU Usage"
     key          = "0_cpu_usage"
@@ -258,7 +247,19 @@ resource "kubernetes_pod" "main" {
       }
       env {
         name  = "CODER_BOOTSTRAP_SCRIPT"
-        value = coder_agent.main.init_script
+        # Wraps the agent init_script to install Node.js first.
+        # CODER_BOOTSTRAP_SCRIPT runs as root inside the inner container during
+        # envbox bootstrap — before the Coder agent starts, and therefore before
+        # any coder_script resources (devcontainers-cli, mux, etc.) run.
+        # This eliminates the race condition between startup_script and coder_scripts.
+        value = <<-EOT
+          #!/bin/sh
+          if ! command -v npm >/dev/null 2>&1; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null || true
+            apt-get install -y nodejs 2>/dev/null || true
+          fi
+          ${coder_agent.main.init_script}
+        EOT
       }
       env {
         name  = "CODER_MOUNTS"
