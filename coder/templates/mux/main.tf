@@ -122,8 +122,8 @@ module "mux" {
   restart_on_kill = true
   # Store binary and log on the persistent PVC (home dir) so they survive workspace restarts.
   # use_cached skips reinstall when the binary is already present.
-  install_prefix = "/home/vscode/.local/bin"
-  log_path       = "/home/vscode/.mux/mux.log"
+  install_prefix = "/home/coder/.local/bin"
+  log_path       = "/home/coder/.mux/mux.log"
   use_cached     = true
 }
 
