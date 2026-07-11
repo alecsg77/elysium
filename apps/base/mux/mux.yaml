@@ -89,6 +89,21 @@ spec:
           env:
             - name: DOCKER_HOST
               value: "tcp://localhost:2375"
+            - name: MUX_SERVER_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mux-secrets
+                  key: MUX_SERVER_AUTH_TOKEN
+            - name: CODER_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mux-secrets
+                  key: CODER_SESSION_TOKEN
+            - name: CODER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mux-secrets
+                  key: CODER_URL
             - name: PATH
               value: "/tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           volumeMounts:
