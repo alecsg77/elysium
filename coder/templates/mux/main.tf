@@ -255,8 +255,12 @@ resource "kubernetes_pod" "main" {
         value = <<-EOT
           #!/bin/sh
           if ! command -v npm >/dev/null 2>&1; then
-            curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null || true
-            apt-get install -y nodejs 2>/dev/null || true
+            echo "=== Installing Node.js (required for devcontainers-cli) ==="
+            apt-get update -q
+            apt-get install -y nodejs npm
+            echo "=== Node.js installed: $(node --version 2>&1), npm: $(npm --version 2>&1) ==="
+          else
+            echo "=== npm already present: $(npm --version) ==="
           fi
           ${coder_agent.main.init_script}
         EOT
