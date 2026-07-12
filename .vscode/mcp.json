@@ -1,0 +1,41 @@
+{
+	"servers": {
+		"kubernetes": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"kubernetes-mcp-server@latest"
+			],
+			"type": "stdio"
+		},
+		"flux-operator-mcp": {
+			"command": "/usr/local/bin/flux-operator-mcp",
+			"args": [
+				"serve"
+			],
+			"env": {
+				"KUBECONFIG": "etc/kubeconfig"
+			},
+			"type": "stdio"
+		},
+		"grafana": {
+			"url": "http://grafana-mcp.monitoring.svc:8000/mcp",
+			"type": "http"
+		},
+		"io.github.upstash/context7": {
+			"type": "http",
+			"url": "https://mcp.context7.com/mcp",
+			"headers": {
+				"CONTEXT7_API_KEY": "${input:CONTEXT7_API_KEY}"
+			}
+		}
+	},
+	"inputs": [
+		{
+			"id": "CONTEXT7_API_KEY",
+			"type": "promptString",
+			"description": "Context7 API Key",
+			"password": true
+		}
+	]
+}
