@@ -5,9 +5,11 @@ ollama:
     run:
       - gemma3:12b
 ingress:
+  enabled: true
   className: tailscale
   hosts:
-    - paths:
+    - host: ollama
+      paths:
         - path: /
           pathType: Prefix
   tls:
