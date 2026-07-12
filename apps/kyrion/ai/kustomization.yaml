@@ -7,28 +7,15 @@ resources:
   - namespace.yaml
   - ../../base/copilot-api
   - ../../base/local-ai
-  - ../../base/ollama
   - ../../base/openclaw
-  - ../../base/openwebui
   - copilot-api-sealed-secret.yaml
   - openclaw-ingress.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-copilot-auth-secret.yaml
-  - openwebui-credentials-env-sealed-secret.yaml
 
 configMapGenerator:
   - name: local-ai-helm-values
     files:
       - values.yaml=local-ai-values.yaml
-    options:
-      disableNameSuffixHash: true
-  - name: ollama-helm-values
-    files:
-      - values.yaml=ollama-values.yaml
-    options:
-      disableNameSuffixHash: true
-  - name: openwebui-helm-values
-    files:
-      - values.yaml=openwebui-values.yaml
     options:
       disableNameSuffixHash: true
