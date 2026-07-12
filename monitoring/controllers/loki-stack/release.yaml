@@ -62,31 +62,19 @@ spec:
         configs:
           - from: "2024-04-01"
             store: tsdb
-            object_store: s3
+            object_store: filesystem
             schema: v13
             index:
               prefix: loki_index_
               period: 24h
       storage:
-        # Loki 6.46+ requires explicit bucket names when using object storage backends
-        type: s3
-        bucketNames:
-          chunks: chunks
-          ruler: ruler
-          admin: admin
+        type: filesystem
       pattern_ingester:
         enabled: true
       ruler:
         enable_api: true
     minio:
-      enabled: true
-      resources:
-        requests:
-          cpu: 100m
-          memory: 512Mi
-        limits:
-          cpu: 500m
-          memory: 1Gi
+      enabled: false
     lokiCanary:
       enabled: false
     deploymentMode: SingleBinary
