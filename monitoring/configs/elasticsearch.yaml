@@ -16,10 +16,10 @@ spec:
           resources:
             requests:
               cpu: 200m
-              memory: 1Gi
+              memory: 512Mi
             limits:
               cpu: 1
-              memory: 2Gi
+              memory: 1Gi
           env:
           - name: ES_JAVA_OPTS
-            value: "-Xms1g -Xmx1g"
+            value: "-Xms512m -Xmx512m"
