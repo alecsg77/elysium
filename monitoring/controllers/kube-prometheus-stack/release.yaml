@@ -49,7 +49,7 @@ spec:
     prometheus:
       prometheusSpec:
         externalUrl: https://prometheus.${ts_net}
-        retention: 15d
+        retention: 7d
         walCompression: true
         scrapeInterval: 60s
         relabelConfigs:
