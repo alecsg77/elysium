@@ -3,9 +3,6 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - podmonitor.yaml
-  - arc-workload-identity-monitor.yaml
-  - elasticsearch.yaml
-  - otel.yaml
   - grafana-mcp-monitor.yaml
 
 configMapGenerator:
@@ -17,15 +14,6 @@ configMapGenerator:
     options:
       labels:
         grafana_dashboard: "1"
-        app.kubernetes.io/part-of: flux
-        app.kubernetes.io/component: monitoring
-        kustomize.toolkit.fluxcd.io/substitute: disabled
-  - name: flux-grafana-datasources
-    files:
-      - datasources/tempo.yaml
-    options:
-      labels:
-        grafana_datasource: "1"
         app.kubernetes.io/part-of: flux
         app.kubernetes.io/component: monitoring
         kustomize.toolkit.fluxcd.io/substitute: disabled
