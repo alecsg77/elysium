@@ -54,7 +54,7 @@ jobs:
           echo "GITHUB_HOST=github.com" >> $GITHUB_ENV
 
       - name: Install kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
         with:
           version: 'latest'
 
