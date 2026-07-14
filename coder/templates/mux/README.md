@@ -14,7 +14,7 @@ Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) â€
 | Component | Details |
 |---|---|
 | **Runtime** | `ghcr.io/coder/envbox:0.6.7` (privileged, built-in Docker daemon) |
-| **Inner image** | `codercom/enterprise-node:ubuntu` |
+| **Inner image** | `codercom/enterprise-node:ubuntu-20260713` |
 | **Mux** | Installed via `coder/mux` registry module (`mux@next` from npm) |
 | **Storage** | Single PVC for `/home/coder`, Docker cache, and Mux state (`~/.mux`) |
 

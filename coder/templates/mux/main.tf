@@ -240,7 +240,7 @@ resource "kubernetes_pod" "main" {
       }
       env {
         name  = "CODER_INNER_IMAGE"
-        value = "codercom/enterprise-node:ubuntu"
+        value = "codercom/enterprise-node:ubuntu-20260713"
       }
       env {
         name  = "CODER_INNER_USERNAME"
@@ -358,7 +358,7 @@ resource "coder_metadata" "workspace_info" {
   }
   item {
     key   = "inner_image"
-    value = "codercom/enterprise-node:ubuntu"
+    value = "codercom/enterprise-node:ubuntu-20260713"
   }
   item {
     key   = "cpu"
