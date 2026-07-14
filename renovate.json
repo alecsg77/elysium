@@ -10,8 +10,8 @@
       "matchStrings": [
         "\\s+image\\s*=\\s*\"(?<depName>[a-zA-Z0-9./_-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
       ],
-      "datasource": "docker",
-      "versioning": "docker"
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     },
     {
       "description": "CODER_INNER_IMAGE env var value in envbox templates",
@@ -20,8 +20,8 @@
       "matchStrings": [
         "CODER_INNER_IMAGE\"[\\s\\S]{0,80}?value\\s*=\\s*\"(?<depName>[a-zA-Z0-9./_-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
       ],
-      "datasource": "docker",
-      "versioning": "docker"
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
   "packageRules": [
