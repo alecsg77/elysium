@@ -6,7 +6,7 @@
     {
       "description": "Container image field in Kubernetes pod specs inside Coder templates",
       "customType": "regex",
-      "fileMatch": ["^coder/templates/.+\\.tf$"],
+      "managerFilePatterns": ["/^coder/templates/.+\\.tf$/"],
       "matchStrings": [
         "\\s+image\\s*=\\s*\"(?<depName>[a-zA-Z0-9./_-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
       ],
@@ -16,7 +16,7 @@
     {
       "description": "CODER_INNER_IMAGE env var value in envbox templates",
       "customType": "regex",
-      "fileMatch": ["^coder/templates/.+\\.tf$"],
+      "managerFilePatterns": ["/^coder/templates/.+\\.tf$/"],
       "matchStrings": [
         "CODER_INNER_IMAGE\"[\\s\\S]{0,80}?value\\s*=\\s*\"(?<depName>[a-zA-Z0-9./_-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
       ],
@@ -26,13 +26,22 @@
   ],
   "packageRules": [
     {
-      "description": "Automerge Docker image digest updates via GitHub native automerge (compatible with branch protection)",
+      "description": "Automerge Docker image updates via GitHub native automerge (compatible with branch protection)",
       "matchManagers": ["custom.regex"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true,
       "automergeStrategy": "squash",
       "commitMessagePrefix": "chore(deps): "
+    },
+    {
+      "description": "codercom enterprise images use ubuntu-YYYYMMDD tags - parse as calendar versioning",
+      "matchPackageNames": [
+        "codercom/enterprise-base",
+        "codercom/enterprise-node",
+        "codercom/enterprise-desktop"
+      ],
+      "versioning": "regex:^ubuntu-(?<major>\\d{4})(?<minor>\\d{2})(?<patch>\\d{2})$"
     }
   ]
 }
