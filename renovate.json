@@ -22,6 +22,16 @@
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "description": "coder_parameter default values containing Docker images (fallback_image, devcontainer_builder, etc.)",
+      "customType": "regex",
+      "managerFilePatterns": ["/^coder/templates/.+\\.tf$/"],
+      "matchStrings": [
+        "\\s+default\\s*=\\s*\"(?<depName>[a-zA-Z0-9][a-zA-Z0-9._-]*\\/[a-zA-Z0-9._/-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
   "packageRules": [
