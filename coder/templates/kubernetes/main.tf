@@ -377,7 +377,8 @@ resource "kubernetes_deployment" "main" {
           for_each = var.enable_dind == true ? [1] : []
           content {
             name  = "dind"
-            image = "docker:dind"
+            image = "docker:29.6.1-dind"
+            image_pull_policy = "IfNotPresent"
             args = [
               "dockerd",
               "--host=unix:///var/run/docker.sock",
