@@ -111,7 +111,7 @@ data "coder_parameter" "repo" {
 }
 
 data "coder_parameter" "fallback_image" {
-  default      = "codercom/enterprise-base:ubuntu"
+  default      = "codercom/enterprise-base:ubuntu-20260713"
   description  = "This image runs if the devcontainer fails to build."
   display_name = "Fallback Image"
   mutable      = true
