@@ -26,10 +26,11 @@
   ],
   "packageRules": [
     {
-      "description": "Automerge Docker image digest updates directly to main - same behavior as Flux ImageUpdateAutomation",
+      "description": "Automerge Docker image digest updates via GitHub native automerge (compatible with branch protection)",
       "matchManagers": ["custom.regex"],
       "automerge": true,
-      "automergeType": "branch",
+      "automergeType": "pr",
+      "platformAutomerge": true,
       "automergeStrategy": "squash",
       "pinDigests": true,
       "commitMessagePrefix": "chore(deps): "
