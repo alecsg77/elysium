@@ -211,8 +211,8 @@ resource "kubernetes_pod" "main" {
 
     container {
       name              = "dev"
-      image             = "ghcr.io/coder/envbox:latest"
-      image_pull_policy = "Always"
+      image             = "ghcr.io/coder/envbox:0.6.7"
+      image_pull_policy = "IfNotPresent"
       command           = ["/envbox", "docker"]
 
       security_context {
@@ -354,7 +354,7 @@ resource "coder_metadata" "workspace_info" {
   resource_id = kubernetes_pod.main[0].id
   item {
     key   = "image"
-    value = "ghcr.io/coder/envbox:latest"
+    value = "ghcr.io/coder/envbox:0.6.7"
   }
   item {
     key   = "inner_image"

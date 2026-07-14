@@ -128,7 +128,7 @@ EOF
   display_name = "Devcontainer Builder"
   mutable      = true
   name         = "devcontainer_builder"
-  default      = "ghcr.io/coder/envbuilder:latest"
+  default      = "ghcr.io/coder/envbuilder:1.3.0"
   order        = 7
 }
 

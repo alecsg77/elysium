@@ -267,8 +267,8 @@ resource "kubernetes_deployment" "main" {
 
         container {
           name              = "main"
-          image             = "codercom/enterprise-desktop:latest"
-          image_pull_policy = "Always"
+          image             = "codercom/enterprise-desktop:ubuntu-20260713"
+          image_pull_policy = "IfNotPresent"
           command           = ["sh", "-c", coder_agent.main.init_script]
           
           security_context {
