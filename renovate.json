@@ -32,7 +32,6 @@
       "automergeType": "pr",
       "platformAutomerge": true,
       "automergeStrategy": "squash",
-      "pinDigests": true,
       "commitMessagePrefix": "chore(deps): "
     }
   ]
