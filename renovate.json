@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "description": "Container image field in Kubernetes pod specs inside Coder templates",
+      "customType": "regex",
+      "fileMatch": ["^coder/templates/.+\\.tf$"],
+      "matchStrings": [
+        "\\s+image\\s*=\\s*\"(?<depName>[a-zA-Z0-9./_-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "description": "CODER_INNER_IMAGE env var value in envbox templates",
+      "customType": "regex",
+      "fileMatch": ["^coder/templates/.+\\.tf$"],
+      "matchStrings": [
+        "CODER_INNER_IMAGE\"[\\s\\S]{0,80}?value\\s*=\\s*\"(?<depName>[a-zA-Z0-9./_-]+):(?<currentValue>[a-zA-Z0-9._-]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Automerge Docker image digest updates directly to main - same behavior as Flux ImageUpdateAutomation",
+      "matchManagers": ["custom.regex"],
+      "automerge": true,
+      "automergeType": "branch",
+      "automergeStrategy": "squash",
+      "pinDigests": true,
+      "commitMessagePrefix": "chore(deps): "
+    }
+  ]
+}
