@@ -71,8 +71,9 @@ data "coder_parameter" "memory_limit" {
 }
 
 resource "coder_agent" "main" {
-  os   = "linux"
-  arch = "amd64"
+  os                         = "linux"
+  arch                       = "amd64"
+  connection_timeout = 300
 
   metadata {
     display_name = "CPU Usage"
@@ -357,7 +358,7 @@ resource "coder_metadata" "workspace_info" {
   }
   item {
     key   = "inner_image"
-    value = "mcr.microsoft.com/devcontainers/javascript-node:0-20-bookworm"
+    value = "codercom/enterprise-node:ubuntu"
   }
   item {
     key   = "cpu"

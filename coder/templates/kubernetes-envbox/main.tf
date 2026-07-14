@@ -82,8 +82,9 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
 resource "coder_agent" "main" {
-  os             = "linux"
-  arch           = "amd64"
+  os                         = "linux"
+  arch                       = "amd64"
+  connection_timeout = 300
   startup_script = <<EOT
     #!/bin/bash
     # home folder can be empty, so copying default bash settings
