@@ -89,7 +89,7 @@ jobs:
           node-version: 20
       
       - name: Set up terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
 
       - name: Set up Coder CLI
         uses: coder/setup-action@v1
