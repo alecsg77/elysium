@@ -339,7 +339,7 @@ data "coder_external_auth" "github" {
 module "github-upload-public-key" {
   count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
   source           = "registry.coder.com/coder/github-upload-public-key/coder"
-  version          = "1.0.15"
+  version          = "1.0.32"
   agent_id         = coder_agent.main.id
   external_auth_id = data.coder_external_auth.github.id
 }
