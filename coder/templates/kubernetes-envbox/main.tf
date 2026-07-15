@@ -347,7 +347,7 @@ module "github-upload-public-key" {
 module "git-config" {
   count    = data.coder_workspace.me.start_count
   source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.15"
+  version  = "1.0.34"
   agent_id = coder_agent.main.id
   allow_email_change = true
 }
