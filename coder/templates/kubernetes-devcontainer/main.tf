@@ -492,16 +492,6 @@ module "git-config" {
 
 data "coder_task" "me" {}
 
-module "mux" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/mux/coder"
-  version  = "~> 1.4"
-  agent_id = coder_agent.main.id
-  add_project = local.workspace_folder
-  subdomain = false
-  use_cached = true
-}
-
 module "coder-login" {
   count    = data.coder_workspace.me.start_count
   source   = "registry.coder.com/coder/coder-login/coder"
