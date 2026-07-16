@@ -159,7 +159,6 @@ module "github-upload-public-key" {
 }
 
 resource "kubernetes_persistent_volume_claim" "home" {
-  count = data.coder_workspace.me.start_count
   metadata {
     name      = "coder-${data.coder_workspace.me.id}-home"
     namespace = var.namespace
@@ -329,7 +328,7 @@ resource "kubernetes_pod" "main" {
     volume {
       name = "home"
       persistent_volume_claim {
-        claim_name = kubernetes_persistent_volume_claim.home[0].metadata[0].name
+        claim_name = kubernetes_persistent_volume_claim.home.metadata[0].name
       }
     }
     volume {
