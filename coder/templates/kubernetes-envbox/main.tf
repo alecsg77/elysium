@@ -109,7 +109,7 @@ module "code-server" {
 
   agent_id = coder_agent.main.id
   order    = 1
-  folder   = data.coder_parameter.git_repo.value != "" ? module.git_clone[0].repo_dir : "/home/coder"
+  folder   = data.coder_parameter.git_repo.value != "" ? replace(module.git_clone[0].repo_dir, "~/", "/home/coder/") : "/home/coder"
 }
 
 # See https://registry.coder.com/modules/coder/jetbrains
@@ -119,7 +119,7 @@ module "jetbrains" {
   version    = "~> 1.0"
   agent_id   = coder_agent.main.id
   agent_name = "main"
-  folder     = data.coder_parameter.git_repo.value != "" ? module.git_clone[0].repo_dir : "/home/coder"
+  folder     = data.coder_parameter.git_repo.value != "" ? replace(module.git_clone[0].repo_dir, "~/", "/home/coder/") : "/home/coder"
 }
 
 resource "kubernetes_persistent_volume_claim_v1" "home" {

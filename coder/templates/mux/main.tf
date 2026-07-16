@@ -126,6 +126,10 @@ module "mux" {
   install_prefix = "/home/coder/.local/bin"
   log_path       = "/home/coder/.mux/mux.log"
   use_cached     = true
+  # Register the home dir as a persistent project on every start (idempotent).
+  # This ensures mux always has a project context where MCP server configs and
+  # session data are anchored, surviving restarts and template upgrades.
+  add_project = "/home/coder"
 }
 
 # Installs @devcontainers/cli via npm. npm is pre-installed in the inner image.
