@@ -75,6 +75,15 @@ resource "coder_agent" "main" {
   arch                       = "amd64"
   connection_timeout = 300
 
+  # GITHUB_COPILOT_TOKEN: lets mux use GitHub Copilot natively (provider: github-copilot),
+  # avoiding copilot-api which sends Azure OpenAI preamble chunks that break streaming.
+  # GITHUB_PERSONAL_ACCESS_TOKEN: same token, required by the GitHub MCP server
+  # (@modelcontextprotocol/server-github) for API access to repos, issues, and PRs.
+  env = {
+    GITHUB_COPILOT_TOKEN         = data.coder_external_auth.github.access_token
+    GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+  }
+
   metadata {
     display_name = "CPU Usage"
     key          = "0_cpu_usage"

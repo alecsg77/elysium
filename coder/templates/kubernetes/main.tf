@@ -131,6 +131,9 @@ data "coder_workspace_owner" "me" {}
 resource "coder_agent" "main" {
   os             = "linux"
   arch           = "amd64"
+  env = {
+    GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+  }
   startup_script = <<-EOT
     set -e
 

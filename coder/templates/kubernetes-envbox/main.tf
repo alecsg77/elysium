@@ -85,6 +85,10 @@ resource "coder_agent" "main" {
   os                         = "linux"
   arch                       = "amd64"
   connection_timeout = 300
+  env = {
+    # Propagated to the inner envbox container via CODER_BOOTSTRAP_SCRIPT (init_script).
+    GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+  }
   startup_script = <<EOT
     #!/bin/bash
     # home folder can be empty, so copying default bash settings

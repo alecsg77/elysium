@@ -24,6 +24,11 @@ data "coder_provisioner" "me" {}
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
+data "coder_external_auth" "github" {
+  id       = "github"
+  optional = true
+}
+
 variable "use_kubeconfig" {
   type        = bool
   description = <<-EOF
@@ -372,6 +377,8 @@ resource "coder_agent" "main" {
   # You can remove this block if you'd prefer to configure Git manually or using
   # dotfiles. (see docs/dotfiles.md)
   env = {
+    # Available inside the devcontainer to the Coder agent and spawned processes.
+    GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
   }
 
   # The following metadata blocks are optional. They are used to display
