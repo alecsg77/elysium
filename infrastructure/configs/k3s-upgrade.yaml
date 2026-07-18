@@ -20,7 +20,6 @@ spec:
   serviceAccountName: system-upgrade
   drain:
     force: true
-    deleteEmptyDirData: true
     skipWaitForDeleteTimeout: 60
   upgrade:
     image: rancher/k3s-upgrade
