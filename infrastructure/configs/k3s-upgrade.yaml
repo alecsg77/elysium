@@ -23,10 +23,14 @@ spec:
     skipWaitForDeleteTimeout: 60
   upgrade:
     image: rancher/k3s-upgrade
-
-  # Increase the default 15 minute timeout for the entire upgrade process to 30 minutes to allow for larger clusters and/or slower nodes to complete the upgrade without being marked as failed.
-  # The default is 900 seconds (15 minutes) which may not be sufficient for all environments, especially if there are many nodes or if the nodes have limited resources.
-  # Adjusting this value can help prevent premature timeouts during the upgrade process, allowing for a more successful upgrade in environments where the process may take longer than the default timeout period.
+  # Maintenance window: Sunday 02:00-04:00 Europe/Rome.
+  # The SUC will not start upgrade jobs outside this window; jobs already running
+  # at window end will complete normally (bounded by jobActiveDeadlineSecs).
+  window:
+    days: ["sunday"]
+    startTime: "02:00"
+    endTime: "04:00"
+    timeZone: "Europe/Rome"
   jobActiveDeadlineSecs: 1800  # 30 minuti
 ---
 apiVersion: upgrade.cattle.io/v1
@@ -55,3 +59,9 @@ spec:
     skipWaitForDeleteTimeout: 60 # 1.18+ (honor pod disruption budgets up to 60 seconds per pod then moves on)
   upgrade:
     image: rancher/k3s-upgrade
+  # Same maintenance window as k3s-server Plan.
+  window:
+    days: ["sunday"]
+    startTime: "02:00"
+    endTime: "04:00"
+    timeZone: "Europe/Rome"
