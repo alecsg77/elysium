@@ -168,7 +168,7 @@ resource "coder_agent" "main" {
 module "kasmvnc" {
   count               = data.coder_workspace.me.start_count
   source              = "registry.coder.com/coder/kasmvnc/coder"
-  version             = "1.1.0"
+  version             = "1.3.0"
   agent_id            = coder_agent.main.id
   desktop_environment = "xfce"
   subdomain           = false
