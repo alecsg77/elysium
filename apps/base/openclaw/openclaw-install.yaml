@@ -19,6 +19,10 @@ spec:
       kind: Deployment
       name: openclaw
       namespace: ai
+  images:
+    - name: ghcr.io/openclaw/openclaw
+      newName: ghcr.io/openclaw/openclaw # {"$imagepolicy": "ai:openclaw-policy:name"}
+      newTag: "2026.6.34" # {"$imagepolicy": "ai:openclaw-policy:tag"}
   patches:
     - patch: |-
         apiVersion: v1

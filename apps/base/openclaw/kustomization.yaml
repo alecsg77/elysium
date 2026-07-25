@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - openclaw.yaml
   - openclaw-install.yaml
+  - openclaw-imagepolicy.yaml
