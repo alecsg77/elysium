@@ -142,16 +142,39 @@ resource "kubernetes_persistent_volume_claim_v1" "home" {
   }
 }
 
-resource "kubernetes_pod_v1" "main" {
-  count = data.coder_workspace.me.start_count
+resource "kubernetes_deployment_v1" "main" {
+  count            = data.coder_workspace.me.start_count
+  wait_for_rollout = false
 
   metadata {
     name      = "coder-${lower(data.coder_workspace_owner.me.name)}-${lower(data.coder_workspace.me.name)}"
     namespace = var.namespace
+    labels = {
+      "app.kubernetes.io/name"     = "coder-workspace"
+      "app.kubernetes.io/part-of"  = "coder"
+      "com.coder.workspace.id"     = data.coder_workspace.me.id
+      "com.coder.workspace.name"   = data.coder_workspace.me.name
+    }
   }
 
   spec {
-    restart_policy = "Never"
+    replicas = 1
+    selector {
+      match_labels = {
+        "com.coder.workspace.id" = data.coder_workspace.me.id
+      }
+    }
+    strategy {
+      type = "Recreate"
+    }
+    template {
+      metadata {
+        labels = {
+          "app.kubernetes.io/name" = "coder-workspace"
+          "com.coder.workspace.id" = data.coder_workspace.me.id
+        }
+      }
+      spec {
 
     container {
       name = "dev"
@@ -319,7 +342,9 @@ resource "kubernetes_pod_v1" "main" {
         type = ""
       }
     }
-  }
+      }    # close template spec
+    }      # close template
+  }        # close deployment spec
 }
 
 data "coder_parameter" "git_repo" {

@@ -195,8 +195,9 @@ resource "kubernetes_persistent_volume_claim" "home" {
   }
 }
 
-resource "kubernetes_pod" "main" {
-  count = data.coder_workspace.me.start_count
+resource "kubernetes_deployment" "main" {
+  count            = data.coder_workspace.me.start_count
+  wait_for_rollout = false
   metadata {
     name      = "coder-${data.coder_workspace.me.id}"
     namespace = var.namespace
@@ -215,7 +216,23 @@ resource "kubernetes_pod" "main" {
     }
   }
   spec {
-    restart_policy = "Never"
+    replicas = 1
+    selector {
+      match_labels = {
+        "com.coder.workspace.id" = data.coder_workspace.me.id
+      }
+    }
+    strategy {
+      type = "Recreate"
+    }
+    template {
+      metadata {
+        labels = {
+          "app.kubernetes.io/name" = "coder-workspace"
+          "com.coder.workspace.id" = data.coder_workspace.me.id
+        }
+      }
+      spec {
 
     container {
       name              = "dev"
@@ -354,12 +371,14 @@ resource "kubernetes_pod" "main" {
         type = ""
       }
     }
-  }
+      }    # close template spec
+    }      # close template
+  }        # close deployment spec
 }
 
 resource "coder_metadata" "workspace_info" {
   count       = data.coder_workspace.me.start_count
-  resource_id = kubernetes_pod.main[0].id
+  resource_id = kubernetes_deployment.main[0].id
   item {
     key   = "image"
     value = "ghcr.io/coder/envbox:0.6.7"
