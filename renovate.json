@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["custom.regex"],
+  "enabledManagers": ["custom.regex", "terraform"],
   "customManagers": [
     {
       "description": "Container image field in Kubernetes pod specs inside Coder templates",
@@ -40,7 +40,15 @@
       "matchManagers": ["custom.regex"],
       "automerge": true,
       "automergeType": "pr",
-      "platformAutomerge": true,
+      "automergeStrategy": "squash",
+      "commitMessagePrefix": "chore(deps): "
+    },
+    {
+      "description": "Automerge terraform minor/patch updates (providers and modules)",
+      "matchManagers": ["terraform"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
       "automergeStrategy": "squash",
       "commitMessagePrefix": "chore(deps): "
     },
