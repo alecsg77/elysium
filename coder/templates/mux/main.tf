@@ -126,7 +126,7 @@ module "coder-login" {
 module "mux" {
   count           = data.coder_workspace.me.start_count
   source          = "registry.coder.com/coder/mux/coder"
-  version         = "1.4.3"
+  version         = "1.5.0"
   agent_id        = coder_agent.main.id
   subdomain       = false
   restart_on_kill = true
