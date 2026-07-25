@@ -5,7 +5,30 @@ description: Creates and updates Coder Registry workspace templates with agent s
 
 # Coder Templates
 
-Coder workspace templates are complete workspace definitions that live under `registry/<namespace>/templates/<name>/` and provision the infrastructure that workspaces run on.
+Coder workspace templates are complete workspace definitions that live under `coder/templates/<name>/` in this repository.
+
+## ⚠️ Deployment — NEVER use `coder templates push` manually
+
+Templates are deployed **exclusively** through the CI/CD workflow:
+
+```
+# ✅ CORRECT workflow:
+git add coder/templates/<name>/...
+git commit -m "feat/fix: ..."
+git push origin main          # triggers .github/workflows/publish-coder-templates.yaml
+
+# ❌ FORBIDDEN — never run:
+coder templates push <name>   # bypasses validation, skips metadata sync
+```
+
+**`.github/workflows/publish-coder-templates.yaml`** does everything:
+- Triggers on push to `main` for changes under `coder/templates/**`
+- Auto-detects changed templates (only publishes what changed)
+- Runs `terraform validate` before pushing
+- Calls `coder templates push` on the `coder-runner-set` ARC runner (inside the cluster)
+- Syncs display name, description, icon from `README.md` frontmatter
+
+`coder update` / `coder restart` for workspace recovery remain acceptable. Only `coder templates push` is forbidden.
 
 ## Before You Start
 

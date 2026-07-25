@@ -19,6 +19,32 @@ Use this file for Copilot-specific operating context and high-signal repository 
 | **Manage secrets** | [Secret Management Guide](/docs/security/secret-management.md) |
 | **Troubleshoot issue** | [Known Issues](/docs/troubleshooting/known-issues.md) |
 
+## ⚠️ Critical Deployment Rules
+
+### Coder Templates — NEVER push manually
+```
+# ❌ FORBIDDEN — never run these directly:
+coder templates push <name> ...
+coder template push <name> ...
+
+# ✅ CORRECT — edit files, commit, push to main:
+git add coder/templates/<name>/...
+git commit -m "..."
+git push origin main
+# → publish-coder-templates.yaml workflow triggers automatically
+```
+The `.github/workflows/publish-coder-templates.yaml` workflow handles ALL template publishing:
+- Triggers on push to `main` for any change under `coder/templates/**`
+- Detects only changed templates (or all if `publish_all=true`)
+- Runs `terraform validate` before pushing
+- Updates display name, description, icon from `README.md` frontmatter
+- Runs on `coder-runner-set` (inside the cluster with direct Coder access)
+
+`coder update` / `coder restart` for **workspace recovery** is acceptable when workspaces are disconnected. `coder templates push` is **never** acceptable.
+
+### Flux / Kubernetes — all changes via Git
+All cluster state changes must go through Git → Flux reconciliation. Never `kubectl apply` directly.
+
 ## Essential Context
 
 ### Cluster Overview
