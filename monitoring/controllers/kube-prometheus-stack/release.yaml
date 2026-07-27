@@ -106,6 +106,19 @@ spec:
       service:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: grafana.${PRIVATE_DOMAIN}
+      readinessProbe:
+        httpGet:
+          path: /api/health
+          port: grafana
+          scheme: HTTPS
+      livenessProbe:
+        httpGet:
+          path: /api/health
+          port: grafana
+          scheme: HTTPS
+        initialDelaySeconds: 60
+        timeoutSeconds: 30
+        failureThreshold: 10
       extraSecretMounts:
         - name: monitoring-wildcard-tls
           secretName: monitoring-wildcard-tls
