@@ -32,4 +32,4 @@ spec:
     policy: sync
     extraArgs:
       - --publish-internal-services
-      - --cloudflare-proxied=false
+      - --no-cloudflare-proxied
