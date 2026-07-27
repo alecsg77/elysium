@@ -4,7 +4,6 @@ namespace: monitoring
 resources:
   - podmonitor.yaml
   - grafana-mcp-monitor.yaml
-  - grafana-tls.yaml
 
 configMapGenerator:
   - name: flux-grafana-dashboards
