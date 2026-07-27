@@ -35,7 +35,7 @@ Cloudflare DNS automation for the private, tailnet-only domain:
 - Provider: Cloudflare (zone `${PRIVATE_DOMAIN}`)
 - Source: `service` only (no `ingress`, no Traefik/TLSStore involved)
 - Records are DNS-only (`--cloudflare-proxied=false`) and point at each app's own Service ClusterIP, reachable from the tailnet via the Connector's Service/Pod CIDR subnet routes
-- Pattern per app: a dedicated cert-manager `Certificate` (DNS-01 on the same Cloudflare zone) + the app's own native TLS termination + `external-dns.alpha.kubernetes.io/hostname` annotation on its Service
+- Pattern per app: a shared, namespace-scoped cert-manager `Certificate` (`*.${PRIVATE_DOMAIN}` wildcard, DNS-01 on the same Cloudflare zone) mounted into the app's own native TLS termination, plus an `external-dns.alpha.kubernetes.io/hostname` annotation on its Service. One wildcard Certificate per namespace is reused by every app in that namespace adopting this pattern (e.g. `monitoring-wildcard-tls` in the `monitoring` namespace, first used by Grafana)
 - Apps verified capable of native TLS termination (candidates for this pattern): Coder, n8n, Grafana (first to adopt it), Prometheus, Alertmanager, Headlamp, openclaw, grafana-mcp
 - Apps without native TLS support (Fission router, copilot-api, LocalAI) remain on Tailscale ingress (`*.ts.net`) until/unless a shared TLS-terminating proxy is reintroduced
 - The public domain (`${DOMAIN}`) is explicitly out of scope for ExternalDNS — its records remain manually managed

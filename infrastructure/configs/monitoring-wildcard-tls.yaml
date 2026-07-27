@@ -2,12 +2,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: grafana-tls
+  name: monitoring-wildcard-tls
   namespace: monitoring
 spec:
-  secretName: grafana-tls
+  secretName: monitoring-wildcard-tls
   dnsNames:
-    - grafana.${PRIVATE_DOMAIN}
+    - "*.${PRIVATE_DOMAIN}"
   issuerRef:
     kind: ClusterIssuer
     name: letsencrypt

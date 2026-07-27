@@ -14,7 +14,7 @@ resources:
   - ts-default-proxy-class.yaml
   - copilot-agent-rbac
   - web-public.yaml
-  - grafana-tls.yaml
+  - monitoring-wildcard-tls.yaml
   - ts-ingress-arkham.yaml
   - arc-runners
 

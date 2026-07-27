@@ -107,8 +107,8 @@ spec:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: grafana.${PRIVATE_DOMAIN}
       extraSecretMounts:
-        - name: grafana-tls
-          secretName: grafana-tls
+        - name: monitoring-wildcard-tls
+          secretName: monitoring-wildcard-tls
           defaultMode: 0440
           mountPath: /etc/grafana/tls
           readOnly: true

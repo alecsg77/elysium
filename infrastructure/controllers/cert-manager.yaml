@@ -32,6 +32,5 @@ spec:
         namespace: cert-manager
   values:
     enableCertificateOwnerRef: true
-    dns01RecursiveNameserversOnly: true
-    dns01RecursiveNameservers: "8.8.8.8:53,1.1.1.1:53"
+    dns01RecursiveNameservers: "8.8.8.8:53,9.9.9.9:53"
     installCRDs: true
