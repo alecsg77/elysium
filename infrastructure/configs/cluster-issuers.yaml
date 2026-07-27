@@ -21,3 +21,4 @@ spec:
         selector:
           dnsZones:
             - '${DOMAIN}'
+            - '${PRIVATE_DOMAIN}'

@@ -102,19 +102,25 @@ spec:
     grafana:
       defaultDashboardsTimezone: browser
       ingress:
-        enabled: true
-        hosts:
-          - grafana
-        ingressClassName: tailscale
-        tls:
-          - hosts:
-            -  grafana
+        enabled: false
+      service:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: grafana.${PRIVATE_DOMAIN}
+      extraSecretMounts:
+        - name: grafana-tls
+          secretName: grafana-tls
+          defaultMode: 0440
+          mountPath: /etc/grafana/tls
+          readOnly: true
       persistence:
         enabled: true
       grafana.ini:
         server:
-          domain: grafana.${ts_net}
-          root_url: https://grafana.${ts_net}
+          protocol: https
+          cert_file: /etc/grafana/tls/tls.crt
+          cert_key: /etc/grafana/tls/tls.key
+          domain: grafana.${PRIVATE_DOMAIN}
+          root_url: https://grafana.${PRIVATE_DOMAIN}
     kubeControllerManager:
       # Add all k3s Control-Plane IPs
       endpoints:

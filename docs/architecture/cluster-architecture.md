@@ -30,6 +30,17 @@ HTTP/HTTPS routing and TLS termination:
 - cert-manager integration for automatic certificate provisioning
 - Traefik Hub features enabled
 
+#### External-DNS
+Cloudflare DNS automation for the private, tailnet-only domain:
+- Provider: Cloudflare (zone `${PRIVATE_DOMAIN}`)
+- Source: `service` only (no `ingress`, no Traefik/TLSStore involved)
+- Records are DNS-only (`--cloudflare-proxied=false`) and point at each app's own Service ClusterIP, reachable from the tailnet via the Connector's Service/Pod CIDR subnet routes
+- Pattern per app: a dedicated cert-manager `Certificate` (DNS-01 on the same Cloudflare zone) + the app's own native TLS termination + `external-dns.alpha.kubernetes.io/hostname` annotation on its Service
+- Apps verified capable of native TLS termination (candidates for this pattern): Coder, n8n, Grafana (first to adopt it), Prometheus, Alertmanager, Headlamp, openclaw, grafana-mcp
+- Apps without native TLS support (Fission router, copilot-api, LocalAI) remain on Tailscale ingress (`*.ts.net`) until/unless a shared TLS-terminating proxy is reintroduced
+- The public domain (`${DOMAIN}`) is explicitly out of scope for ExternalDNS — its records remain manually managed
+- The `kyrion.` hostname prefix is reserved for any future Traefik-fronted exposure on the private domain; it is not used by any app on this pattern today
+
 #### Azure Arc Integration (Optional)
 Hybrid cloud management:
 - Namespaces: `azure-arc`, `azure-arc-release`
@@ -76,7 +87,7 @@ The cluster uses 25+ namespaces for logical separation:
 |----------|------------|---------|
 | **System** | `kube-system`, `kube-public`, `kube-node-lease`, `default` | Kubernetes core components |
 | **Flux** | `flux-system`, `capacitor` | GitOps controllers and image automation |
-| **Infrastructure** | `cert-manager`, `tailscale`, `sealed-secrets-system` | Core infrastructure services |
+| **Infrastructure** | `cert-manager`, `tailscale`, `sealed-secrets-system`, `external-dns` | Core infrastructure services |
 | **Networking** | `traefik`, `ingress` | Ingress and traffic management |
 | **Storage** | `csi-rclone` | Storage provisioners and drivers |
 | **Monitoring** | `monitoring`, `elastic-system`, `opentelemetry-operator-system` | Observability stack |
@@ -218,7 +229,7 @@ infra-configs       monitoring-configs    (standalone)
 
 ## HelmRepository Inventory
 
-The cluster uses 18 HelmRepository sources for chart distribution:
+The cluster uses 19 HelmRepository sources for chart distribution:
 
 | Repository | Type | URL/OCI Path | Charts Used | Notes |
 |------------|------|--------------|-------------|-------|
@@ -228,6 +239,7 @@ The cluster uses 18 HelmRepository sources for chart distribution:
 | **cert-manager** | Standard | https://charts.jetstack.io | cert-manager | Certificate management |
 | **traefik** | Standard | https://traefik.github.io/charts | traefik | Ingress controller |
 | **tailscale** | Standard | https://pkgs.tailscale.com/helmcharts | tailscale-operator | Private networking |
+| **external-dns** | Standard | https://kubernetes-sigs.github.io/external-dns/ | external-dns | Cloudflare DNS automation for the private domain (`${PRIVATE_DOMAIN}`), `source=service` only |
 | **kube-prometheus-stack** | OCI | oci://ghcr.io/prometheus-community/charts | kube-prometheus-stack | Monitoring stack |
 | **grafana-charts** | Standard | https://grafana.github.io/helm-charts | loki, tempo, promtail | Log and trace backends |
 | **elastic** | Standard | https://helm.elastic.co | elasticsearch, kibana | Log indexing |
