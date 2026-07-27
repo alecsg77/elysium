@@ -104,6 +104,8 @@ spec:
       ingress:
         enabled: false
       service:
+        port: 443
+        targetPort: 3000
         annotations:
           external-dns.alpha.kubernetes.io/hostname: grafana.${PRIVATE_DOMAIN}
       readinessProbe:
