@@ -23,7 +23,7 @@ Please investigate this issue and run diagnostics
 
 ### Using Other Local Agents
 - Start with `/AGENTS.md`
-- Use `/.github/skills/troubleshoot-flux/SKILL.md` as the portable troubleshooting workflow
+- Use `/.agents/skills/troubleshoot-flux/SKILL.md` as the portable troubleshooting workflow
 - Use `/.github/agents/troubleshooter.agents.md` as the detailed diagnostic role reference when your host can read plain markdown but not Copilot custom agent metadata
 
 ### Common Commands

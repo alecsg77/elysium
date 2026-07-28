@@ -1,0 +1,34 @@
+// Repo-level MCP server overrides for mux (https://mux.coder.com/config/mcp-servers).
+// Global config lives in ~/.mux/mcp.jsonc; this file adds/overrides servers for this repo only.
+//
+// Mirrors the cluster-facing servers already defined for GitHub Copilot / VS Code
+// in .vscode/mcp.json, so mux agents get the same Kubernetes/Flux/Grafana tools.
+// Keep this file in sync whenever .vscode/mcp.json changes.
+//
+// context7 and tavily are already configured globally for mux, so they are
+// intentionally NOT duplicated here (unlike .vscode/mcp.json).
+{
+  "servers": {
+    // Generic Kubernetes API access (get/list/apply/logs/events, etc.).
+    "kubernetes": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest"]
+    },
+    // Flux GitOps operator: inspect Kustomizations/HelmReleases and reconciliation status.
+    "flux-operator-mcp": {
+      "type": "stdio",
+      "command": "/usr/local/bin/flux-operator-mcp",
+      "args": ["serve"],
+      "env": {
+        "KUBECONFIG": "etc/kubeconfig"
+      }
+    },
+    // Grafana dashboards/alerts/datasources for the kyrion cluster.
+    // Only reachable from inside the cluster network (in-cluster Service DNS).
+    "grafana": {
+      "type": "http",
+      "url": "http://grafana-mcp.monitoring.svc:8000/mcp"
+    }
+  }
+}

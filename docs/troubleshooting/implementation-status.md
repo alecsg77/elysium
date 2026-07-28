@@ -31,7 +31,7 @@ Web-based troubleshooting system implementation for cluster issue resolution via
 - **review-gitops-config** skill: User-invocable GitOps review workflow
 - **knowledge-base-search** skill: Search for similar historical incidents
 
-**Location**: `.github/skills/`
+**Location**: `.agents/skills/`
 
 ### 5. Documentation
 - **Web-Based Troubleshooting Guide**: Complete user workflow ([docs/troubleshooting/web-troubleshooting.md](/docs/troubleshooting/web-troubleshooting.md))
@@ -83,13 +83,13 @@ User Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Codi
 - `.github/agents/troubleshooter.agents.md` - Diagnostics + analysis
 - `.github/agents/issue-coordinator.agents.md` - Resolution orchestration
 - `.github/workflows/update-knowledge-base.yml` - KB automation
-- `.github/skills/deploy-application/SKILL.md` - App deployment workflow
-- `.github/skills/troubleshoot-flux/SKILL.md` - Troubleshooting workflow
-- `.github/skills/manage-sealed-secrets/SKILL.md` - Secret management workflow
-- `.github/skills/generate-gitops-docs/SKILL.md` - Documentation workflow
-- `.github/skills/review-gitops-config/SKILL.md` - Review workflow
-- `.github/skills/gitops-implementation-planning/SKILL.md` - Planning workflow
-- `.github/skills/knowledge-base-search/SKILL.md` - Historical incident search workflow
+- `.agents/skills/deploy-application/SKILL.md` - App deployment workflow
+- `.agents/skills/troubleshoot-flux/SKILL.md` - Troubleshooting workflow
+- `.agents/skills/manage-sealed-secrets/SKILL.md` - Secret management workflow
+- `.agents/skills/generate-gitops-docs/SKILL.md` - Documentation workflow
+- `.agents/skills/review-gitops-config/SKILL.md` - Review workflow
+- `.agents/skills/gitops-implementation-planning/SKILL.md` - Planning workflow
+- `.agents/skills/knowledge-base-search/SKILL.md` - Historical incident search workflow
 - `.github/instructions/agents.instructions.md` - Custom agent maintenance rules
 - `.github/instructions/prompt.instructions.md` - Prompt deprecation and maintenance rules
 - `.github/instructions/skills.instructions.md` - Skill maintenance rules
@@ -126,5 +126,5 @@ User Issue → Copilot Diagnostics → Root Cause Analysis → Approval → Codi
 
 - **User Guide**: [Web-Based Troubleshooting Workflow](/docs/troubleshooting/web-troubleshooting.md)
 - **Known Issues**: [Known Issues and Solutions](/docs/troubleshooting/known-issues.md)
-- **Diagnostics Entry Point**: `.github/skills/troubleshoot-flux/SKILL.md`
+- **Diagnostics Entry Point**: `.agents/skills/troubleshoot-flux/SKILL.md`
 - **Resolution Coordination**: `.github/agents/issue-coordinator.agents.md`

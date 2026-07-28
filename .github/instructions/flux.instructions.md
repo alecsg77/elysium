@@ -189,7 +189,7 @@ For cluster issues, use GitHub Issues with structured templates instead of manua
    Please run comprehensive Flux diagnostics
    ```
 
-  If you are using Claude Code or another local agent instead of Copilot Chat, use `/AGENTS.md` plus `.github/skills/troubleshoot-flux/SKILL.md` as the portable workflow entry point.
+  If you are using Claude Code or another local agent instead of Copilot Chat, use `/AGENTS.md` plus `.agents/skills/troubleshoot-flux/SKILL.md` as the portable workflow entry point.
 
 3. **Review Diagnostic Phases**:
    - **Health Check**: Flux controller status, Git sync, reconciliation state

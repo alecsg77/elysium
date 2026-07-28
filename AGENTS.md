@@ -1,6 +1,33 @@
+You are an experienced, pragmatic software engineering AI agent. Do not over-engineer a solution when a simple one is possible. Keep edits minimal. If you want an exception to ANY rule, you MUST stop and get permission first.
+
 # Elysium Agent Guide
 
 Vendor-neutral operating guide for AI coding agents working in this repository.
+
+## Project Overview
+- **Elysium** is a GitOps-managed Kubernetes homelab (cluster name `kyrion`, a k3s cluster) reconciled entirely by [Flux](https://fluxcd.io/).
+- There is no application source code to compile here — the repo is a monorepo of Kubernetes manifests, Helm values, Kustomize overlays, and small Helm charts. "Building" means rendering manifests locally to catch errors before they reach the cluster.
+- Technology stack: **Flux** (Kustomization/HelmRelease CRDs), **Kustomize** (base/overlay composition), **Helm** (third-party charts + two local charts under `charts/`), **Bitnami Sealed Secrets** (encrypted secrets in Git), **Terraform** (Coder workspace templates under `coder/templates/`), YAML/yamllint for formatting.
+- Goals: single source of truth in Git, safe-by-default (no plaintext secrets, no direct `kubectl apply`), and a clean base/overlay separation so apps are reusable across environments.
+
+## Reference
+- `AGENTS.md` (this file) — portable baseline for all agents. `.github/copilot-instructions.md` is the Copilot-specific overlay; `CLAUDE.md` bootstraps Claude Code into this file.
+- `docs/README.md` — documentation index; `docs/standards/repository-structure.md` is the **authoritative** guide to where any given file belongs (read it before adding new manifests).
+- Top-level directories:
+  | Path | Purpose |
+  |------|---------|
+  | `clusters/kyrion/` | Flux entry point: `Kustomization` objects defining what gets applied and in what order. |
+  | `infrastructure/` | Controllers/operators (`controllers/`) and their cluster-wide config (`configs/`). |
+  | `apps/base/<app>/` | Environment-agnostic app catalog (namespace-agnostic, no cluster-specific values). |
+  | `apps/kyrion/<namespace>/` | Per-namespace overlay: selects apps from the catalog, sets namespace + cluster-specific patches. |
+  | `monitoring/` | Observability stack (controllers + configs): Grafana, kube-prometheus-stack, Loki, etc. |
+  | `charts/` | Local Helm charts (`cron-job`, `onechart`) consumed by apps. |
+  | `coder/templates/` | Terraform templates for Coder-provisioned dev/agent workspaces. |
+  | `functions/` | Fission serverless function specs. |
+  | `etc/` | Local operator artifacts (kubeconfig, certs) — never commit private keys. |
+  | `scripts/` | Bootstrap/automation scripts (e.g. `bootstrap_flux.sh`, `collect-monitoring-baseline.sh`). |
+  | `docs/` | Human documentation: architecture, standards, runbooks, security, troubleshooting. |
+- Skills referenced below live under `.agents/skills/<name>/SKILL.md` (moved there from `.github/skills/` in commit `cc947d7`; all `/docs` and `.github/instructions/*.md` references were updated to match). mux discovers `.agents/skills/` natively (see "Mux-Specific Notes" below).
 
 ## Scope
 - Apply these rules when modifying code, manifests, documentation, or automation in this repository.
@@ -21,34 +48,49 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 - Respect Flux dependency ordering: controllers/CRDs before dependent resources.
 - Keep documentation authoritative in `/docs`, not duplicated across agent files.
 
-## Validation Expectations
-- Validate YAML and rendered output before finalizing changes.
-- Preferred checks:
-  - `kustomize build apps/base/<app>/`
-  - `kustomize build apps/kyrion/`
-  - `flux build kustomization apps --path clusters/kyrion`
-  - `helm template <name> <chart> -f values.yaml` when using HelmRelease
-- For troubleshooting, prefer the smallest diagnostic command set that can identify the first failing control point.
+## Essential Commands
+This repo has no application build/test suite — "validation" means rendering manifests locally and linting YAML.
+- **Render/build a single app**: `kustomize build apps/base/<app>/`
+- **Render a full namespace overlay**: `kustomize build apps/kyrion/<namespace>/`
+- **Render exactly what Flux will apply**: `flux build kustomization apps --path clusters/kyrion`
+- **Render a HelmRelease's chart** (when adding/upgrading one): `helm template <name> <chart> -f values.yaml`
+- **Lint YAML**: `yamllint .` (config in `.yamllint.yaml`; `.md` files and `clusters/*/flux-system/` are excluded)
+- **Bootstrap Flux on a new cluster** (rarely needed, destructive on a fresh cluster only): `scripts/bootstrap_flux.sh`
+- **Collect a monitoring baseline** (for troubleshooting/regressions): `scripts/collect-monitoring-baseline.sh`
+- There is no `clean`, `format`, or dev server target — YAML/Helm files are edited directly and validated via the render commands above.
+- For troubleshooting, prefer the smallest diagnostic command set that can identify the first failing control point (see `.agents/skills/troubleshoot-flux/SKILL.md`).
 
 ## Cross-Agent Compatibility Rules
 - Keep Copilot-specific files valid for Copilot first.
 - For portability, prefer reusable guidance in `/docs`, `AGENTS.md`, `CLAUDE.md`, and plain markdown `SKILL.md` bodies.
-- Treat `.github/skills/<name>/SKILL.md` as reusable workflow references even if your host does not natively support skills.
+- Treat `.agents/skills/<name>/SKILL.md` as reusable workflow references even if your host does not natively support skills.
 - Treat `.github/agents/*.agents.md` as role/workflow references if your host does not support custom agent frontmatter.
 
 ## Primary Workflows
-- Deploy application: `.github/skills/deploy-application/SKILL.md`
-- Manage sealed secrets: `.github/skills/manage-sealed-secrets/SKILL.md`
-- Generate docs: `.github/skills/generate-gitops-docs/SKILL.md`
-- Review GitOps config: `.github/skills/review-gitops-config/SKILL.md`
-- Plan GitOps work: `.github/skills/gitops-implementation-planning/SKILL.md`
-- Search historical incidents: `.github/skills/knowledge-base-search/SKILL.md`
-- Troubleshoot Flux and Kubernetes issues: `.github/skills/troubleshoot-flux/SKILL.md`
+- Deploy application: `.agents/skills/deploy-application/SKILL.md`
+- Manage sealed secrets: `.agents/skills/manage-sealed-secrets/SKILL.md`
+- Generate docs: `.agents/skills/generate-gitops-docs/SKILL.md`
+- Review GitOps config: `.agents/skills/review-gitops-config/SKILL.md`
+- Plan GitOps work: `.agents/skills/gitops-implementation-planning/SKILL.md`
+- Search historical incidents: `.agents/skills/knowledge-base-search/SKILL.md`
+- Troubleshoot Flux and Kubernetes issues: `.agents/skills/troubleshoot-flux/SKILL.md`
+- Create/update Coder workspace templates: `.agents/skills/coder-templates/SKILL.md`
 
 ## Copilot-Specific Workflows
 - Copilot is the primary hosted workflow for issue-page diagnostics, coding-agent handoff, and GitHub web-based resolution.
 - The `Troubleshooter` and `Issue Coordinator` agent specs under `/.github/agents/` are kept for Copilot because they support structured orchestration and issue workflow handoff.
 - Other agents can still follow those files as procedural references.
+
+## Mux-Specific Notes
+- mux (this tool) discovers project skills from `.mux/skills/` first, then falls back to `.agents/skills/` — so the skills under `.agents/skills/` (see Primary Workflows) are already visible to mux without any extra setup.
+- mux MCP servers are configured globally in `~/.mux/mcp.jsonc`, with optional repo overrides in `./.mux/mcp.jsonc`. This repo's `.mux/mcp.jsonc` mirrors the cluster-facing servers from `.vscode/mcp.json` (`kubernetes`, `flux-operator-mcp`, `grafana`) so mux agents get the same Kubernetes/Flux/Grafana tools as VS Code/Copilot. `context7` and `tavily` are already configured globally for mux and are intentionally **not** duplicated in the repo override.
+- If you add or change a server in `.vscode/mcp.json`, mirror the equivalent entry in `.mux/mcp.jsonc` (and vice versa) so both hosts stay in sync.
+
+## Commit and Pull Request Guidelines
+- Before committing, run the render/lint commands in "Essential Commands" for anything you touched (at minimum `kustomize build` on the affected app/overlay, plus `yamllint` on changed YAML).
+- Commit messages follow **Conventional Commits**: `type(scope): summary` (e.g. `fix(monitoring): expose Grafana Service on port 443`, `feat(external-dns): add ExternalDNS for private domain`). Common types in this repo: `feat`, `fix`, `chore`, `docs`, `build`. Scope is usually the app/component directory name.
+- There is no PR template; describe **what changed and why**, list the validation commands you ran, and call out any secret rotation or dependency-ordering implications (controllers before workloads).
+- Never include plaintext secret values in commit messages or PR descriptions.
 
 ## Key References
 - `/docs/README.md`

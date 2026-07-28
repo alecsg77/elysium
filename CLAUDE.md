@@ -9,7 +9,7 @@ Claude Code should use `AGENTS.md` in this repository as the portable baseline.
 
 ## Compatibility Notes
 - If Claude Code does not support Copilot custom agent frontmatter, ignore the YAML metadata and follow the markdown body.
-- Treat `/.github/skills/*/SKILL.md` as reusable workflow instructions.
+- Treat `/.agents/skills/*/SKILL.md` as reusable workflow instructions.
 - Treat `/.github/agents/*.agents.md` as role/workflow references when troubleshooting or coordinating issue flows.
 
 ## Repository Priorities

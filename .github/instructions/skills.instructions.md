@@ -6,7 +6,7 @@ applyTo: '**/SKILL.md'
 # Skill File Maintenance
 
 ## Scope
-- Apply these rules to repository skills under `.github/skills/<name>/SKILL.md`.
+- Apply these rules to repository skills under `.agents/skills/<name>/SKILL.md`.
 - Use skills for on-demand, repeatable workflows that benefit from focused instructions and optional bundled assets.
 
 ## Frontmatter Requirements

@@ -24,7 +24,7 @@ This repository maintains a **strict separation** between AI agent guidance and 
 |-----------|-------------|---------|----------|
 | `.github/instructions/*.instructions.md` | **Agent instructions** | Coding standards, patterns, conventions with references to actual docs | GitHub Copilot (coding) |
 | `.github/agents/*.agents.md` | **Agent definitions** | Agent behavior, workflows, coordination logic | GitHub Copilot (agents) |
-| `.github/skills/<name>/SKILL.md` | **Agent skills** | On-demand reusable workflows with optional bundled assets | GitHub Copilot (skills) |
+| `.agents/skills/<name>/SKILL.md` | **Agent skills** | On-demand reusable workflows with optional bundled assets | GitHub Copilot (skills) |
 | `.github/prompts/*.prompt.md` | **Copilot prompts** | Thin task entry points only when a full skill is unnecessary | GitHub Copilot (prompts) |
 
 **Rules for `.github/` content**:
@@ -258,7 +258,7 @@ Runbooks are **step-by-step operational procedures** for humans and AI agents to
 
 **Runbook vs Skill distinction**:
 - **Runbook** (`/docs/runbooks/add-application.md`): Complete procedure with all commands, validation steps, troubleshooting - authoritative source
-- **Skill** (`.github/skills/deploy-application/SKILL.md`): On-demand workflow guidance that **references** the runbook and repository rules without duplicating them
+- **Skill** (`.agents/skills/deploy-application/SKILL.md`): On-demand workflow guidance that **references** the runbook and repository rules without duplicating them
 
 ## Diagram Standards
 - Use mermaid diagrams for architecture visualization
@@ -350,7 +350,7 @@ Runbooks are **step-by-step operational procedures** for humans and AI agents to
 2. Include prerequisites, validation, troubleshooting
 3. Test all commands work as documented
 4. Add to `/docs/runbooks/README.md` with category
-5. Reference from relevant `.github/skills/` files, or from prompts only when a thin prompt still exists
+5. Reference from relevant `.agents/skills/` files, or from prompts only when a thin prompt still exists
 
 **Agent instructions** (`.github/instructions/`):
 1. Focus on coding patterns and conventions
@@ -359,7 +359,7 @@ Runbooks are **step-by-step operational procedures** for humans and AI agents to
 4. Link to detailed standards and runbooks
 5. Update when coding patterns change, not when procedures change
 
-**Agent skill** (`.github/skills/<name>/SKILL.md`):
+**Agent skill** (`.agents/skills/<name>/SKILL.md`):
 1. Define the reusable workflow and when to invoke it
 2. Reference detailed runbook for procedures
 3. Highlight key principles and validation
