@@ -71,8 +71,8 @@ data "coder_parameter" "memory_limit" {
 }
 
 resource "coder_agent" "main" {
-  os                         = "linux"
-  arch                       = "amd64"
+  os                 = "linux"
+  arch               = "amd64"
   connection_timeout = 300
 
   # GITHUB_COPILOT_TOKEN: lets mux use GitHub Copilot natively (provider: github-copilot),
@@ -109,6 +109,18 @@ resource "coder_agent" "main" {
   }
 }
 
+resource "coder_script" "install-gh-cli" {
+  count              = data.coder_workspace.me.start_count
+  agent_id           = coder_agent.main.id
+  display_name       = "Install GitHub CLI"
+  icon               = "/icon/terminal.svg"
+  script             = templatefile("${path.module}/scripts/install-gh-cli.sh.tftpl", {
+    version = "2.63.2" # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
+  })
+  run_on_start       = true
+  start_blocks_login = false
+}
+
 # Sets CODER_SESSION_TOKEN = data.coder_workspace_owner.me.session_token and
 # CODER_URL = data.coder_workspace.me.access_url as workspace env vars.
 # The mux process (started by the mux module script) inherits these, providing
@@ -135,6 +147,7 @@ module "mux" {
   install_prefix = "/home/coder/.local/bin"
   log_path       = "/home/coder/.mux/mux.log"
   use_cached     = true
+  open_in        = "tab"
 }
 
 # Installs @devcontainers/cli via npm. npm is pre-installed in the inner image.
@@ -234,146 +247,146 @@ resource "kubernetes_deployment" "main" {
       }
       spec {
 
-    container {
-      name              = "dev"
-      image             = "ghcr.io/coder/envbox:0.6.7"
-      image_pull_policy = "IfNotPresent"
-      command           = ["/envbox", "docker"]
+        container {
+          name              = "dev"
+          image             = "ghcr.io/coder/envbox:0.6.7"
+          image_pull_policy = "IfNotPresent"
+          command           = ["/envbox", "docker"]
 
-      security_context {
-        privileged = true
-      }
+          security_context {
+            privileged = true
+          }
 
-      resources {
-        requests = {
-          cpu    = "250m"
-          memory = "512Mi"
-        }
-        limits = {
-          cpu    = "${data.coder_parameter.cpu_limit.value}"
-          memory = "${data.coder_parameter.memory_limit.value}Gi"
-        }
-      }
+          resources {
+            requests = {
+              cpu    = "250m"
+              memory = "512Mi"
+            }
+            limits = {
+              cpu    = "${data.coder_parameter.cpu_limit.value}"
+              memory = "${data.coder_parameter.memory_limit.value}Gi"
+            }
+          }
 
-      env {
-        name  = "CODER_AGENT_TOKEN"
-        value = coder_agent.main.token
-      }
-      env {
-        name  = "CODER_AGENT_URL"
-        value = data.coder_workspace.me.access_url
-      }
-      env {
-        name  = "CODER_INNER_IMAGE"
-        value = "codercom/enterprise-node:ubuntu-20260723"
-      }
-      env {
-        name  = "CODER_INNER_USERNAME"
-        value = "coder"
-      }
-      env {
-        name  = "CODER_BOOTSTRAP_SCRIPT"
-        value = coder_agent.main.init_script
-      }
-      env {
-        name  = "CODER_MOUNTS"
-        value = "/home/coder:/home/coder"
-      }
-      env {
-        name  = "CODER_ADD_FUSE"
-        value = "false"
-      }
-      env {
-        name  = "CODER_ADD_TUN"
-        value = "false"
-      }
-      env {
-        name  = "CODER_INNER_HOSTNAME"
-        value = data.coder_workspace.me.name
-      }
-      env {
-        name = "CODER_CPUS"
-        value_from {
-          resource_field_ref {
-            resource = "limits.cpu"
+          env {
+            name  = "CODER_AGENT_TOKEN"
+            value = coder_agent.main.token
+          }
+          env {
+            name  = "CODER_AGENT_URL"
+            value = data.coder_workspace.me.access_url
+          }
+          env {
+            name  = "CODER_INNER_IMAGE"
+            value = "codercom/enterprise-node:ubuntu-20260723"
+          }
+          env {
+            name  = "CODER_INNER_USERNAME"
+            value = "coder"
+          }
+          env {
+            name  = "CODER_BOOTSTRAP_SCRIPT"
+            value = coder_agent.main.init_script
+          }
+          env {
+            name  = "CODER_MOUNTS"
+            value = "/home/coder:/home/coder"
+          }
+          env {
+            name  = "CODER_ADD_FUSE"
+            value = "false"
+          }
+          env {
+            name  = "CODER_ADD_TUN"
+            value = "false"
+          }
+          env {
+            name  = "CODER_INNER_HOSTNAME"
+            value = data.coder_workspace.me.name
+          }
+          env {
+            name = "CODER_CPUS"
+            value_from {
+              resource_field_ref {
+                resource = "limits.cpu"
+              }
+            }
+          }
+          env {
+            name = "CODER_MEMORY"
+            value_from {
+              resource_field_ref {
+                resource = "limits.memory"
+              }
+            }
+          }
+
+          volume_mount {
+            mount_path = "/home/coder"
+            name       = "home"
+            sub_path   = "home"
+          }
+          volume_mount {
+            mount_path = "/var/lib/coder/docker"
+            name       = "home"
+            sub_path   = "cache/docker"
+          }
+          volume_mount {
+            mount_path = "/var/lib/coder/containers"
+            name       = "home"
+            sub_path   = "cache/containers"
+          }
+          volume_mount {
+            mount_path = "/var/lib/sysbox"
+            name       = "sysbox"
+          }
+          volume_mount {
+            mount_path = "/var/lib/containers"
+            name       = "home"
+            sub_path   = "envbox/containers"
+          }
+          volume_mount {
+            mount_path = "/var/lib/docker"
+            name       = "home"
+            sub_path   = "envbox/docker"
+          }
+          volume_mount {
+            mount_path = "/usr/src"
+            name       = "usr-src"
+          }
+          volume_mount {
+            mount_path = "/lib/modules"
+            name       = "lib-modules"
           }
         }
-      }
-      env {
-        name = "CODER_MEMORY"
-        value_from {
-          resource_field_ref {
-            resource = "limits.memory"
+
+        volume {
+          name = "home"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.home.metadata[0].name
           }
         }
-      }
-
-      volume_mount {
-        mount_path = "/home/coder"
-        name       = "home"
-        sub_path   = "home"
-      }
-      volume_mount {
-        mount_path = "/var/lib/coder/docker"
-        name       = "home"
-        sub_path   = "cache/docker"
-      }
-      volume_mount {
-        mount_path = "/var/lib/coder/containers"
-        name       = "home"
-        sub_path   = "cache/containers"
-      }
-      volume_mount {
-        mount_path = "/var/lib/sysbox"
-        name       = "sysbox"
-      }
-      volume_mount {
-        mount_path = "/var/lib/containers"
-        name       = "home"
-        sub_path   = "envbox/containers"
-      }
-      volume_mount {
-        mount_path = "/var/lib/docker"
-        name       = "home"
-        sub_path   = "envbox/docker"
-      }
-      volume_mount {
-        mount_path = "/usr/src"
-        name       = "usr-src"
-      }
-      volume_mount {
-        mount_path = "/lib/modules"
-        name       = "lib-modules"
-      }
-    }
-
-    volume {
-      name = "home"
-      persistent_volume_claim {
-        claim_name = kubernetes_persistent_volume_claim.home.metadata[0].name
-      }
-    }
-    volume {
-      name = "sysbox"
-      empty_dir {}
-    }
-    volume {
-      name = "usr-src"
-      host_path {
-        path = "/usr/src"
-        type = ""
-      }
-    }
-    volume {
-      name = "lib-modules"
-      host_path {
-        path = "/lib/modules"
-        type = ""
-      }
-    }
-      }    # close template spec
-    }      # close template
-  }        # close deployment spec
+        volume {
+          name = "sysbox"
+          empty_dir {}
+        }
+        volume {
+          name = "usr-src"
+          host_path {
+            path = "/usr/src"
+            type = ""
+          }
+        }
+        volume {
+          name = "lib-modules"
+          host_path {
+            path = "/lib/modules"
+            type = ""
+          }
+        }
+      } # close template spec
+    }   # close template
+  }     # close deployment spec
 }
 
 resource "coder_metadata" "workspace_info" {

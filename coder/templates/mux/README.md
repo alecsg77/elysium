@@ -26,6 +26,10 @@ Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) �
 - [`coder/git-config`](https://registry.coder.com/modules/coder/git-config) — configures git from Coder credentials
 - [`coder/github-upload-public-key`](https://registry.coder.com/modules/coder/github-upload-public-key) — uploads SSH public key to GitHub (requires GitHub external auth)
 
+## Additional tool installers
+
+For CLI tools without an existing Coder Registry module (e.g. GitHub CLI `gh`), standalone installer script templates live under [`scripts/`](./scripts). Each `scripts/install-<tool>.sh.tftpl` is rendered via `templatefile()` with a pinned version and run as part of a single `coder_script` on startup. Versions are pinned as `main.tf` locals decorated with `renovate:` comments so Renovate can bump them automatically — see [`scripts/README.md`](./scripts/README.md) for the full convention.
+
 ## Prerequisites
 
 - Kubernetes cluster with privileged pod support
