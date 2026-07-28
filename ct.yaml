@@ -1,0 +1,14 @@
+# Configuration for helm/chart-testing (ct), used by .github/workflows/pr-validate-charts.yml.
+# See https://github.com/helm/chart-testing#configuration for all available options.
+
+# charts/ contains the vendored Helm charts (cron-job, onechart); ct auto-detects which of
+# them changed against --target-branch.
+chart-dirs:
+  - charts
+
+# charts/* track the vendored Gimlet "onechart" upstream version, not an independent local
+# semver, so don't force a version bump on every PR.
+check-version-increment: false
+
+# The vendored upstream Chart.yaml files don't declare a maintainers field.
+validate-maintainers: false
