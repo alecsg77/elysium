@@ -76,6 +76,11 @@ This repo has no application build/test suite — "validation" means rendering m
 - Troubleshoot Flux and Kubernetes issues: `.agents/skills/troubleshoot-flux/SKILL.md`
 - Create/update Coder workspace templates: `.agents/skills/coder-templates/SKILL.md`
 
+## PR Validation Workflows
+- Lint YAML manifests on every PR: `.github/workflows/pr-lint-yaml.yml`
+- Scan PR diffs for leaked secrets: `.github/workflows/pr-secret-scan.yml`
+- See `docs/ci/pr-validation.md` for the full two-level validation model.
+
 ## Copilot-Specific Workflows
 - Copilot is the primary hosted workflow for issue-page diagnostics, coding-agent handoff, and GitHub web-based resolution.
 - The `Troubleshooter` and `Issue Coordinator` agent specs under `/.github/agents/` are kept for Copilot because they support structured orchestration and issue workflow handoff.
