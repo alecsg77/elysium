@@ -45,6 +45,8 @@ ct lint --config ct.yaml --target-branch main
 helm lint charts/onechart
 
 # Run the existing helm-unittest suite for a chart (requires the helm-unittest plugin)
+# --verify=false: the plugin source doesn't support provenance verification, which newer
+# Helm CLIs require by default
 helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.2 --verify=false
 helm unittest charts/cron-job
 helm unittest charts/onechart

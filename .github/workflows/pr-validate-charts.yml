@@ -39,7 +39,7 @@ jobs:
         run: ct lint --config ct.yaml --target-branch main
 
       - name: Install helm-unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.2
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.2 --verify=false
 
       - name: Run helm unittest (cron-job)
         run: helm unittest charts/cron-job
