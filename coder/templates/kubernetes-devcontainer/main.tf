@@ -165,7 +165,7 @@ data "coder_parameter" "use_service_account" {
 data "kubernetes_service_account_v1" "me" {
   count = data.coder_parameter.use_service_account.value ? 1 : 0
   metadata {
-    name = data.coder_workspace_owner.me.name
+    name      = data.coder_workspace_owner.me.name
     namespace = var.namespace
   }
 }
@@ -291,7 +291,7 @@ resource "kubernetes_deployment_v1" "main" {
       }
       spec {
         service_account_name = data.coder_parameter.use_service_account.value ? data.kubernetes_service_account_v1.me[0].metadata.0.name : null
-        
+
         security_context {}
 
         container {
@@ -388,7 +388,7 @@ resource "coder_agent" "main" {
   # If you need more control, you can write your own script.
   # Note: May not work on AWS Linux Nodes See: https://github.com/coder/clistat/issues/17
   metadata {
-     display_name = "CPU Usage"
+    display_name = "CPU Usage"
     key          = "0_cpu_usage"
     script       = "coder stat cpu"
     interval     = 10
@@ -490,10 +490,10 @@ resource "coder_metadata" "container_info" {
 }
 
 module "git-config" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-config/coder"
-  version  = "~> 1.0"
-  agent_id = coder_agent.main.id
+  count              = data.coder_workspace.me.start_count
+  source             = "registry.coder.com/coder/git-config/coder"
+  version            = "~> 1.0"
+  agent_id           = coder_agent.main.id
   allow_email_change = true
 }
 

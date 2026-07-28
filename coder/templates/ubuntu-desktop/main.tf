@@ -104,8 +104,8 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
 resource "coder_agent" "main" {
-  os             = "linux"
-  arch           = "amd64"
+  os   = "linux"
+  arch = "amd64"
 
   # The following metadata blocks are optional. They are used to display
   # information about your workspace in the dashboard. You can remove them
@@ -270,7 +270,7 @@ resource "kubernetes_deployment" "main" {
           image             = "codercom/enterprise-desktop:ubuntu-20260723"
           image_pull_policy = "IfNotPresent"
           command           = ["sh", "-c", coder_agent.main.init_script]
-          
+
           security_context {
             run_as_user = "1000"
           }

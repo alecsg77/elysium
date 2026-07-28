@@ -110,11 +110,11 @@ resource "coder_agent" "main" {
 }
 
 resource "coder_script" "install-gh-cli" {
-  count              = data.coder_workspace.me.start_count
-  agent_id           = coder_agent.main.id
-  display_name       = "Install GitHub CLI"
-  icon               = "/icon/terminal.svg"
-  script             = templatefile("${path.module}/scripts/install-gh-cli.sh.tftpl", {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  display_name = "Install GitHub CLI"
+  icon         = "/icon/terminal.svg"
+  script = templatefile("${path.module}/scripts/install-gh-cli.sh.tftpl", {
     version = "2.63.2" # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
   })
   run_on_start       = true

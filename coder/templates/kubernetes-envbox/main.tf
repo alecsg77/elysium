@@ -82,8 +82,8 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
 resource "coder_agent" "main" {
-  os                         = "linux"
-  arch                       = "amd64"
+  os                 = "linux"
+  arch               = "amd64"
   connection_timeout = 300
   env = {
     # Propagated to the inner envbox container via CODER_BOOTSTRAP_SCRIPT (init_script).
@@ -150,10 +150,10 @@ resource "kubernetes_deployment_v1" "main" {
     name      = "coder-${lower(data.coder_workspace_owner.me.name)}-${lower(data.coder_workspace.me.name)}"
     namespace = var.namespace
     labels = {
-      "app.kubernetes.io/name"     = "coder-workspace"
-      "app.kubernetes.io/part-of"  = "coder"
-      "com.coder.workspace.id"     = data.coder_workspace.me.id
-      "com.coder.workspace.name"   = data.coder_workspace.me.name
+      "app.kubernetes.io/name"    = "coder-workspace"
+      "app.kubernetes.io/part-of" = "coder"
+      "com.coder.workspace.id"    = data.coder_workspace.me.id
+      "com.coder.workspace.name"  = data.coder_workspace.me.name
     }
   }
 
@@ -176,182 +176,182 @@ resource "kubernetes_deployment_v1" "main" {
       }
       spec {
 
-    container {
-      name = "dev"
-      # We highly recommend pinning this to a specific release of envbox, as the latest tag may change.
-      image             = "ghcr.io/coder/envbox:0.6.7"
-      image_pull_policy = "IfNotPresent"
-      command           = ["/envbox", "docker"]
+        container {
+          name = "dev"
+          # We highly recommend pinning this to a specific release of envbox, as the latest tag may change.
+          image             = "ghcr.io/coder/envbox:0.6.7"
+          image_pull_policy = "IfNotPresent"
+          command           = ["/envbox", "docker"]
 
-      security_context {
-        privileged = true
-      }
+          security_context {
+            privileged = true
+          }
 
-      resources {
-        requests = {
-          "cpu" : "${var.min_cpus}"
-          "memory" : "${var.min_memory}G"
-        }
+          resources {
+            requests = {
+              "cpu" : "${var.min_cpus}"
+              "memory" : "${var.min_memory}G"
+            }
 
-        limits = {
-          "cpu" : "${var.max_cpus}"
-          "memory" : "${var.max_memory}G"
-        }
-      }
+            limits = {
+              "cpu" : "${var.max_cpus}"
+              "memory" : "${var.max_memory}G"
+            }
+          }
 
-      env {
-        name  = "CODER_AGENT_TOKEN"
-        value = coder_agent.main.token
-      }
+          env {
+            name  = "CODER_AGENT_TOKEN"
+            value = coder_agent.main.token
+          }
 
-      env {
-        name  = "CODER_AGENT_URL"
-        value = data.coder_workspace.me.access_url
-      }
+          env {
+            name  = "CODER_AGENT_URL"
+            value = data.coder_workspace.me.access_url
+          }
 
-      env {
-        name  = "CODER_INNER_IMAGE"
-        value = "codercom/enterprise-node:ubuntu-20260723"
-      }
+          env {
+            name  = "CODER_INNER_IMAGE"
+            value = "codercom/enterprise-node:ubuntu-20260723"
+          }
 
-      env {
-        name  = "CODER_INNER_USERNAME"
-        value = "coder"
-      }
+          env {
+            name  = "CODER_INNER_USERNAME"
+            value = "coder"
+          }
 
-      env {
-        name  = "CODER_BOOTSTRAP_SCRIPT"
-        value = coder_agent.main.init_script
-      }
+          env {
+            name  = "CODER_BOOTSTRAP_SCRIPT"
+            value = coder_agent.main.init_script
+          }
 
-      env {
-        name  = "CODER_MOUNTS"
-        value = "/home/coder:/home/coder,/lib/modules:/lib/modules,/usr/src:/usr/src"
-      }
+          env {
+            name  = "CODER_MOUNTS"
+            value = "/home/coder:/home/coder,/lib/modules:/lib/modules,/usr/src:/usr/src"
+          }
 
-      env {
-        name  = "CODER_ADD_FUSE"
-        value = var.create_fuse
-      }
+          env {
+            name  = "CODER_ADD_FUSE"
+            value = var.create_fuse
+          }
 
-      env {
-        name  = "CODER_INNER_HOSTNAME"
-        value = data.coder_workspace.me.name
-      }
+          env {
+            name  = "CODER_INNER_HOSTNAME"
+            value = data.coder_workspace.me.name
+          }
 
-      env {
-        name  = "CODER_ADD_TUN"
-        value = var.create_tun
-      }
+          env {
+            name  = "CODER_ADD_TUN"
+            value = var.create_tun
+          }
 
-      env {
-        name = "CODER_CPUS"
-        value_from {
-          resource_field_ref {
-            resource = "limits.cpu"
+          env {
+            name = "CODER_CPUS"
+            value_from {
+              resource_field_ref {
+                resource = "limits.cpu"
+              }
+            }
+          }
+
+          env {
+            name = "CODER_MEMORY"
+            value_from {
+              resource_field_ref {
+                resource = "limits.memory"
+              }
+            }
+          }
+
+          env {
+            name  = "CODER_AGENT_DEVCONTAINERS_DISCOVERY_AUTOSTART_ENABLE"
+            value = "true"
+          }
+
+          volume_mount {
+            mount_path = "/home/coder"
+            name       = "home"
+            read_only  = false
+            sub_path   = "home"
+          }
+
+          volume_mount {
+            mount_path = "/var/lib/coder/docker"
+            name       = "home"
+            sub_path   = "cache/docker"
+          }
+
+          volume_mount {
+            mount_path = "/var/lib/coder/containers"
+            name       = "home"
+            sub_path   = "cache/containers"
+          }
+
+          volume_mount {
+            mount_path = "/var/lib/sysbox"
+            name       = "sysbox"
+          }
+
+          volume_mount {
+            mount_path = "/var/lib/containers"
+            name       = "home"
+            sub_path   = "envbox/containers"
+          }
+
+          volume_mount {
+            mount_path = "/var/lib/docker"
+            name       = "home"
+            sub_path   = "envbox/docker"
+          }
+
+          volume_mount {
+            mount_path = "/usr/src"
+            name       = "usr-src"
+          }
+
+          volume_mount {
+            mount_path = "/lib/modules"
+            name       = "lib-modules"
           }
         }
-      }
 
-      env {
-        name = "CODER_MEMORY"
-        value_from {
-          resource_field_ref {
-            resource = "limits.memory"
+        volume {
+          name = "home"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim_v1.home.metadata.0.name
+            read_only  = false
           }
         }
-      }
 
-      env {
-        name = "CODER_AGENT_DEVCONTAINERS_DISCOVERY_AUTOSTART_ENABLE"
-        value = "true"
-      }
+        volume {
+          name = "sysbox"
+          empty_dir {}
+        }
 
-      volume_mount {
-        mount_path = "/home/coder"
-        name       = "home"
-        read_only  = false
-        sub_path   = "home"
-      }
+        volume {
+          name = "usr-src"
+          host_path {
+            path = "/usr/src"
+            type = ""
+          }
+        }
 
-      volume_mount {
-        mount_path = "/var/lib/coder/docker"
-        name       = "home"
-        sub_path   = "cache/docker"
-      }
-
-      volume_mount {
-        mount_path = "/var/lib/coder/containers"
-        name       = "home"
-        sub_path   = "cache/containers"
-      }
-
-      volume_mount {
-        mount_path = "/var/lib/sysbox"
-        name       = "sysbox"
-      }
-
-      volume_mount {
-        mount_path = "/var/lib/containers"
-        name       = "home"
-        sub_path   = "envbox/containers"
-      }
-
-      volume_mount {
-        mount_path = "/var/lib/docker"
-        name       = "home"
-        sub_path   = "envbox/docker"
-      }
-
-      volume_mount {
-        mount_path = "/usr/src"
-        name       = "usr-src"
-      }
-
-      volume_mount {
-        mount_path = "/lib/modules"
-        name       = "lib-modules"
-      }
-    }
-
-    volume {
-      name = "home"
-      persistent_volume_claim {
-        claim_name = kubernetes_persistent_volume_claim_v1.home.metadata.0.name
-        read_only  = false
-      }
-    }
-
-    volume {
-      name = "sysbox"
-      empty_dir {}
-    }
-
-    volume {
-      name = "usr-src"
-      host_path {
-        path = "/usr/src"
-        type = ""
-      }
-    }
-
-    volume {
-      name = "lib-modules"
-      host_path {
-        path = "/lib/modules"
-        type = ""
-      }
-    }
-      }    # close template spec
-    }      # close template
-  }        # close deployment spec
+        volume {
+          name = "lib-modules"
+          host_path {
+            path = "/lib/modules"
+            type = ""
+          }
+        }
+      } # close template spec
+    }   # close template
+  }     # close deployment spec
 }
 
 data "coder_parameter" "git_repo" {
   name         = "git_repo"
   display_name = "Git repository"
   default      = ""
-  description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
+  description  = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
   icon         = "/icon/git.svg"
   type         = "string"
   validation {
@@ -361,7 +361,7 @@ data "coder_parameter" "git_repo" {
 }
 
 data "coder_external_auth" "github" {
-  id = "github"
+  id       = "github"
   optional = true
 }
 
@@ -374,10 +374,10 @@ module "github-upload-public-key" {
 }
 
 module "git-config" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.34"
-  agent_id = coder_agent.main.id
+  count              = data.coder_workspace.me.start_count
+  source             = "registry.coder.com/coder/git-config/coder"
+  version            = "1.0.34"
+  agent_id           = coder_agent.main.id
   allow_email_change = true
 }
 
