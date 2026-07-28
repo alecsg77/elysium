@@ -1,0 +1,236 @@
+# Validates Flux/Kustomize manifests on every PR that touches the core GitOps
+# directories (clusters/, infrastructure/, apps/, monitoring/).
+#
+# Known limitation: this workflow does NOT render the actual Helm charts referenced
+# by HelmRelease objects (e.g. apps/kyrion/*/*-values.yaml). `flux build kustomization`
+# does not template HelmRelease objects -- it only emits the literal CR as-is -- and
+# `flux-local`, the tool that used to cover this gap offline, has been
+# deprecated/archived by its maintainer. This is a known, intentionally-deferred
+# limitation, tracked separately in issue #60 (evaluating flate/konflate or
+# alternatives). See docs/ci/pr-validation.md for details.
+name: PR Validate Flux
+
+on:
+  pull_request:
+    paths:
+      - "clusters/**"
+      - "infrastructure/**"
+      - "apps/**"
+      - "monitoring/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned tool versions for the raw binary downloads below (not GitHub Actions, so
+  # they are version-pinned here rather than SHA-pinned like the third-party
+  # `uses:` steps further down).
+  KUSTOMIZE_VERSION: v5.8.1
+  KUBECONFORM_VERSION: v0.8.0
+
+jobs:
+  kustomize-build:
+    name: kustomize build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every namespace overlay under apps/kyrion/<ns>/, plus the infrastructure/
+        # and monitoring/ paths referenced by the top-level Flux Kustomizations in
+        # clusters/kyrion/infrastructure.yaml and clusters/kyrion/monitoring.yaml.
+        target:
+          - apps/kyrion/ai
+          - apps/kyrion/airflow
+          - apps/kyrion/arkham
+          - apps/kyrion/coder
+          - apps/kyrion/default
+          - apps/kyrion/fission
+          - apps/kyrion/n8n
+          - apps/kyrion/raiplaysoundrss
+          - apps/kyrion/registry
+          - apps/kyrion/romm
+          - infrastructure/controllers
+          - infrastructure/configs
+          - monitoring/controllers
+          - monitoring/configs
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Install kustomize
+        run: |
+          curl -fsSL -o kustomize.tar.gz \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          tar -xzf kustomize.tar.gz
+          sudo install -m 0755 kustomize /usr/local/bin/kustomize
+          kustomize version
+
+      - name: Render manifests
+        id: render
+        run: |
+          set -euo pipefail
+          target="${{ matrix.target }}"
+          slug="$(echo "$target" | tr '/' '-')"
+          mkdir -p rendered
+
+          # A few paths (e.g. monitoring/controllers) are plain directories of
+          # sub-apps without their own aggregating kustomization.yaml. Flux's
+          # kustomize-controller auto-generates one for such paths at apply time
+          # (see https://fluxcd.io/flux/components/kustomize/kustomizations/#kustomization-generation),
+          # so mirror that here instead of failing the build.
+          if [ ! -f "$target/kustomization.yaml" ] && [ ! -f "$target/kustomization.yml" ] && [ ! -f "$target/Kustomization" ]; then
+            echo "No kustomization.yaml found at $target; auto-generating one (kustomize create --autodetect --recursive)"
+            (cd "$target" && kustomize create --autodetect --recursive)
+          fi
+
+          out="rendered/${slug}.yaml"
+          kustomize build "$target" > "$out"
+          echo "path=$out" >> "$GITHUB_OUTPUT"
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+
+      - name: Upload rendered manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: rendered-kustomize-${{ steps.render.outputs.slug }}
+          path: ${{ steps.render.outputs.path }}
+          retention-days: 1
+
+  flux-build:
+    name: flux build kustomization (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # One entry per top-level Kustomization defined in clusters/kyrion/*.yaml.
+        # `path` is each Kustomization's own `spec.path` (verified directly against
+        # those files) -- flux resolves spec.path relative to --path, so --path has
+        # to already be the manifests location for the render to reflect the actual
+        # overlay contents.
+        include:
+          - name: apps
+            file: apps.yaml
+            path: ./apps/kyrion
+          - name: infra-controllers
+            file: infrastructure.yaml
+            path: ./infrastructure/controllers
+          - name: infra-configs
+            file: infrastructure.yaml
+            path: ./infrastructure/configs
+          - name: monitoring-controllers
+            file: monitoring.yaml
+            path: ./monitoring/controllers
+          - name: monitoring-configs
+            file: monitoring.yaml
+            path: ./monitoring/configs
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@16602fa989daa99762f1c6d1186ae2ad1c735815 # v2.9.3
+
+      - name: Flux dry-run build
+        id: render
+        run: |
+          set -euo pipefail
+          mkdir -p rendered
+          out="rendered/flux-${{ matrix.name }}.yaml"
+          flux build kustomization ${{ matrix.name }} \
+            --path ${{ matrix.path }} \
+            --kustomization-file clusters/kyrion/${{ matrix.file }} \
+            --dry-run > "$out"
+          echo "path=$out" >> "$GITHUB_OUTPUT"
+
+      - name: Upload rendered manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: rendered-flux-${{ matrix.name }}
+          path: ${{ steps.render.outputs.path }}
+          retention-days: 1
+
+  validate-manifests:
+    name: Validate rendered manifests
+    runs-on: ubuntu-latest
+    needs:
+      - kustomize-build
+      - flux-build
+    steps:
+      - name: Download rendered manifests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: rendered-*
+          path: rendered
+          merge-multiple: true
+
+      - name: Install kubeconform
+        run: |
+          curl -fsSL -o kubeconform.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          tar -xzf kubeconform.tar.gz kubeconform
+          ./kubeconform -v
+
+      # kubeconform: schema coverage for this repo's CRD groups
+      # (kustomize.toolkit.fluxcd.io, helm.toolkit.fluxcd.io, cert-manager.io,
+      # monitoring.coreos.com) via the datreeio/CRDs-catalog schema-location has not
+      # been fully verified yet -- it's already known to reject some valid
+      # SealedSecret documents under `-strict` (see docs/ci/pr-validation.md) -- so
+      # this step is intentionally non-blocking (continue-on-error) until coverage is
+      # confirmed and the false positives are addressed.
+      - name: Validate schemas with kubeconform (non-blocking)
+        continue-on-error: true
+        run: |
+          ./kubeconform -strict -ignore-missing-schemas -summary \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            rendered/
+
+      - name: Scan for misconfigurations with Checkov
+        uses: bridgecrewio/checkov-action@7b972723c44fb3d256283fac96fae5d7c1894bb7 # v12.3114.0
+        with:
+          directory: rendered
+          framework: kubernetes
+          quiet: true
+
+  no-plaintext-secrets:
+    name: No plaintext Secret guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fail on bare kind:Secret manifests
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          changed_files="$(git diff --name-only --diff-filter=ACMR "$base" "$head" -- apps clusters | grep -E '\.ya?ml$' || true)"
+
+          if [ -z "$changed_files" ]; then
+            echo "No changed YAML files under apps/ or clusters/."
+            exit 0
+          fi
+
+          violations=0
+          while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            # Only flag a bare `kind: Secret` -- SealedSecret documents
+            # (`kind: SealedSecret`) are the required, safe alternative and must not
+            # match here. See .github/instructions/security.instructions.md.
+            if grep -nE "^[[:space:]]*kind:[[:space:]]*[\"']?Secret[\"']?[[:space:]]*$" "$f"; then
+              echo "::error file=$f::Bare 'kind: Secret' found. Real Secrets must never be committed -- use Bitnami Sealed Secrets (kind: SealedSecret) instead. See .github/instructions/security.instructions.md."
+              violations=$((violations + 1))
+            fi
+          done <<< "$changed_files"
+
+          if [ "$violations" -gt 0 ]; then
+            echo "Found $violations file(s) with a plaintext-shaped Secret manifest."
+            exit 1
+          fi
+
+          echo "No plaintext Secret manifests found in changed files."

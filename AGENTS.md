@@ -85,6 +85,7 @@ This repo has no application build/test suite — "validation" means rendering m
 - Scan PR diffs for leaked secrets: `.github/workflows/pr-secret-scan.yml`
 - Validate Helm charts (`ct lint` + `helm unittest`) on `charts/**` changes: `.github/workflows/pr-validate-charts.yml`
 - Validate changed Coder/Terraform templates on PRs: `.github/workflows/pr-validate-coder-templates.yml`
+- Validate Flux/Kustomize manifests on PRs touching `clusters/**`, `infrastructure/**`, `apps/**`, or `monitoring/**`: `.github/workflows/pr-validate-flux.yml`
 - See `docs/ci/pr-validation.md` for the full two-level validation model.
 
 ## Copilot-Specific Workflows
