@@ -1,9 +1,16 @@
 name: PR Validate Charts
 
+# This workflow uses a top-level `paths:` filter, so it only runs on PRs that touch the
+# listed paths. The workflow file itself is included below so that changes to its own
+# logic still trigger it. NOTE: this filter is trigger-level only — it does NOT make it
+# safe to mark this workflow as a required status check in branch protection yet. A PR
+# that doesn't touch these paths would leave the check permanently "Pending" and block
+# merge. See #67 for the fan-in "gate" job refactor needed before this can be required.
 on:
   pull_request:
     paths:
       - charts/**
+      - .github/workflows/pr-validate-charts.yml
 
 permissions:
   contents: read

@@ -18,7 +18,12 @@ See `AGENTS.md` for the full command reference used by these workflows.
 ### `pr-validate-charts.yml` — Helm chart lint and unit tests
 
 **Workflow:** `.github/workflows/pr-validate-charts.yml`
-**Trigger:** `pull_request` on changes under `charts/**`.
+**Trigger:** `pull_request` on changes under `charts/**` (the workflow file's own path is
+also included in the filter so changes to its logic are validated too). Note that this
+`paths:` filter is trigger-level only — it does not make this workflow safe to mark as a
+required status check in branch protection, since a PR that doesn't touch these paths
+would leave the check permanently "Pending" and block merge; see #67 for the fan-in
+"gate" job refactor needed before this workflow can be required.
 
 Validates the vendored Helm charts (`charts/cron-job`, `charts/onechart`):
 
