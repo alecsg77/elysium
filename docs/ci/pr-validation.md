@@ -54,8 +54,15 @@ helm unittest charts/onechart
 
 ### `pr-validate-coder-templates.yml`
 
-Triggers on `pull_request` when files under `coder/templates/**` change. Each `coder/templates/<name>/`
+Triggers on `pull_request` when files under `coder/templates/**` or the workflow file itself
+(`.github/workflows/pr-validate-coder-templates.yml`) change. Each `coder/templates/<name>/`
 directory is an independent Terraform root module (no remote backend, no shared provider config).
+
+> **Note:** the `paths:` filter above only controls when the workflow *triggers* — it does not make
+> this workflow safe to mark as a required status check in branch protection. A PR that touches
+> neither filtered path leaves the check permanently "Pending", which blocks merge. See
+> [#67](https://github.com/alecsg77/elysium/issues/67) for the proper fix (a fan-in "gate" job
+> pattern).
 
 The workflow first computes which template directories were touched by the PR (diffing the PR's
 base and head refs, same approach as the `init` job in `publish-coder-templates.yaml` but adapted to
