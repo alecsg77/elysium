@@ -5,5 +5,8 @@
             "${workspaceFolder}/etc/kubeconfig"
         ]
     },
-    "chat.mcp.access": "all"
+    "chat.mcp.access": "all",
+    "chat.tools.terminal.autoApprove": {
+        "terraform": true
+    }
 }
