@@ -10,6 +10,13 @@
 # alternatives). See docs/ci/pr-validation.md for details.
 name: PR Validate Flux
 
+# This workflow triggers on a top-level `paths:` filter (below), and this workflow
+# file itself is included in that filter so changes to the workflow's own logic
+# still trigger it. However, the filter is trigger-level only: it does NOT make it
+# safe to mark this workflow as a GitHub branch-protection required status check
+# yet. A PR that doesn't touch any of the filtered paths would leave the check
+# permanently "Pending" and block merge. See issue #67, which tracks the fan-in
+# "gate" job refactor needed before this workflow can safely be required.
 on:
   pull_request:
     paths:
@@ -17,6 +24,7 @@ on:
       - "infrastructure/**"
       - "apps/**"
       - "monitoring/**"
+      - ".github/workflows/pr-validate-flux.yml"
 
 permissions:
   contents: read
