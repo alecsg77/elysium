@@ -7,7 +7,7 @@ metadata:
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: nfd 
+  name: nfd
   namespace: node-feature-discovery
 spec:
   interval: 24h

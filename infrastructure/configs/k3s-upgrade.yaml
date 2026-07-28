@@ -1,4 +1,5 @@
-# These plans are adapted from work by Dax McDonald (https://github.com/daxmc99) and Hussein Galal (https://github.com/galal-hussein)
+# These plans are adapted from work by Dax McDonald (https://github.com/daxmc99)
+# and Hussein Galal (https://github.com/galal-hussein)
 # in support of Rancher v2 managed k3s upgrades. See Also: https://rancher.com/docs/k3s/latest/en/upgrades/automated/
 ---
 apiVersion: upgrade.cattle.io/v1
