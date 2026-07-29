@@ -100,3 +100,37 @@ terraform init -backend=false
 terraform validate
 checkov -d . --framework terraform --soft-fail
 ```
+
+### `pr-validate-flux.yml` — Flux and rendered-manifest validation
+
+**Workflow:** `.github/workflows/pr-validate-flux.yml`
+**Trigger:** `pull_request` on changes under `clusters/**`, `infrastructure/**`, `apps/**`, or
+`monitoring/**`, as well as changes to this workflow file. Like the other path-filtered workflows,
+it must **not** be a required status check until #67 introduces an always-running fan-in gate.
+
+The workflow validates the core GitOps directories with four jobs:
+
+1. **`kustomize-build`** — runs `kustomize build` for each `apps/kyrion/<namespace>` overlay and
+   the infrastructure and monitoring targets. `monitoring/controllers` is rendered through a
+   temporary recursive Kustomization because it has no aggregating `kustomization.yaml`.
+2. **`flux-build`** — runs `flux build kustomization` for `apps`, `infra-controllers`,
+   `infra-configs`, `monitoring-controllers`, and `monitoring-configs`, using each resource's own
+   `spec.path` and Kustomization manifest.
+3. **`validate-manifests`** — checks the rendered artifacts with kubeconform and Checkov.
+   Kubeconform remains non-blocking because strict CRD schemas can reject valid SealedSecrets;
+   Checkov remains non-blocking while the real pre-existing findings tracked in #66 are remediated.
+4. **`no-plaintext-secrets`** — rejects a literal `kind: Secret` added to changed YAML under
+   `apps/**` or `clusters/**`; `SealedSecret` resources remain permitted.
+
+**Local equivalents:**
+
+```bash
+kustomize build apps/kyrion/<namespace>/
+flux build kustomization apps --path ./apps/kyrion --kustomization-file clusters/kyrion/apps.yaml --dry-run
+kubeconform -strict -ignore-missing-schemas <rendered-file-or-dir>
+checkov -d <rendered-dir> --framework kubernetes --soft-fail
+```
+
+**Known limitation:** `flux build kustomization` emits `HelmRelease` custom resources but does not
+render their referenced Helm charts. Issue #60 tracks evaluating `flate`, `konflate`, or another
+maintained renderer for this gap.
