@@ -105,7 +105,7 @@ data "coder_parameter" "git_repo" {
   name         = "git_repo"
   display_name = "Git repository"
   default      = ""
-  description = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
+  description  = "The URL of the git repository to clone into the workspace. If left empty, the workspace will be created with a default home directory."
   icon         = "/icon/git.svg"
   type         = "string"
   validation {
@@ -115,7 +115,7 @@ data "coder_parameter" "git_repo" {
 }
 
 data "coder_external_auth" "github" {
-  id = "github"
+  id       = "github"
   optional = true
 }
 
@@ -129,8 +129,8 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
 resource "coder_agent" "main" {
-  os             = "linux"
-  arch           = "amd64"
+  os   = "linux"
+  arch = "amd64"
   env = {
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
   }
@@ -203,10 +203,10 @@ resource "coder_agent" "main" {
 }
 
 module "git-config" {
-  count    = data.coder_workspace.me.start_count
-  source   = "registry.coder.com/coder/git-config/coder"
-  version  = "1.0.34"
-  agent_id = coder_agent.main.id
+  count              = data.coder_workspace.me.start_count
+  source             = "registry.coder.com/coder/git-config/coder"
+  version            = "1.0.34"
+  agent_id           = coder_agent.main.id
   allow_email_change = true
 }
 
@@ -379,8 +379,8 @@ resource "kubernetes_deployment" "main" {
         dynamic "container" {
           for_each = var.enable_dind == true ? [1] : []
           content {
-            name  = "dind"
-            image = "docker:29.6.2-dind"
+            name              = "dind"
+            image             = "docker:29.6.2-dind"
             image_pull_policy = "IfNotPresent"
             args = [
               "dockerd",
@@ -392,10 +392,10 @@ resource "kubernetes_deployment" "main" {
               value = "1000"
             }
             security_context {
-              privileged = true
+              privileged      = true
               run_as_non_root = false
-              run_as_user = 0
-              run_as_group = 0
+              run_as_user     = 0
+              run_as_group    = 0
             }
             startup_probe {
               exec {
@@ -432,7 +432,7 @@ resource "kubernetes_deployment" "main" {
             empty_dir {}
           }
         }
-        
+
         affinity {
           // This affinity attempts to spread out all workspace pods evenly across
           // nodes.

@@ -51,3 +51,52 @@ helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.
 helm unittest charts/cron-job
 helm unittest charts/onechart
 ```
+
+### `pr-validate-coder-templates.yml`
+
+Triggers on `pull_request` when files under `coder/templates/**` or the workflow file itself
+(`.github/workflows/pr-validate-coder-templates.yml`) change. Each `coder/templates/<name>/`
+directory is an independent Terraform root module (no remote backend, no shared provider config).
+
+> **Note:** the `paths:` filter above only controls when the workflow *triggers* — it does not make
+> this workflow safe to mark as a required status check in branch protection. A PR that touches
+> neither filtered path leaves the check permanently "Pending", which blocks merge. See
+> [#67](https://github.com/alecsg77/elysium/issues/67) for the proper fix (a fan-in "gate" job
+> pattern).
+
+The workflow first computes which template directories were touched by the PR (diffing the PR's
+base and head refs, same approach as the `init` job in `publish-coder-templates.yaml` but adapted to
+`pull_request`), then runs the checks below in a matrix, once per changed template. Unlike
+`publish-coder-templates.yaml`, this workflow never runs `coder templates push` and never uses the
+`CODER_SESSION_TOKEN` secret — it is validation-only and safe to run on PRs from forks.
+
+For each changed template:
+- `terraform fmt -check -recursive` — fails the job if the template isn't formatted.
+- `terraform init -backend=false` — initializes providers without requiring backend credentials.
+- `terraform validate` — checks the configuration is syntactically valid and internally consistent.
+- [Checkov](https://www.checkov.io/) (`framework: terraform`) — scans the template directory for
+  security/best-practice misconfigurations. **Non-blocking for now** (`soft_fail: true`): Checkov
+  reports real, pre-existing Kubernetes pod security-posture findings (missing probes, no
+  read-only root filesystem, `NET_RAW` not dropped, images not pinned by digest, etc.) on all 6
+  templates. These are genuine gaps in currently-running Coder workspace templates, not false
+  positives, but fixing them requires careful per-template testing to avoid breaking active dev
+  workspaces, which is out of scope for this validation-only workflow. Tracked in
+  [#65](https://github.com/alecsg77/elysium/issues/65); once the backlog is cleared, `soft_fail`
+  should be removed so Checkov blocks regressions again.
+- A **non-blocking** check of the `README.md` frontmatter (`displayname`/`description`/`icon`, read
+  via the same `mheap/markdown-meta-action` used in `publish-coder-templates.yaml`) that emits a
+  `::warning::` annotation if a field looks missing. It never fails the job — the publish workflow
+  already consumes these fields silently, so this is just an early heads-up.
+
+`tflint` is intentionally not included: `terraform validate` and Checkov already cover
+configuration correctness and security posture for these templates, and adding `tflint` would
+require introducing and maintaining a separate ruleset with no rules currently defined for this
+repo. It can be added later as an additional step if a concrete need arises.
+
+Local equivalent (run from a changed `coder/templates/<name>/` directory):
+```bash
+terraform fmt -check -recursive
+terraform init -backend=false
+terraform validate
+checkov -d . --framework terraform --soft-fail
+```

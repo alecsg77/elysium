@@ -1,2 +1,2 @@
 use_kubeconfig = "false"
-namespace = "coder"
+namespace      = "coder"
