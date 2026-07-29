@@ -15,13 +15,13 @@ spec:
     mode: enabled
     ignore:
       # Ignore "validated" annotation which is not inserted during install
-      - paths: [ "/metadata/annotations/prometheus-operator-validated" ]
+      - paths: ["/metadata/annotations/prometheus-operator-validated"]
         target:
           kind: PrometheusRule
   valuesFrom:
-  - kind: ConfigMap
-    name: flux-kube-state-metrics-config
-    valuesKey: kube-state-metrics-config.yaml
+    - kind: ConfigMap
+      name: flux-kube-state-metrics-config
+      valuesKey: kube-state-metrics-config.yaml
   # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
   values:
     alertmanager:
@@ -34,7 +34,7 @@ spec:
           - /
         tls:
           - hosts:
-            -  alertmanager
+              - alertmanager
       alertmanagerSpec:
         externalUrl: https://alertmanager.${ts_net}
         forceEnableClusterMode: true
@@ -98,7 +98,7 @@ spec:
           - /
         tls:
           - hosts:
-            -  prometheus
+              - prometheus
     grafana:
       defaultDashboardsTimezone: browser
       ingress:
