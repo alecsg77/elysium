@@ -4,10 +4,33 @@
 	"name": "GitOps",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Dockerfile",
+		// Build on the host network namespace instead of the default Docker
+		// bridge. The bridge's default MTU (1500) is larger than this host's
+		// actual MTU (1450, on eth0 in Coder/Kubernetes overlay networks),
+		// which silently drops larger TLS packets and makes downloads inside
+		// feature install scripts (e.g. Helm) hang for ~2 minutes before
+		// failing with "Recv failure: Connection reset by peer". --network=host
+		// makes build-time RUN steps use the host's interface/MTU directly.
+		"options": ["--network=host"]
 	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
+	//
+	// Tool installation policy (apply consistently when adding new tools):
+	//   1. Prefer an official ghcr.io/devcontainers/features/* feature if one exists.
+	//   2. Otherwise prefer a well-maintained community feature (ghcr.io namespace)
+	//      if a suitable one exists (e.g. rio/kustomize, gickis/kubeseal+kubeconform,
+	//      goldsam/flux2, tailscale/codespace, devcontainers-extra/renovate-cli).
+	//   3. Only when no feature exists at all for a niche/bespoke tool, add a custom
+	//      local feature under ./features/<name>/. All local features follow the
+	//      same pattern: download the exact GitHub release asset, verify its SHA256
+	//      checksum against the release's published checksums file before
+	//      installing, and expose "version"/"architecture" options (see
+	//      features/{coder-cli,fission-cli,flux-operator-mcp,kompose}/install.sh).
+	//   4. Never install tools via raw Dockerfile RUN curl|wget commands — the
+	//      Dockerfile stays a single FROM line (see its comment for why it still
+	//      exists at all).
 	"features": {
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
 			"minikube": "none"
@@ -16,14 +39,26 @@
 		"ghcr.io/gickis/devcontainer-features/kubeseal": {},
 		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
 		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
-		"ghcr.io/devcontainers/features/azure-cli": {},
 		"./features/fission-cli": {},
 		"ghcr.io/devcontainers/features/terraform": {},
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale": {},
 		"ghcr.io/devcontainers/features/node:2": {},
 		"./features/flux-operator-mcp": {},
-		"ghcr.io/devcontainers/features/copilot-cli:1": {}
+		"./features/kompose": {},
+		// Renovate CLI: no local-feature pattern applies here (Renovate ships as
+		// an npm package, not a checksummed GitHub-release binary), so this uses
+		// the official community feature instead (tier 2 of the policy above).
+		// It declares installsAfter node, so install order relative to
+		// features/node:2 is handled automatically. Enables local config
+		// validation (`renovate-config-validator`) and local dry-runs
+		// (`renovate --platform=local ...`) without relying on npx.
+		"ghcr.io/devcontainers-extra/features/renovate-cli:2": {}
+		// Removed ghcr.io/devcontainers/features/azure-cli and
+		// ghcr.io/devcontainers/features/copilot-cli:1: no `az` or
+		// `gh copilot`/copilot-cli usage found anywhere in this repo
+		// (scripts, CI, docs). Node.js remains via features/node:2, which
+		// also provides `npx` for on-demand tools.
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -45,8 +80,15 @@
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
-	"containerUser":"vscode",
-	
+	"containerUser": "vscode",
+
+	// Docker bind mounts require the host source path to already exist (unlike
+	// named volumes, Docker will not create it). Ensure ~/.ssh and ~/.kube
+	// exist on the host before the "mounts" below run, otherwise `devcontainer
+	// up` fails with "bind source path does not exist" on machines that have
+	// never run kubectl/ssh locally.
+	"initializeCommand": "mkdir -p \"${localEnv:HOME}${localEnv:USERPROFILE}/.ssh\" \"${localEnv:HOME}${localEnv:USERPROFILE}/.kube\"",
+
 	"mounts": [
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
@@ -56,9 +98,18 @@
 		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem"
 	},
 	"postCreateCommand": {
+		"kubectl": "sudo sh -c 'kubectl completion bash > /etc/bash_completion.d/kubectl'",
+		"helm": "sudo sh -c 'helm completion bash > /etc/bash_completion.d/helm'",
 		"kustomize": "sudo sh -c 'kustomize completion bash > /etc/bash_completion.d/kustomize'",
 		"flux": "sudo sh -c 'flux completion bash > /etc/bash_completion.d/flux'",
 		"kompose": "sudo sh -c 'kompose completion bash > /etc/bash_completion.d/kompose'",
+		// Not fission: unlike the other CLIs here, `fission completion bash`
+		// eagerly connects to a Kubernetes cluster (in-cluster config or
+		// KUBECONFIG) before it will print the completion script, and fails
+		// immediately if none is reachable. postCreateCommand runs at
+		// container creation with no guaranteed cluster access yet, so this
+		// would write a corrupt file (the error text, not a valid script)
+		// into /etc/bash_completion.d instead of failing cleanly.
 		"terraform": "terraform -install-autocomplete",
 		"coder": "sudo sh -c 'coder completion -s bash -p > /etc/bash_completion.d/coder'",
 		"tailscale": "sudo sh -c 'tailscale completion bash > /etc/bash_completion.d/tailscale'"

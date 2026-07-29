@@ -40,14 +40,19 @@ main () {
         *) echo "The current architecture (${ARCH}) is not supported."; exit 1 ;;
     esac
 
-    # Get the latest version from GitHub if needed
+    # Get the latest release metadata from GitHub if needed. Uses
+    # /releases/latest (a single release object, never a draft/prerelease)
+    # rather than /releases (a list), so the checksum and binary URLs always
+    # come from exactly the same release. URL patterns are anchored on the
+    # trailing '"' to avoid matching a longer filename that merely contains
+    # the same substring (e.g. a future signature/attestation asset).
     if [ "${FLUXOPERATORMCP_VERSION}" != "latest" ] ; then
         CHECKSUMS_URL="https://github.com/controlplaneio-fluxcd/flux-operator/releases/download/v${FLUXOPERATORMCP_VERSION#[vV]}/checksums.txt"
         ASSET_URL="https://github.com/controlplaneio-fluxcd/flux-operator/releases/download/v${FLUXOPERATORMCP_VERSION#[vV]}/flux-operator-mcp_v${FLUXOPERATORMCP_VERSION#[vV]}_linux_${ARCH}.tar.gz"
     else
-        local RELEASES_RESPONSE="$(wget -qO- --tries=3 https://api.github.com/repos/controlplaneio-fluxcd/flux-operator/releases)"
-        CHECKSUMS_URL="$(echo "${RELEASES_RESPONSE}" | grep "browser_download_url.*checksums.txt" | head -n 1 | cut -d '"' -f 4)"
-        ASSET_URL="$(echo "${RELEASES_RESPONSE}" | grep "browser_download_url.*flux-operator-mcp.*linux_${ARCH}" | head -n 1 | cut -d '"' -f 4)"
+        local RELEASES_RESPONSE="$(wget -qO- --tries=3 https://api.github.com/repos/controlplaneio-fluxcd/flux-operator/releases/latest)"
+        CHECKSUMS_URL="$(echo "${RELEASES_RESPONSE}" | grep 'browser_download_url.*checksums\.txt"' | head -n 1 | cut -d '"' -f 4)"
+        ASSET_URL="$(echo "${RELEASES_RESPONSE}" | grep "browser_download_url.*flux-operator-mcp.*linux_${ARCH}\.tar\.gz\"" | head -n 1 | cut -d '"' -f 4)"
     fi
 
     echo "Installing flux-operator-mcp ${FLUXOPERATORMCP_VERSION} for ${ARCH} ..."

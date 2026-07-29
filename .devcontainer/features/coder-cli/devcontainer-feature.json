@@ -2,7 +2,7 @@
   "name": "Coder CLI",
   "id": "coder-cli",
   "version": "1.0.0",
-  "description": "Installs Coder CLI for serverless functions on Kubernetes",
+  "description": "Installs the Coder CLI for creating and managing Coder workspaces",
   "options": {
     "version": {
       "type": "string",

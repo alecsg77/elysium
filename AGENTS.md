@@ -55,6 +55,8 @@ This repo has no application build/test suite — "validation" means rendering m
 - **Render exactly what Flux will apply**: `flux build kustomization apps --path clusters/kyrion`
 - **Render a HelmRelease's chart** (when adding/upgrading one): `helm template <name> <chart> -f values.yaml`
 - **Lint YAML**: `yamllint .` (config in `.yamllint.yaml`; `.md` files and `clusters/*/flux-system/` are excluded)
+- **Validate `renovate.json`**: `renovate-config-validator` (Renovate CLI is preinstalled in the devcontainer via `ghcr.io/devcontainers-extra/features/renovate-cli:2`; outside the devcontainer, run `npx --yes --package renovate -- renovate-config-validator` instead)
+- **Dry-run Renovate locally** (see what updates it would open, without pushing anything): `LOG_LEVEL=debug RENOVATE_PLATFORM=local renovate` from the repo root
 - **Bootstrap Flux on a new cluster** (rarely needed, destructive on a fresh cluster only): `scripts/bootstrap_flux.sh`
 - **Collect a monitoring baseline** (for troubleshooting/regressions): `scripts/collect-monitoring-baseline.sh`
 - There is no `clean`, `format`, or dev server target — YAML/Helm files are edited directly and validated via the render commands above.

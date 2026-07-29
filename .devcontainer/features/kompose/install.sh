@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-readonly FISSION_VERSION="${VERSION:-"latest"}"
+readonly KOMPOSE_VERSION="${VERSION:-"1.34.0"}"
 
 # apt-get configuration
 export DEBIAN_FRONTEND=noninteractive
@@ -44,35 +44,36 @@ main () {
     # /releases/latest (a single release object, never a draft/prerelease)
     # rather than /releases (a list), so the checksum and binary URLs always
     # come from exactly the same release. URL patterns are anchored on the
-    # trailing '"' so e.g. "checksums.txt" cannot also match
-    # "checksums.txt.sig.bundle" from the same release.
-    if [ "${FISSION_VERSION}" != "latest" ] ; then
-        CHECKSUMS_URL="https://github.com/fission/fission/releases/download/v${FISSION_VERSION#[vV]}/checksums.txt"
-        BINARY_URL="https://github.com/fission/fission/releases/download/v${FISSION_VERSION#[vV]}/fission-v${FISSION_VERSION#[vV]}-linux-${ARCH}"
+    # trailing '"' so e.g. "kompose-linux-amd64" cannot also match
+    # "kompose-linux-amd64.tar.gz" from the same release.
+    if [ "${KOMPOSE_VERSION}" != "latest" ]; then
+        local TAG="v${KOMPOSE_VERSION#[vV]}"
+        CHECKSUMS_URL="https://github.com/kubernetes/kompose/releases/download/${TAG}/SHA256_SUM"
+        BINARY_URL="https://github.com/kubernetes/kompose/releases/download/${TAG}/kompose-linux-${ARCH}"
     else
-        local RELEASES_RESPONSE="$(wget -qO- --tries=3 https://api.github.com/repos/fission/fission/releases/latest)"
-        CHECKSUMS_URL="$(echo "${RELEASES_RESPONSE}" | grep 'browser_download_url.*checksums\.txt"' | head -n 1 | cut -d '"' -f 4)"
-        BINARY_URL="$(echo "${RELEASES_RESPONSE}" | grep "browser_download_url.*linux-${ARCH}\"" | head -n 1 | cut -d '"' -f 4)"
+        local RELEASE_RESPONSE="$(wget -qO- --tries=3 https://api.github.com/repos/kubernetes/kompose/releases/latest)"
+        CHECKSUMS_URL="$(echo "${RELEASE_RESPONSE}" | grep 'browser_download_url.*SHA256_SUM"' | head -n 1 | cut -d '"' -f 4)"
+        BINARY_URL="$(echo "${RELEASE_RESPONSE}" | grep "browser_download_url.*kompose-linux-${ARCH}\"" | head -n 1 | cut -d '"' -f 4)"
     fi
 
-    echo "Installing fission ${FISSION_VERSION} for ${ARCH} ..."
+    echo "Installing kompose ${KOMPOSE_VERSION} for ${ARCH} ..."
 
     echo "Downloading checksums ${CHECKSUMS_URL} ..."
     wget --no-verbose -O /tmp/checksums.txt "${CHECKSUMS_URL}"
-    local SHA="$(grep linux-${ARCH} /tmp/checksums.txt | cut -d ' ' -f 1)"
+    local SHA="$(grep " kompose-linux-${ARCH}\$" /tmp/checksums.txt | cut -d ' ' -f 1)"
 
     echo "Downloading ${BINARY_URL} ..."
-    wget --no-verbose -O /tmp/fission "${BINARY_URL}"
+    wget --no-verbose -O /tmp/kompose "${BINARY_URL}"
 
     echo "Verifying checksum ${SHA} ..."
-    echo "${SHA}  /tmp/fission" | sha256sum -c -
+    echo "${SHA}  /tmp/kompose" | sha256sum -c -
 
     # Move binary to a location in PATH
     mkdir -p /usr/local/bin
-    mv /tmp/fission /usr/local/bin/
-    chmod +x /usr/local/bin/fission
+    mv /tmp/kompose /usr/local/bin/
+    chmod +x /usr/local/bin/kompose
 
-    echo "fission ${FISSION_VERSION} for ${ARCH} installed at $(command -v fission)."
+    echo "kompose ${KOMPOSE_VERSION} for ${ARCH} installed at $(command -v kompose)."
 }
 
 main "$@"
