@@ -14,3 +14,40 @@ See `AGENTS.md` for the full command reference used by these workflows.
 - **Local equivalent:** Install [gitleaks](https://github.com/gitleaks/gitleaks) and run `gitleaks detect --source . -v` (or `gitleaks protect --staged -v` before committing) to scan for secrets before opening a PR.
 
 ## Level 2 — domain-specific checks (path-filtered)
+
+### `pr-validate-charts.yml` — Helm chart lint and unit tests
+
+**Workflow:** `.github/workflows/pr-validate-charts.yml`
+**Trigger:** `pull_request` on changes under `charts/**` (the workflow file's own path is
+also included in the filter so changes to its logic are validated too). Note that this
+`paths:` filter is trigger-level only — it does not make this workflow safe to mark as a
+required status check in branch protection, since a PR that doesn't touch these paths
+would leave the check permanently "Pending" and block merge; see #67 for the fan-in
+"gate" job refactor needed before this workflow can be required.
+
+Validates the vendored Helm charts (`charts/cron-job`, `charts/onechart`):
+
+- **`ct lint`** ([`helm/chart-testing-action`](https://github.com/helm/chart-testing-action)): auto-detects which
+  chart(s) changed relative to `main` and runs `helm lint` plus chart schema/`values.schema.json` validation against
+  each. Configured via the repo-root `ct.yaml` (`check-version-increment: false`, since these charts track the
+  vendored Gimlet `onechart` upstream version rather than an independent local semver; `validate-maintainers: false`,
+  since the vendored `Chart.yaml` files don't declare a `maintainers` field).
+- **`helm unittest`** ([`helm-unittest`](https://github.com/helm-unittest/helm-unittest) plugin): runs the
+  `suite:`/`tests:`/`asserts:` test files under `charts/*/tests/*_test.yaml` against both charts.
+
+**Local equivalent:**
+
+```bash
+# Lint only the chart(s) changed vs. main (matches the ct lint step)
+ct lint --config ct.yaml --target-branch main
+
+# Or lint a single chart directly with Helm (no ct required)
+helm lint charts/onechart
+
+# Run the existing helm-unittest suite for a chart (requires the helm-unittest plugin)
+# --verify=false: the plugin source doesn't support provenance verification, which newer
+# Helm CLIs require by default
+helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.2 --verify=false
+helm unittest charts/cron-job
+helm unittest charts/onechart
+```

@@ -1,0 +1,48 @@
+name: PR Validate Charts
+
+# This workflow uses a top-level `paths:` filter, so it only runs on PRs that touch the
+# listed paths. The workflow file itself is included below so that changes to its own
+# logic still trigger it. NOTE: this filter is trigger-level only — it does NOT make it
+# safe to mark this workflow as a required status check in branch protection yet. A PR
+# that doesn't touch these paths would leave the check permanently "Pending" and block
+# merge. See #67 for the fan-in "gate" job refactor needed before this can be required.
+on:
+  pull_request:
+    paths:
+      - charts/**
+      - .github/workflows/pr-validate-charts.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+
+      - name: Run ct lint (only changed charts)
+        run: ct lint --config ct.yaml --target-branch main
+
+      - name: Install helm-unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.2 --verify=false
+
+      - name: Run helm unittest (cron-job)
+        run: helm unittest charts/cron-job
+
+      - name: Run helm unittest (onechart)
+        run: helm unittest charts/onechart
