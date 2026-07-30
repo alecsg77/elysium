@@ -86,17 +86,22 @@ spec:
           value: "github"
         - name: CODER_EXTERNAL_AUTH_0_TYPE
           value: "github"
+        # Intentionally request every GitHub OAuth scope so `gh` can act as the
+        # authenticated user wherever that user is authorized.
         - name: CODER_EXTERNAL_AUTH_0_SCOPES
-          value: "repo,workflow,admin:public_key"
+          value: >-
+            repo admin:repo_hook admin:org admin:public_key admin:org_hook gist
+            notifications user project delete_repo write:packages read:packages
+            delete:packages admin:gpg_key codespace workflow read:audit_log
         - name: CODER_EXTERNAL_AUTH_0_CLIENT_ID
           valueFrom:
             secretKeyRef:
-              name: coder-oauth2-github
+              name: coder-external-auth-github
               key: clientId
         - name: CODER_EXTERNAL_AUTH_0_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: coder-oauth2-github
+              name: coder-external-auth-github
               key: clientSecret
         - name: CODER_PROMETHEUS_ENABLE
           value: "true"
