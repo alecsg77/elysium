@@ -6,12 +6,10 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		// Build on the host network namespace instead of the default Docker
-		// bridge. The bridge's default MTU (1500) is larger than this host's
-		// actual MTU (1450, on eth0 in Coder/Kubernetes overlay networks),
-		// which silently drops larger TLS packets and makes downloads inside
-		// feature install scripts (e.g. Helm) hang for ~2 minutes before
-		// failing with "Recv failure: Connection reset by peer". --network=host
-		// makes build-time RUN steps use the host's interface/MTU directly.
+		// bridge. In environments where the bridge MTU exceeds the available
+		// path MTU, larger TLS downloads in feature install scripts can stall
+		// and reset. --network=host makes build-time RUN steps use the host's
+		// effective network path directly.
 		"options": ["--network=host"]
 	},
 
@@ -36,6 +34,9 @@
 			"minikube": "none"
 		},
 		"ghcr.io/rio/features/kustomize:1": {},
+		"ghcr.io/rio/features/k9s:1": {
+			"version": "0.51.0"
+		},
 		"ghcr.io/gickis/devcontainer-features/kubeseal": {},
 		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
 		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
@@ -82,18 +83,10 @@
 	// "remoteUser": "root"
 	"containerUser": "vscode",
 
-	// Docker bind mounts require the host source path to already exist (unlike
-	// named volumes, Docker will not create it). Ensure ~/.ssh and ~/.kube
-	// exist on the host before the "mounts" below run, otherwise `devcontainer
-	// up` fails with "bind source path does not exist" on machines that have
-	// never run kubectl/ssh locally.
-	"initializeCommand": "mkdir -p \"${localEnv:HOME}${localEnv:USERPROFILE}/.ssh\" \"${localEnv:HOME}${localEnv:USERPROFILE}/.kube\"",
-
 	"mounts": [
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,bind-create-src",
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached,bind-create-src"
 	],
-	"runArgs": ["--add-host=kubernetes:host-gateway"],
 	"containerEnv": {
 		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem"
 	},

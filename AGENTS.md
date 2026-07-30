@@ -42,6 +42,7 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 ## Core Repository Rules
 - This is a GitOps repository. Cluster changes must flow through Git, not direct `kubectl apply` mutations.
 - Never commit plaintext secrets. Use Sealed Secrets.
+- Treat infrastructure identifiers as sensitive because this repository is public: do not commit real host/device names, private domains, internal addresses or endpoints, or topology details. Use placeholders, Git-ignored local configuration, and Secrets/Sealed Secrets; include a real identifier only when strictly necessary and explicitly approved, and review diffs for accidental disclosure before release.
 - Respect the base/overlay split:
   - Base: `apps/base/<app>/`
   - Environment overlay: `apps/kyrion/`
