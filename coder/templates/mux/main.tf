@@ -79,9 +79,11 @@ resource "coder_agent" "main" {
   # avoiding copilot-api which sends Azure OpenAI preamble chunks that break streaming.
   # GITHUB_PERSONAL_ACCESS_TOKEN: same token, required by the GitHub MCP server
   # (@modelcontextprotocol/server-github) for API access to repos, issues, and PRs.
+  # GITHUB_TOKEN: same token, required by GitHub CLI access to repos, issues, and PRs.
   env = {
     GITHUB_COPILOT_TOKEN         = data.coder_external_auth.github.access_token
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+    GITHUB_TOKEN                 = data.coder_external_auth.github.access_token
   }
 
   metadata {

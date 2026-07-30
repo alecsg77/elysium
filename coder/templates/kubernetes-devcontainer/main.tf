@@ -379,6 +379,7 @@ resource "coder_agent" "main" {
   env = {
     # Available inside the devcontainer to the Coder agent and spawned processes.
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+    GITHUB_TOKEN                 = data.coder_external_auth.github.access_token
   }
 
   # The following metadata blocks are optional. They are used to display

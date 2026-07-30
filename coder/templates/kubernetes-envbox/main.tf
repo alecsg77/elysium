@@ -88,6 +88,7 @@ resource "coder_agent" "main" {
   env = {
     # Propagated to the inner envbox container via CODER_BOOTSTRAP_SCRIPT (init_script).
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+    GITHUB_TOKEN                 = data.coder_external_auth.github.access_token
   }
   startup_script = <<EOT
     #!/bin/bash

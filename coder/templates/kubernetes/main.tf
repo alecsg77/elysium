@@ -133,6 +133,7 @@ resource "coder_agent" "main" {
   arch = "amd64"
   env = {
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
+    GITHUB_TOKEN                 = data.coder_external_auth.github.access_token
   }
   startup_script = <<-EOT
     set -e
