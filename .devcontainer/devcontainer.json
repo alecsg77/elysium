@@ -74,7 +74,8 @@
 				"redhat.vscode-yaml",
 				"github.vscode-github-actions",
 				"tailscale.vscode-tailscale",
-				"hashicorp.terraform"
+				"hashicorp.terraform",
+				"openai.chatgpt"
 			]
 		}
 	},
