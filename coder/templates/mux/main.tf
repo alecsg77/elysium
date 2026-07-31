@@ -117,7 +117,7 @@ resource "coder_script" "install-gh-cli" {
   display_name = "Install GitHub CLI"
   icon         = "/icon/terminal.svg"
   script = templatefile("${path.module}/scripts/install-gh-cli.sh.tftpl", {
-    version = "2.96.0" # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
+    version = "2.97.0" # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
   })
   run_on_start       = true
   start_blocks_login = false
