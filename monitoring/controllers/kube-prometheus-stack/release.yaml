@@ -26,17 +26,30 @@ spec:
   values:
     alertmanager:
       ingress:
-        enabled: true
-        hosts:
-          - alertmanager
-        ingressClassName: tailscale
-        paths:
-          - /
-        tls:
-          - hosts:
-              - alertmanager
+        enabled: false
+      service:
+        port: 443
+        targetPort: 9093
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: alertmanager.${PRIVATE_DOMAIN}
+      serviceMonitor:
+        scheme: https
+        tlsConfig:
+          serverName: alertmanager.${PRIVATE_DOMAIN}
       alertmanagerSpec:
-        externalUrl: https://alertmanager.${ts_net}
+        externalUrl: https://alertmanager.${PRIVATE_DOMAIN}
+        scheme: https
+        tlsConfig:
+          serverName: alertmanager.${PRIVATE_DOMAIN}
+        web:
+          tlsConfig:
+            cert:
+              secret:
+                name: monitoring-wildcard-tls
+                key: tls.crt
+            keySecret:
+              name: monitoring-wildcard-tls
+              key: tls.key
         forceEnableClusterMode: true
         storage:
           volumeClaimTemplate:
@@ -47,8 +60,28 @@ spec:
                 requests:
                   storage: 10Gi
     prometheus:
+      ingress:
+        enabled: false
+      service:
+        port: 443
+        targetPort: 9090
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: prometheus.${PRIVATE_DOMAIN}
+      serviceMonitor:
+        scheme: https
+        tlsConfig:
+          serverName: prometheus.${PRIVATE_DOMAIN}
       prometheusSpec:
-        externalUrl: https://prometheus.${ts_net}
+        externalUrl: https://prometheus.${PRIVATE_DOMAIN}
+        web:
+          tlsConfig:
+            cert:
+              secret:
+                name: monitoring-wildcard-tls
+                key: tls.crt
+            keySecret:
+              name: monitoring-wildcard-tls
+              key: tls.key
         retention: 7d
         walCompression: true
         scrapeInterval: 60s
@@ -89,16 +122,6 @@ spec:
             memory: 3Gi
         podMonitorSelectorNilUsesHelmValues: false
         serviceMonitorSelectorNilUsesHelmValues: false
-      ingress:
-        enabled: true
-        hosts:
-          - prometheus
-        ingressClassName: tailscale
-        paths:
-          - /
-        tls:
-          - hosts:
-              - prometheus
     grafana:
       defaultDashboardsTimezone: browser
       ingress:
