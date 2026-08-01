@@ -29,3 +29,48 @@ spec:
         kind: Deployment
         name: n8n
         namespace: n8n
+    - patch: |-
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: n8n
+          namespace: n8n
+        spec:
+          template:
+            spec:
+              containers:
+                - name: n8n
+                  env:
+                    - name: N8N_PROTOCOL
+                      value: https
+                    - name: N8N_SSL_CERT
+                      value: /etc/n8n/tls/tls.crt
+                    - name: N8N_SSL_KEY
+                      value: /etc/n8n/tls/tls.key
+                  volumeMounts:
+                    - name: n8n-tls
+                      mountPath: /etc/n8n/tls
+                      readOnly: true
+              volumes:
+                - name: n8n-tls
+                  secret:
+                    secretName: n8n-tls
+      target:
+        kind: Deployment
+        name: n8n
+        namespace: n8n
+    - patch: |
+        - op: add
+          path: /metadata/annotations
+          value:
+            external-dns.alpha.kubernetes.io/hostname: n8n.${PRIVATE_DOMAIN}
+        - op: replace
+          path: /spec/type
+          value: ClusterIP
+        - op: replace
+          path: /spec/ports/0/port
+          value: 443
+      target:
+        kind: Service
+        name: n8n
+        namespace: n8n

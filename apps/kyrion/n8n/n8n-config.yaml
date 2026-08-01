@@ -4,4 +4,4 @@ metadata:
   name: n8n-config
   namespace: n8n
 data:
-  WEBHOOK_URL: https://n8n.${ts_net}/
+  WEBHOOK_URL: https://n8n.${PRIVATE_DOMAIN}/

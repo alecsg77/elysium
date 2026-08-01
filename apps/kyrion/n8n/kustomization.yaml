@@ -8,3 +8,4 @@ resources:
   - ../../base/n8n
   - n8n-config.yaml
   - n8n-sealed-secret.yaml
+  - tls-certificate.yaml
