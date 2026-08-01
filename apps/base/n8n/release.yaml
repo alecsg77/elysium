@@ -47,6 +47,15 @@ spec:
                       value: /etc/n8n/tls/tls.crt
                     - name: N8N_SSL_KEY
                       value: /etc/n8n/tls/tls.key
+                    # Bound V8 below the container limit while giving the current
+                    # n8n image enough heap and non-heap runtime headroom.
+                    - name: NODE_OPTIONS
+                      value: --max-old-space-size=1024
+                  resources:
+                    requests:
+                      memory: 512Mi
+                    limits:
+                      memory: 2Gi
                   volumeMounts:
                     - name: n8n-tls
                       mountPath: /etc/n8n/tls
