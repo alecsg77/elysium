@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/sonarr # {"$imagepolicy": "arkham:sonarr-policy:name"}
       tag: "4.0.19" # {"$imagepolicy": "arkham:sonarr-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:sonarr-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

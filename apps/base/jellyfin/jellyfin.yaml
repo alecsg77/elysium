@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/jellyfin # {"$imagepolicy": "arkham:jellyfin-policy:name"}
       tag: "10.11.11" # {"$imagepolicy": "arkham:jellyfin-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:jellyfin-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

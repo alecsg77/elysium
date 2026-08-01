@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/radarr # {"$imagepolicy": "arkham:radarr-policy:name"}
       tag: "5.28.0" # {"$imagepolicy": "arkham:radarr-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:radarr-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

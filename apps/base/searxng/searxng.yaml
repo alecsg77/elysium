@@ -17,6 +17,7 @@ spec:
     image:
       repository: ghcr.io/searxng/searxng # {"$imagepolicy": "ai:searxng-policy:name"}
       tag: "2026.2.11-970f2b843" # {"$imagepolicy": "ai:searxng-policy:tag"}
+      digest: "" # {"$imagepolicy": "ai:searxng-policy:digest"}
     resources:
       requests:
         cpu: "250m"

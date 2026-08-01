@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/lidarr # {"$imagepolicy": "arkham:lidarr-policy:name"}
       tag: "2.14.5" # {"$imagepolicy": "arkham:lidarr-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:lidarr-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

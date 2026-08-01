@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/tautulli # {"$imagepolicy": "arkham:tautulli-policy:name"}
       tag: "version-v2.17.2" # {"$imagepolicy": "arkham:tautulli-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:tautulli-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

@@ -21,6 +21,7 @@ spec:
     image:
       repository: shraymonks/unmonitorr # {"$imagepolicy": "arkham:unmonitorr-policy:name"}
       tag: "v1.2.0" # {"$imagepolicy": "arkham:unmonitorr-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:unmonitorr-policy:digest"}
     vars:
       PLEX_PORT: 9797
     existingSecrets:
