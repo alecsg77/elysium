@@ -40,7 +40,10 @@ spec:
                   "mode": "token"
                 },
                 "controlUi": {
-                  "enabled": true
+                  "enabled": true,
+                  "allowedOrigins": [
+                    "https://openclaw.${PRIVATE_DOMAIN}"
+                  ]
                 },
                 "tls": {
                   "enabled": true,
@@ -102,6 +105,11 @@ spec:
                       const config = JSON.parse(fs.readFileSync(path, "utf8"));
                       config.gateway = {
                         ...config.gateway,
+                        controlUi: {
+                          ...config.gateway.controlUi,
+                          enabled: true,
+                          allowedOrigins: ["https://openclaw.${PRIVATE_DOMAIN}"],
+                        },
                         tls: {
                           enabled: true,
                           certPath: "/etc/openclaw/tls/tls.crt",
