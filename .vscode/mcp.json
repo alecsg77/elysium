@@ -19,7 +19,7 @@
 			"type": "stdio"
 		},
 		"grafana": {
-			"url": "http://grafana-mcp.monitoring.svc:8000/mcp",
+			"url": "https://grafana-mcp.${env:PRIVATE_DOMAIN}/mcp",
 			"type": "http"
 		},
 		"io.github.upstash/context7": {

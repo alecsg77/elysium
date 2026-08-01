@@ -16,8 +16,8 @@ Grafana MCP (Model Context Protocol) Server enables AI assistants and automation
 - **Chart**: `grafana-mcp` (official Grafana Helm chart)
 - **Image**: `docker.io/grafana/mcp-grafana` (official Docker image)
 - **Dependencies**: `kube-prometheus-stack` (Grafana deployment)
-- **Access**: Private via Tailscale ingress at `https://grafana-mcp.${ts_net}` or internal cluster DNS
-- **Port**: 8000 (Streamable HTTP transport)
+- **Access**: Private native-HTTPS endpoint at `https://grafana-mcp.${PRIVATE_DOMAIN}/mcp`, reached through Tailnet Service-CIDR routes
+- **Port**: 443 externally, forwarded by `grafana-mcp-https` to the chart's native Streamable HTTP port 8000
 - **Protocol**: MCP 2025-06-18 (backward compatible with 2024-11-05)
 
 ## Prerequisites
@@ -27,7 +27,7 @@ Grafana MCP (Model Context Protocol) Server enables AI assistants and automation
 Create a service account in Grafana UI with Editor role for full read/write access:
 
 **Steps**:
-1. Open Grafana UI at `https://grafana.${ts_net}`
+1. Open Grafana UI at `https://grafana.${PRIVATE_DOMAIN}`
 2. Navigate to: **Administration** → **Service Accounts**
 3. Click **Add service account**
 4. Configure:
@@ -50,7 +50,7 @@ kubectl create secret generic grafana-mcp-credentials \
   --format=yaml > monitoring/controllers/grafana-mcp/grafana-mcp-credentials-sealed-secret.yaml
 ```
 
-**Note**: The Grafana URL (`http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80`) is configured directly in the HelmRelease as it is not sensitive information and is fixed for this cluster.
+**Note**: The Grafana URL (`https://grafana.${PRIVATE_DOMAIN}`) is configured directly in the HelmRelease as it is not sensitive information and is fixed for this cluster.
 
 ### 3. Commit and Deploy
 
@@ -75,9 +75,9 @@ git push
 
 | Setting | Value | Description |
 |---------|-------|-------------|
-| **Grafana URL** | `http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80` | Internal Grafana service URL (configured in HelmRelease) |
-| **Internal Service** | `grafana-mcp.monitoring.svc.cluster.local:8000/mcp` | Cluster-internal MCP endpoint |
-| **External Access** | `https://grafana-mcp.${ts_net}/mcp` | Tailscale network MCP endpoint |
+| **Grafana URL** | `https://grafana.${PRIVATE_DOMAIN}` | Native-HTTPS Grafana endpoint configured in the HelmRelease |
+| **MCP endpoint** | `https://grafana-mcp.${PRIVATE_DOMAIN}/mcp` | Native-HTTPS endpoint for all MCP clients; preserves certificate SNI |
+| **Cluster Service** | `grafana-mcp-https.monitoring.svc.cluster.local:443/mcp` | Optional in-cluster path when its client can validate the external certificate hostname |
 
 ### Resources
 
@@ -110,18 +110,18 @@ This section covers 3 different configuration methods for connecting to the Graf
 
 Clients should use `"type": "http"` (not `"sse"`) as this is the Streamable HTTP transport mode.
 
-### Configuration 1: Inside the Cluster
+### Configuration 1: VS Code project configuration
 
-**Use Case**: Workloads running inside the Kubernetes cluster (e.g., Coder devcontainers, ARC runners).
+**Use Case**: VS Code clients running locally or from a Coder workspace.
 
-**Access Method**: Direct cluster service access via internal DNS
+**Access Method**: Private DNS endpoint with native TLS. Set `PRIVATE_DOMAIN` in the local VS Code environment; the checked-in `.vscode/mcp.json` uses this environment variable so the real private suffix is not committed.
 
 **MCP Client Configuration**:
 ```json
 {
   "mcpServers": {
     "grafana": {
-      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp",
+      "url": "https://grafana-mcp.${env:PRIVATE_DOMAIN}/mcp",
       "type": "http"
     }
   }
@@ -129,23 +129,39 @@ Clients should use `"type": "http"` (not `"sse"`) as this is the Streamable HTTP
 ```
 
 **Characteristics**:
-- Low latency (service-to-service communication)
-- No Tailscale required
-- Uses internal Kubernetes DNS
-- Available to all pods in the cluster
+- Uses the certificate's externally named hostname, preserving TLS SNI validation.
+- Reaches the Service ClusterIP over existing Tailnet Service-CIDR routes.
+- Does not require a Tailscale Ingress or a reverse proxy TLS terminator.
 
-### Configuration 2: Outside via Tailscale Network
+### Mux configuration
 
-**Use Case**: External workloads connected to the Tailscale network (e.g., Codespaces with Tailscale, local PC with Tailscale).
+Mux does not interpolate environment-variable placeholders in HTTP MCP URLs. Configure Grafana in each user's untracked global `~/.mux/mcp.jsonc` with the literal private endpoint; do not place the real private domain in this repository:
 
-**Access Method**: Tailscale ingress (private network overlay)
+```jsonc
+{
+  "servers": {
+    "grafana": {
+      "transport": "http",
+      "url": "https://grafana-mcp.<private-domain>/mcp"
+    }
+  }
+}
+```
+
+The tracked `.mux/mcp.jsonc` intentionally omits this server while retaining the portable Kubernetes and Flux entries.
+
+### Configuration 2: Other Tailnet-connected clients
+
+**Use Case**: External workloads connected to the Tailnet (for example, a local workstation or Codespaces with Tailscale).
+
+**Access Method**: The same private DNS endpoint with native TLS
 
 **MCP Client Configuration**:
 ```json
 {
   "mcpServers": {
     "grafana": {
-      "url": "https://grafana-mcp.${ts_net}/mcp",
+      "url": "https://grafana-mcp.${PRIVATE_DOMAIN}/mcp",
       "type": "http"
     }
   }
@@ -153,21 +169,20 @@ Clients should use `"type": "http"` (not `"sse"`) as this is the Streamable HTTP
 ```
 
 **Prerequisites**:
-- Tailscale client installed and authenticated
-- Connected to the cluster's Tailscale network
-- Access to `*.${ts_net}` domain
+- Tailscale client installed and authenticated.
+- Connected to the Tailnet with the Service-CIDR route available.
+- DNS resolution for `${PRIVATE_DOMAIN}`.
 
 **Characteristics**:
-- Secure access over Tailscale mesh network
-- HTTPS with automatic TLS via Tailscale
-- Can access from anywhere with Tailscale
-- Private network (not exposed to public internet)
+- Secure transport over the Tailnet plus TLS terminated by the MCP workload.
+- The DNS record is private/DNS-only; this endpoint is not public Internet exposure.
+- Client configuration is identical to Configuration 1.
 
 ### Configuration 3: GitHub Copilot Coding Agent
 
 **Use Case**: GitHub Copilot coding agent running in the cluster via Actions Runner Controller (ARC).
 
-**Access Method**: Direct cluster service access via internal DNS
+**Access Method**: The same private DNS endpoint with native TLS
 
 **Read-Only Configuration**: Configure read-only tools to prevent accidental modifications during troubleshooting.
 
@@ -181,7 +196,7 @@ Clients should use `"type": "http"` (not `"sse"`) as this is the Streamable HTTP
 {
   "mcpServers": {
     "grafana": {
-      "url": "http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp",
+      "url": "https://grafana-mcp.${PRIVATE_DOMAIN}/mcp",
       "type": "http",
       "tools": [
         "get_dashboard",
@@ -225,7 +240,7 @@ The configuration above includes only read-only tools. The following write opera
 
 **Characteristics**:
 - Read-only access for safe troubleshooting
-- Same internal DNS access as Configuration 1
+- Uses the same private DNS/TLS endpoint as Configuration 1
 - GitHub Copilot agent runs in `arc-runners` namespace
 - Prevents accidental modifications during automated workflows
 - Full observability data access for AI-assisted debugging
@@ -323,7 +338,7 @@ grafana-mcp-<hash>-<hash>      1/1     Running   0          2m
 ### 3. Test SSE Endpoint (from Tailscale network)
 
 ```bash
-curl -N https://grafana-mcp.${ts_net}/mcp
+curl -N https://grafana-mcp.${PRIVATE_DOMAIN}/mcp
 ```
 
 Expected: SSE event stream (connection stays open)
@@ -332,7 +347,7 @@ Expected: SSE event stream (connection stays open)
 
 ```bash
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl -N http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp
+  curl -N https://grafana-mcp.${PRIVATE_DOMAIN}/mcp
 ```
 
 Expected: SSE event stream
@@ -442,32 +457,32 @@ To update the service account token:
    ```bash
    kubectl exec -it -n monitoring <grafana-mcp-pod> -- sh
    # Inside pod:
-   wget -O- http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80/api/health
+   wget -O- https://grafana.${PRIVATE_DOMAIN}/api/health
    ```
 2. Check Grafana service exists:
    ```bash
    kubectl get svc -n monitoring kube-prometheus-stack-grafana
    ```
 
-### Ingress Not Working
+### Native HTTPS Endpoint Not Working
 
-**Symptom**: Cannot access `https://grafana-mcp.${ts_net}`
+**Symptom**: Cannot access `https://grafana-mcp.${PRIVATE_DOMAIN}`
 
 **Causes**:
-1. Tailscale operator not ready
-2. DNS not propagated
-3. Ingress misconfigured
+1. Certificate has not become ready or is not mounted by the pod.
+2. ExternalDNS has not published the Service record.
+3. The Tailscale Connector Service-CIDR route is unavailable.
 
 **Resolution**:
-1. Check ingress status:
+1. Check certificate and the generated Secret:
    ```bash
-   kubectl get ingress -n monitoring grafana-mcp
+   kubectl get certificate,secret -n monitoring monitoring-wildcard-tls
    ```
-2. Verify Tailscale operator:
+2. Check the ExternalDNS-facing Service and its endpoints:
    ```bash
-   kubectl get pods -n tailscale
+   kubectl get svc,endpoints -n monitoring grafana-mcp-https
    ```
-3. Check Tailscale DNS:
+3. Check the Tailnet route and DNS response from the client:
    ```bash
    tailscale status
    ```
@@ -478,20 +493,17 @@ To update the service account token:
 
 **Troubleshooting by Configuration**:
 
-**Configuration 1 & 3 (In-Cluster)**:
+**Configurations 1, 2, and 3 (native HTTPS endpoint)**:
 ```bash
 # Verify service is accessible
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl -v http://grafana-mcp.monitoring.svc.cluster.local:8000/mcp
+  curl -v https://grafana-mcp.${PRIVATE_DOMAIN}/mcp
 ```
 
-**Configuration 2 (Tailscale)**:
 ```bash
-# Verify Tailscale connection
+# Verify the Tailnet connection and test the shared endpoint.
 tailscale status
-
-# Test endpoint
-curl -v https://grafana-mcp.${ts_net}/mcp
+curl -v https://grafana-mcp.${PRIVATE_DOMAIN}/mcp
 ```
 
 ## References
