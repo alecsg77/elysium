@@ -21,6 +21,7 @@ spec:
     image:
       repository: registry # {"$imagepolicy": "registry:registry-policy:name"}
       tag: "2.8.3" # {"$imagepolicy": "registry:registry-policy:tag"}
+      digest: "" # {"$imagepolicy": "registry:registry-policy:digest"}
     volumes:
       - name: registry
         size: "100Mi"

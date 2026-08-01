@@ -21,6 +21,7 @@ spec:
     image:
       repository: pihole/pihole # {"$imagepolicy": "arkham:pihole-policy:name"}
       tag: "2025.11.1" # {"$imagepolicy": "arkham:pihole-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:pihole-policy:digest"}
     vars:
       TZ: ${TZ:=Etc/UTC}
       FTLCONF_webserver_api_password: ''

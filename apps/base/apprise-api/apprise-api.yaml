@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/apprise-api # {"$imagepolicy": "arkham:apprise-api-policy:name"}
       tag: "version-v1.5.1" # {"$imagepolicy": "arkham:apprise-api-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:apprise-api-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

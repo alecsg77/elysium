@@ -21,6 +21,7 @@ spec:
     image:
       repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "arkham:qbittorrent-policy:name"}
       tag: "5.2.3" # {"$imagepolicy": "arkham:qbittorrent-policy:tag"}
+      digest: "" # {"$imagepolicy": "arkham:qbittorrent-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}

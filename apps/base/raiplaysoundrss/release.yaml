@@ -21,6 +21,7 @@ spec:
     image:
       repository: ghcr.io/alecsg77/raiplaysoundrss # {"$imagepolicy": "raiplaysoundrss:raiplaysoundrss-policy:name"}
       tag: "0.7.5" # {"$imagepolicy": "raiplaysoundrss:raiplaysoundrss-policy:tag"}
+      digest: "" # {"$imagepolicy": "raiplaysoundrss:raiplaysoundrss-policy:digest"}
     imagePullSecrets:
       - regcred
     containerPort: 3000
