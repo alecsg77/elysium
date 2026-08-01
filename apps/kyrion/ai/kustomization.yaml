@@ -9,8 +9,8 @@ resources:
   - ../../base/local-ai
   - ../../base/openclaw
   - copilot-api-sealed-secret.yaml
-  - openclaw-ingress.yaml
   - openclaw-sealed-secret.yaml
+  - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml
 
 configMapGenerator:

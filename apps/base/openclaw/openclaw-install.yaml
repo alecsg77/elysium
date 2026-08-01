@@ -41,6 +41,11 @@ spec:
                 },
                 "controlUi": {
                   "enabled": true
+                },
+                "tls": {
+                  "enabled": true,
+                  "certPath": "/etc/openclaw/tls/tls.crt",
+                  "keyPath": "/etc/openclaw/tls/tls.key"
                 }
               },
               "agents": {
@@ -74,6 +79,9 @@ spec:
             spec:
               initContainers:
                 - name: init-config
+                  # Use the same image selected by the Flux image policy so Node is
+                  # available to update only gateway.tls in persisted configuration.
+                  image: ghcr.io/openclaw/openclaw
                   securityContext:
                     runAsUser: 0
                     runAsGroup: 0
@@ -88,6 +96,20 @@ spec:
                       if [ ! -f /home/node/.openclaw/openclaw.json ]; then
                         cp /config/openclaw.json /home/node/.openclaw/openclaw.json
                       fi
+                      node - <<'NODE'
+                      const fs = require("fs");
+                      const path = "/home/node/.openclaw/openclaw.json";
+                      const config = JSON.parse(fs.readFileSync(path, "utf8"));
+                      config.gateway = {
+                        ...config.gateway,
+                        tls: {
+                          enabled: true,
+                          certPath: "/etc/openclaw/tls/tls.crt",
+                          keyPath: "/etc/openclaw/tls/tls.key",
+                        },
+                      };
+                      fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+                      NODE
                       if [ ! -f /home/node/.openclaw/workspace/AGENTS.md ]; then
                         cp /config/AGENTS.md /home/node/.openclaw/workspace/AGENTS.md
                       fi
@@ -112,6 +134,45 @@ spec:
                           name: openclaw-copilot-auth
                           key: GH_TOKEN
                           optional: true
+                  volumeMounts:
+                    - name: openclaw-tls
+                      mountPath: /etc/openclaw/tls
+                      readOnly: true
+                  livenessProbe:
+                    exec:
+                      command:
+                        - node
+                        - -e
+                        - >-
+                          require("https").get({hostname:"127.0.0.1",port:18789,path:"/healthz",rejectUnauthorized:false}, r => process.exit(r.statusCode < 400 ? 0 : 1)).on("error", () => process.exit(1))
+                    initialDelaySeconds: 60
+                    periodSeconds: 30
+                    timeoutSeconds: 10
+                  readinessProbe:
+                    exec:
+                      command:
+                        - node
+                        - -e
+                        - >-
+                          require("https").get({hostname:"127.0.0.1",port:18789,path:"/readyz",rejectUnauthorized:false}, r => process.exit(r.statusCode < 400 ? 0 : 1)).on("error", () => process.exit(1))
+                    initialDelaySeconds: 15
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+              volumes:
+                - name: openclaw-tls
+                  secret:
+                    secretName: openclaw-tls
       target:
         kind: Deployment
+        name: openclaw
+    - patch: |
+        - op: add
+          path: /metadata/annotations
+          value:
+            external-dns.alpha.kubernetes.io/hostname: openclaw.${PRIVATE_DOMAIN}
+        - op: replace
+          path: /spec/ports/0/port
+          value: 443
+      target:
+        kind: Service
         name: openclaw
