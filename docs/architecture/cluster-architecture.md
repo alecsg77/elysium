@@ -206,6 +206,30 @@ The cluster uses Flux CD v2 with **image-reflector-controller** and **image-auto
 - **ImagePolicy**: Defines rules for selecting latest/suitable image versions
 - **ImageUpdateAutomation**: Automatically updates Git repository with new image references
 
+### Image Digest Automation
+
+`onechart` supports an optional `image.digest` value to deploy an immutable OCI image
+reference while retaining the selected tag. Configure the values and Flux setters in
+the Git-tracked `HelmRelease`, not in the chart defaults or templates:
+
+```yaml
+image:
+  repository: ghcr.io/example/app # {"$imagepolicy": "namespace:policy:name"}
+  tag: latest # {"$imagepolicy": "namespace:policy:tag"}
+  digest: sha256:<digest> # {"$imagepolicy": "namespace:policy:digest"}
+```
+
+When `digest` is set, the chart renders
+`ghcr.io/example/app:latest@sha256:<digest>`; leaving it empty preserves the
+existing `repository:tag` reference. The digest includes its algorithm prefix
+(e.g. `sha256:`), not only the hexadecimal hash.
+
+Use `digestReflectionPolicy: Always` on an `ImagePolicy` when following a mutable
+or reused tag, such as `latest` or a minor release tag republished by its registry.
+Use `IfNotPresent` when the first observed digest for a selected tag should remain
+pinned. A workload must explicitly add the `:digest` setter marker above before
+ImageUpdateAutomation can write digest updates to Git.
+
 #### Notification Controller CRDs
 - **Provider**: Notification destinations (Slack, Discord, webhooks)
 - **Alert**: Event filtering and forwarding rules
