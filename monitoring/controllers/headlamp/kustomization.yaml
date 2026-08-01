@@ -5,4 +5,4 @@ namespace: kube-system
 resources:
   - repository.yaml
   - release.yaml
-  - ingress.yaml
+  - tls-certificate.yaml

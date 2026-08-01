@@ -18,6 +18,14 @@ spec:
       inCluster: true
       inClusterContextName: kyrion
       pluginsDir: /build/plugins
+      tlsCertPath: /etc/headlamp/tls/tls.crt
+      tlsKeyPath: /etc/headlamp/tls/tls.key
+    service:
+      port: 443
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: headlamp.${PRIVATE_DOMAIN}
+    probes:
+      scheme: HTTPS
     initContainers:
       - name: headlamp-flux-plugin
         image: ghcr.io/headlamp-k8s/headlamp-plugin-flux:latest
@@ -36,9 +44,15 @@ spec:
     volumeMounts:
       - name: headlamp-plugins
         mountPath: /build/plugins
+      - name: headlamp-tls
+        mountPath: /etc/headlamp/tls
+        readOnly: true
     volumes:
       - name: headlamp-plugins
         emptyDir: {}
+      - name: headlamp-tls
+        secret:
+          secretName: headlamp-tls
     resources:
       requests:
         cpu: 50m

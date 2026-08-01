@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openclaw-tls
+  namespace: ai
+spec:
+  secretName: openclaw-tls
+  dnsNames:
+    - openclaw.${PRIVATE_DOMAIN}
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt
