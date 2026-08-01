@@ -1,6 +1,8 @@
 image:
   repository: nginx
   tag: "latest"
+  # Optional full OCI digest, e.g. sha256:<64 hexadecimal characters>.
+  digest: ""
   pullPolicy: IfNotPresent
 
 # ingress:

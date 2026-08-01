@@ -13,6 +13,17 @@ tests:
         equal:
           path: spec.template.spec.containers[0].image
           value: nginx:x.y.z
+  - it: Should append an image digest
+    set:
+      image.repository: nginx
+      image.tag: x.y.z
+      image.digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    asserts:
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:x.y.z@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
   - it: Should set an ImagePullSecret
     set:
       imagePullSecrets:
