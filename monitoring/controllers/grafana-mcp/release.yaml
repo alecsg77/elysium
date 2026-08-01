@@ -45,25 +45,12 @@ spec:
         cpu: 500m
         memory: 512Mi
 
-    # Transport mode: Use Streamable HTTP (MCP protocol 2025-06-18)
-    # Supports both modern clients (POST /sse) and legacy clients (GET /sse).
-    # TLS terminates in the MCP server; the externally exposed Service is
-    # maintained separately to map port 443 to this chart's native port 8000.
+    # Streamable HTTP is available only through the cluster Service. Do not add
+    # TLS arguments or an ExternalDNS Service: this MCP server is intentionally
+    # not exposed through private DNS or a Tailscale Ingress.
     extraArgs:
       - "-t"
       - "streamable-http"
-      - "--server.tls-cert-file"
-      - "/etc/grafana-mcp/tls/tls.crt"
-      - "--server.tls-key-file"
-      - "/etc/grafana-mcp/tls/tls.key"
-    volumeMounts:
-      - name: monitoring-wildcard-tls
-        mountPath: /etc/grafana-mcp/tls
-        readOnly: true
-    volumes:
-      - name: monitoring-wildcard-tls
-        secret:
-          secretName: monitoring-wildcard-tls
 
     ingress:
       enabled: false
