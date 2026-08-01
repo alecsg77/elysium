@@ -4,4 +4,5 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - grafana-mcp-credentials-sealed-secret.yaml
+  - https-service.yaml
   - release.yaml

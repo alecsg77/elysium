@@ -23,9 +23,10 @@ spec:
       tag: ""  # {"$imagepolicy": "flux-system:grafana-mcp-policy:tag"}
       registry: docker.io
 
-    # Grafana connection configuration
+    # Use Grafana's externally named HTTPS endpoint so TLS SNI matches the
+    # namespace wildcard certificate mounted by the Grafana workload.
     grafana:
-      url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+      url: "https://grafana.${PRIVATE_DOMAIN}"
       apiKey: ""  # Set via GRAFANA_SERVICE_ACCOUNT_TOKEN from sealed secret
 
     # Environment variables from sealed secret
@@ -45,25 +46,27 @@ spec:
         memory: 512Mi
 
     # Transport mode: Use Streamable HTTP (MCP protocol 2025-06-18)
-    # Supports both modern clients (POST /sse) and legacy clients (GET /sse)
+    # Supports both modern clients (POST /sse) and legacy clients (GET /sse).
+    # TLS terminates in the MCP server; the externally exposed Service is
+    # maintained separately to map port 443 to this chart's native port 8000.
     extraArgs:
       - "-t"
       - "streamable-http"
+      - "--server.tls-cert-file"
+      - "/etc/grafana-mcp/tls/tls.crt"
+      - "--server.tls-key-file"
+      - "/etc/grafana-mcp/tls/tls.key"
+    volumeMounts:
+      - name: monitoring-wildcard-tls
+        mountPath: /etc/grafana-mcp/tls
+        readOnly: true
+    volumes:
+      - name: monitoring-wildcard-tls
+        secret:
+          secretName: monitoring-wildcard-tls
 
-    # Ingress configuration (Tailscale for private access)
     ingress:
-      enabled: true
-      className: tailscale
-      annotations:
-        tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
-      hosts:
-        - host: grafana-mcp
-          paths:
-            - path: /
-              pathType: Prefix
-      tls:
-        - hosts:
-            - grafana-mcp
+      enabled: false
 ---
 # ImageRepository for automated image updates
 apiVersion: image.toolkit.fluxcd.io/v1
