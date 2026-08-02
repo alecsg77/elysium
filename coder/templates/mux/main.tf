@@ -70,6 +70,24 @@ data "coder_parameter" "memory_limit" {
   }
 }
 
+data "coder_parameter" "use_service_account" {
+  name         = "use_service_account"
+  display_name = "Use workspace owner service account"
+  description  = "Assign an existing workspace-owner service account to the workspace Pod."
+  default      = "false"
+  type         = "bool"
+  mutable      = true
+}
+
+data "kubernetes_service_account_v1" "workspace_owner" {
+  count = data.coder_parameter.use_service_account.value ? 1 : 0
+
+  metadata {
+    name      = data.coder_workspace_owner.me.name
+    namespace = var.namespace
+  }
+}
+
 resource "coder_agent" "main" {
   os                 = "linux"
   arch               = "amd64"
@@ -248,6 +266,7 @@ resource "kubernetes_deployment" "main" {
         }
       }
       spec {
+        service_account_name = data.coder_parameter.use_service_account.value ? data.kubernetes_service_account_v1.workspace_owner[0].metadata[0].name : null
 
         container {
           name              = "dev"

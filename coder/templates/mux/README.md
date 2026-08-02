@@ -30,6 +30,12 @@ Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) â€
 
 For CLI tools without an existing Coder Registry module (e.g. GitHub CLI `gh`), standalone installer script templates live under [`scripts/`](./scripts). Each `scripts/install-<tool>.sh.tftpl` is rendered via `templatefile()` with a pinned version and run as part of a single `coder_script` on startup. Versions are pinned as `main.tf` locals decorated with `renovate:` comments so Renovate can bump them automatically â€” see [`scripts/README.md`](./scripts/README.md) for the full convention.
 
+## Optional workspace ServiceAccount
+
+The `use_service_account` workspace parameter is disabled by default. When enabled, the template assigns an existing ServiceAccount named for the workspace owner to the workspace Pod. The template does not create the ServiceAccount, RBAC bindings, or credentials; provisioning fails if the expected ServiceAccount is unavailable.
+
+The assignment applies to the Kubernetes Pod only. Envbox inner containers and devcontainers launched from it do not automatically inherit the projected ServiceAccount volume. Any runtime credential propagation must remain read-only, ephemeral, and outside the persistent home and cache volumes.
+
 ## Prerequisites
 
 - Kubernetes cluster with privileged pod support
