@@ -102,6 +102,7 @@ resource "coder_agent" "main" {
     GITHUB_COPILOT_TOKEN         = data.coder_external_auth.github.access_token
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
     GITHUB_TOKEN                 = data.coder_external_auth.github.access_token
+    MUX_SERVER_URL               = "http://127.0.0.1:4000"
   }
 
   metadata {
@@ -156,12 +157,13 @@ module "coder-login" {
 # a workspace process. Generates its own MUX_SERVER_AUTH_TOKEN per workspace
 # instance (stored in Terraform state -- no manual secret management needed).
 module "mux" {
-  count           = data.coder_workspace.me.start_count
-  source          = "registry.coder.com/coder/mux/coder"
-  version         = "1.5.0"
-  agent_id        = coder_agent.main.id
-  subdomain       = false
-  restart_on_kill = true
+  count                = data.coder_workspace.me.start_count
+  source               = "registry.coder.com/coder/mux/coder"
+  version              = "1.5.0"
+  agent_id             = coder_agent.main.id
+  additional_arguments = "--host 127.0.0.1"
+  subdomain            = false
+  restart_on_kill      = true
   # Store binary and log on the persistent PVC (home dir) so they survive workspace restarts.
   # use_cached skips reinstall when the binary is already present.
   install_prefix = "/home/coder/.local/bin"
