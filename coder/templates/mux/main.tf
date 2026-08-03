@@ -314,6 +314,10 @@ resource "kubernetes_deployment" "main" {
             value = data.coder_parameter.use_service_account.value ? "/home/coder:/home/coder,/var/run/secrets/kubernetes.io/serviceaccount:/var/run/secrets/kubernetes.io/serviceaccount:ro" : "/home/coder:/home/coder"
           }
           env {
+            name  = "CODER_INNER_ENVS"
+            value = data.coder_parameter.use_service_account.value ? "KUBERNETES_SERVICE_*" : ""
+          }
+          env {
             name  = "CODER_ADD_FUSE"
             value = "false"
           }

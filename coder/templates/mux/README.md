@@ -34,7 +34,7 @@ For CLI tools without an existing Coder Registry module (e.g. GitHub CLI `gh`), 
 
 The `use_service_account` workspace parameter is disabled by default. When enabled, the template assigns an existing ServiceAccount named for the workspace owner to the workspace Pod. The template does not create the ServiceAccount, RBAC bindings, or credentials; provisioning fails if the expected ServiceAccount is unavailable.
 
-When enabled, the template forwards the Pod's projected ServiceAccount directory to the Envbox inner container as a read-only runtime mount. The credential remains ephemeral and outside the persistent home and cache volumes. Devcontainers launched from the inner container do not automatically inherit this mount; their propagation remains subject to a separate runtime integration check.
+When enabled, the template forwards the Pod's projected ServiceAccount directory to the Envbox inner container as a read-only runtime mount, together with the Kubernetes service-discovery environment variables required for in-cluster clients. The credential remains ephemeral and outside the persistent home and cache volumes. Devcontainers launched from the inner container do not automatically inherit this mount or these variables; their propagation remains subject to a separate runtime integration check.
 
 ## Prerequisites
 
