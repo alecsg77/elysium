@@ -8,11 +8,11 @@
 // intentionally NOT duplicated here (unlike .vscode/mcp.json).
 {
   "servers": {
-    // Generic Kubernetes API access (get/list/apply/logs/events, etc.).
+    // This Mux version executes the `command` field directly and does not
+    // preserve a separate `args` array, so keep the complete invocation here.
     "kubernetes": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "kubernetes-mcp-server@latest"]
+      "command": "npx -y kubernetes-mcp-server@latest"
     },
     // Flux GitOps operator: inspect Kustomizations/HelmReleases and reconciliation status.
     "flux-operator-mcp": {
