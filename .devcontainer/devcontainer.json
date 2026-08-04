@@ -86,10 +86,14 @@
 
 	"mounts": [
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,bind-create-src",
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached,bind-create-src"
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached,bind-create-src",
+		"source=/var/run/secrets/kubernetes.io/serviceaccount,target=/var/run/secrets/kubernetes.io/serviceaccount,type=bind,readonly"
 	],
 	"containerEnv": {
-		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem"
+		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem",
+		"KUBERNETES_SERVICE_HOST": "${localEnv:KUBERNETES_SERVICE_HOST}",
+		"KUBERNETES_SERVICE_PORT": "${localEnv:KUBERNETES_SERVICE_PORT}",
+		"KUBERNETES_SERVICE_PORT_HTTPS": "${localEnv:KUBERNETES_SERVICE_PORT_HTTPS}"
 	},
 	"postCreateCommand": {
 		"kubectl": "sudo sh -c 'kubectl completion bash > /etc/bash_completion.d/kubectl'",

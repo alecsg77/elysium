@@ -34,11 +34,11 @@ For CLI tools without an existing Coder Registry module (e.g. GitHub CLI `gh`), 
 
 The template binds the Mux server to IPv4 loopback and exports its loopback URL for workspace commands. This keeps the API private to the workspace network namespace while allowing `mux api` commands to use the same address family as the server.
 
-## Optional workspace ServiceAccount
+## Workspace ServiceAccount
 
-The `use_service_account` workspace parameter is disabled by default. When enabled, the template assigns an existing ServiceAccount named for the workspace owner to the workspace Pod. The template does not create the ServiceAccount, RBAC bindings, or credentials; provisioning fails if the expected ServiceAccount is unavailable.
+The template assigns an existing ServiceAccount named for the workspace owner to every workspace Pod. The template does not create the ServiceAccount, RBAC bindings, or credentials; provisioning fails if the expected ServiceAccount is unavailable.
 
-When enabled, the template forwards the Pod's projected ServiceAccount directory to the Envbox inner container as a read-only runtime mount, together with the Kubernetes service-discovery environment variables required for in-cluster clients. The credential remains ephemeral and outside the persistent home and cache volumes. Devcontainers launched from the inner container do not automatically inherit this mount or these variables; their propagation remains subject to a separate runtime integration check.
+The template forwards the Pod's projected ServiceAccount directory to the Envbox inner container as a read-only runtime mount, together with the Kubernetes service-discovery environment variables required for in-cluster clients. The credential remains ephemeral and outside the persistent home and cache volumes. The repository's shared Dev Container configuration passes the same read-only mount and discovery variables into child devcontainers, so devcontainers launched from Mux can use the workspace identity.
 
 ## Prerequisites
 

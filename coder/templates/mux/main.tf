@@ -70,18 +70,7 @@ data "coder_parameter" "memory_limit" {
   }
 }
 
-data "coder_parameter" "use_service_account" {
-  name         = "use_service_account"
-  display_name = "Use workspace owner service account"
-  description  = "Assign an existing workspace-owner service account to the workspace Pod."
-  default      = "false"
-  type         = "bool"
-  mutable      = true
-}
-
 data "kubernetes_service_account_v1" "workspace_owner" {
-  count = data.coder_parameter.use_service_account.value ? 1 : 0
-
   metadata {
     name      = data.coder_workspace_owner.me.name
     namespace = var.namespace
@@ -268,7 +257,7 @@ resource "kubernetes_deployment" "main" {
         }
       }
       spec {
-        service_account_name = data.coder_parameter.use_service_account.value ? data.kubernetes_service_account_v1.workspace_owner[0].metadata[0].name : null
+        service_account_name = data.kubernetes_service_account_v1.workspace_owner.metadata[0].name
 
         container {
           name              = "dev"
@@ -313,11 +302,11 @@ resource "kubernetes_deployment" "main" {
           }
           env {
             name  = "CODER_MOUNTS"
-            value = data.coder_parameter.use_service_account.value ? "/home/coder:/home/coder,/var/run/secrets/kubernetes.io/serviceaccount:/var/run/secrets/kubernetes.io/serviceaccount:ro" : "/home/coder:/home/coder"
+            value = "/home/coder:/home/coder,/var/run/secrets/kubernetes.io/serviceaccount:/var/run/secrets/kubernetes.io/serviceaccount:ro"
           }
           env {
             name  = "CODER_INNER_ENVS"
-            value = data.coder_parameter.use_service_account.value ? "KUBERNETES_SERVICE_*" : ""
+            value = "KUBERNETES_SERVICE_*"
           }
           env {
             name  = "CODER_ADD_FUSE"
