@@ -119,7 +119,7 @@
 		"terraform": "terraform -install-autocomplete",
 		// Keep these operations in one command: GitHub CLI setup modifies the
 		// copied config and must happen after the host configuration is in $HOME.
-		"git-auth": "set -eu; install -m 0600 /tmp/host-gitconfig \"$HOME/.gitconfig\"; if [ -n \"${GH_TOKEN:-}\" ]; then tmpdir=$(mktemp -d); trap 'rm -rf \"$tmpdir\"' EXIT; cd \"$tmpdir\"; gh auth setup-git; fi",
+		"git-auth": "set -eu; install -m 0600 /tmp/host-gitconfig \"$HOME/.gitconfig\"; if [ -n \"${GH_TOKEN:-}\" ]; then (cd \"$HOME\" && gh auth setup-git); fi",
 		"coder": "sudo sh -c 'coder completion -s bash -p > /etc/bash_completion.d/coder'",
 		"tailscale": "sudo sh -c 'tailscale completion bash > /etc/bash_completion.d/tailscale'"
 	}

@@ -86,11 +86,11 @@ resource "coder_agent" "main" {
   # avoiding copilot-api which sends Azure OpenAI preamble chunks that break streaming.
   # GITHUB_PERSONAL_ACCESS_TOKEN: same token, required by the GitHub MCP server
   # (@modelcontextprotocol/server-github) for API access to repos, issues, and PRs.
-  # GITHUB_TOKEN: same token, required by GitHub CLI access to repos, issues, and PRs.
+  # GH_TOKEN: same token, required by GitHub CLI access to repos, issues, and PRs.
   env = {
     GITHUB_COPILOT_TOKEN         = data.coder_external_auth.github.access_token
     GITHUB_PERSONAL_ACCESS_TOKEN = data.coder_external_auth.github.access_token
-    GITHUB_TOKEN                 = data.coder_external_auth.github.access_token
+    GH_TOKEN                     = data.coder_external_auth.github.access_token
     MUX_SERVER_URL               = "http://127.0.0.1:4000"
   }
 
@@ -305,8 +305,11 @@ resource "kubernetes_deployment" "main" {
             value = "/home/coder:/home/coder,/var/run/secrets/kubernetes.io/serviceaccount:/var/run/secrets/kubernetes.io/serviceaccount:ro"
           }
           env {
-            name  = "CODER_INNER_ENVS"
-            value = "KUBERNETES_SERVICE_*"
+            name = "CODER_INNER_ENVS"
+            # Preserve the GitHub variables already used by Mux and its MCP
+            # integrations, and additionally forward GH_TOKEN for the child
+            # devcontainer's `gh auth setup-git` flow.
+            value = "KUBERNETES_SERVICE_*,GITHUB_*,GH_TOKEN"
           }
           env {
             name  = "CODER_ADD_FUSE"
