@@ -7,6 +7,7 @@ resources:
   - namespace.yaml
   - ../../base/coder
   - sealed-secrets.yaml
+  - tls-certificate.yaml
 
 patches:
   # JSON Patch to append CODER_ACCESS_URL to the env array defined in base.
@@ -16,7 +17,7 @@ patches:
         path: "/spec/values/coder/env/-"
         value:
           name: CODER_ACCESS_URL
-          value: "https://coder.${ts_net}"
+          value: "https://coder.${PRIVATE_DOMAIN}"
     target:
       kind: HelmRelease
       name: coder

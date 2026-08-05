@@ -1,1 +1,1 @@
-url: "https://coder.${ts_net}"
+url: "https://coder.${PRIVATE_DOMAIN}"
