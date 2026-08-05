@@ -361,13 +361,13 @@ resource "kubernetes_deployment" "main" {
             name       = "home"
             sub_path   = "envbox/containers"
           }
-          # Envbox exposes /var/lib/coder/docker as the inner Docker daemon's
-          # data root. Mount the same persistent subtree here so its content
-          # store and snapshot metadata cannot be split across PVC paths.
+          # Keep Envbox's outer Docker daemon separate from the inner container's
+          # Docker state. On this Kubernetes idmapped PVC, sharing cache/docker
+          # makes dockerd fail at startup with EOVERFLOW during chmod.
           volume_mount {
             mount_path = "/var/lib/docker"
             name       = "home"
-            sub_path   = "cache/docker"
+            sub_path   = "envbox/docker"
           }
           volume_mount {
             mount_path = "/usr/src"
