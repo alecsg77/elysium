@@ -87,6 +87,9 @@
 	"mounts": [
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,bind-create-src",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached,bind-create-src",
+		// The host source must already exist as a regular file. It is copied
+		// into $HOME during postCreateCommand rather than mounted over it.
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/tmp/host-gitconfig,type=bind,readonly",
 		"source=/var/run/secrets/kubernetes.io/serviceaccount,target=/var/run/secrets/kubernetes.io/serviceaccount,type=bind,readonly"
 	],
 	"containerEnv": {
@@ -94,6 +97,11 @@
 		"KUBERNETES_SERVICE_HOST": "${localEnv:KUBERNETES_SERVICE_HOST}",
 		"KUBERNETES_SERVICE_PORT": "${localEnv:KUBERNETES_SERVICE_PORT}",
 		"KUBERNETES_SERVICE_PORT_HTTPS": "${localEnv:KUBERNETES_SERVICE_PORT_HTTPS}"
+	},
+	// GH_TOKEN is remote-only so it is available to postCreateCommand without
+	// becoming an image-layer ENV during the feature build.
+	"remoteEnv": {
+		"GH_TOKEN": "${localEnv:GH_TOKEN}"
 	},
 	"postCreateCommand": {
 		"kubectl": "sudo sh -c 'kubectl completion bash > /etc/bash_completion.d/kubectl'",
@@ -109,6 +117,9 @@
 		// would write a corrupt file (the error text, not a valid script)
 		// into /etc/bash_completion.d instead of failing cleanly.
 		"terraform": "terraform -install-autocomplete",
+		// Keep these operations in one command: GitHub CLI setup modifies the
+		// copied config and must happen after the host configuration is in $HOME.
+		"git-auth": "set -eu; install -m 0600 /tmp/host-gitconfig \"$HOME/.gitconfig\"; if [ -n \"${GH_TOKEN:-}\" ]; then tmpdir=$(mktemp -d); trap 'rm -rf \"$tmpdir\"' EXIT; cd \"$tmpdir\"; gh auth setup-git; fi",
 		"coder": "sudo sh -c 'coder completion -s bash -p > /etc/bash_completion.d/coder'",
 		"tailscale": "sudo sh -c 'tailscale completion bash > /etc/bash_completion.d/tailscale'"
 	}
