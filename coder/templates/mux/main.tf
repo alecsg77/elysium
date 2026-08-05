@@ -361,10 +361,13 @@ resource "kubernetes_deployment" "main" {
             name       = "home"
             sub_path   = "envbox/containers"
           }
+          # Envbox exposes /var/lib/coder/docker as the inner Docker daemon's
+          # data root. Mount the same persistent subtree here so its content
+          # store and snapshot metadata cannot be split across PVC paths.
           volume_mount {
             mount_path = "/var/lib/docker"
             name       = "home"
-            sub_path   = "envbox/docker"
+            sub_path   = "cache/docker"
           }
           volume_mount {
             mount_path = "/usr/src"
