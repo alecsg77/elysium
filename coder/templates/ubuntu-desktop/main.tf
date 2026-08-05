@@ -171,7 +171,7 @@ module "kasmvnc" {
   version             = "1.3.0"
   agent_id            = coder_agent.main.id
   desktop_environment = "xfce"
-  subdomain           = false
+  subdomain           = true
 }
 
 resource "kubernetes_persistent_volume_claim" "home" {

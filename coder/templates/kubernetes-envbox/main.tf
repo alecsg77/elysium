@@ -112,9 +112,10 @@ module "code-server" {
   # This ensures that the latest non-breaking version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
   version = "~> 1.0"
 
-  agent_id = coder_agent.main.id
-  order    = 1
-  folder   = data.coder_parameter.git_repo.value != "" ? replace(module.git_clone[0].repo_dir, "~/", "/home/coder/") : "/home/coder"
+  agent_id  = coder_agent.main.id
+  order     = 1
+  folder    = data.coder_parameter.git_repo.value != "" ? replace(module.git_clone[0].repo_dir, "~/", "/home/coder/") : "/home/coder"
+  subdomain = true
 }
 
 # See https://registry.coder.com/modules/coder/jetbrains

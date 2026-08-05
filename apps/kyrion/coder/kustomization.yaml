@@ -10,7 +10,7 @@ resources:
   - tls-certificate.yaml
 
 patches:
-  # JSON Patch to append CODER_ACCESS_URL to the env array defined in base.
+  # JSON Patch to append the public and wildcard access URLs to the base env array.
   # Array append cannot be expressed as a Helm values override, so we keep this patch.
   - patch: |-
       - op: add
@@ -18,6 +18,11 @@ patches:
         value:
           name: CODER_ACCESS_URL
           value: "https://coder.${PRIVATE_DOMAIN}"
+      - op: add
+        path: "/spec/values/coder/env/-"
+        value:
+          name: CODER_WILDCARD_ACCESS_URL
+          value: "*.coder.${PRIVATE_DOMAIN}"
     target:
       kind: HelmRelease
       name: coder

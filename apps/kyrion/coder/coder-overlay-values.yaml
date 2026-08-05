@@ -16,6 +16,6 @@ coder:
   service:
     type: ClusterIP
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: coder.${PRIVATE_DOMAIN}
+      external-dns.alpha.kubernetes.io/hostname: "coder.${PRIVATE_DOMAIN},*.coder.${PRIVATE_DOMAIN}"
   ingress:
     enable: false

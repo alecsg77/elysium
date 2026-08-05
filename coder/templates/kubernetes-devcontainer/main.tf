@@ -458,9 +458,10 @@ module "code-server" {
   # This ensures that the latest non-breaking version of the module gets downloaded, you can also pin the module version to prevent breaking changes in production.
   version = "~> 1.0"
 
-  agent_id = coder_agent.main.id
-  order    = 1
-  folder   = local.workspace_folder
+  agent_id  = coder_agent.main.id
+  order     = 1
+  folder    = local.workspace_folder
+  subdomain = true
 }
 
 # See https://registry.coder.com/modules/coder/jetbrains

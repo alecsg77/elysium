@@ -151,7 +151,7 @@ module "mux" {
   version              = "1.5.0"
   agent_id             = coder_agent.main.id
   additional_arguments = "--host 127.0.0.1"
-  subdomain            = false
+  subdomain            = true
   restart_on_kill      = true
   # Store binary and log on the persistent PVC (home dir) so they survive workspace restarts.
   # use_cached skips reinstall when the binary is already present.

@@ -181,7 +181,7 @@ resource "coder_app" "code-server" {
   display_name = "code-server"
   icon         = "/icon/code.svg"
   url          = "http://localhost:13337?folder=/home/coder"
-  subdomain    = false
+  subdomain    = true
   share        = "owner"
 
   healthcheck {
@@ -348,5 +348,5 @@ module "jupyterlab" {
   source    = "registry.coder.com/coder/jupyterlab/coder"
   version   = "1.2.2"
   agent_id  = coder_agent.main.id
-  subdomain = false
+  subdomain = true
 }
