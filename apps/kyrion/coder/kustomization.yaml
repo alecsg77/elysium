@@ -23,6 +23,11 @@ patches:
         value:
           name: CODER_WILDCARD_ACCESS_URL
           value: "*.coder.${PRIVATE_DOMAIN}"
+      # Coder reads its TLS certificate when it starts. Bump this revision after
+      # cert-manager replaces coder-tls so Flux rolls the pod with the new cert.
+      - op: add
+        path: "/spec/values/coder/podAnnotations/elysium.io~1tls-reload-revision"
+        value: "2"
     target:
       kind: HelmRelease
       name: coder
