@@ -342,10 +342,13 @@ resource "kubernetes_deployment" "main" {
             name       = "home"
             sub_path   = "home"
           }
+          # Docker's previous cache generation has unrecoverable content-store
+          # and ownership corruption. Start the inner daemon on a fresh PVC
+          # subpath without disturbing the workspace home volume.
           volume_mount {
             mount_path = "/var/lib/coder/docker"
             name       = "home"
-            sub_path   = "cache/docker"
+            sub_path   = "cache/docker-v2"
           }
           volume_mount {
             mount_path = "/var/lib/coder/containers"
