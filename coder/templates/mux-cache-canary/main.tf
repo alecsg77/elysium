@@ -377,6 +377,13 @@ resource "kubernetes_deployment" "main" {
             name  = "CODER_ADD_TUN"
             value = "false"
           }
+          # The Envbox-supported persistent-Docker topology mounts one storage
+          # path at both the outer and inner Docker roots. This cluster's PVC
+          # requires idmapped mounts to be disabled for that shared path.
+          env {
+            name  = "CODER_DISABLE_IDMAPPED_MOUNT"
+            value = "true"
+          }
           env {
             name  = "CODER_INNER_HOSTNAME"
             value = data.coder_workspace.me.name
@@ -421,13 +428,12 @@ resource "kubernetes_deployment" "main" {
             name       = "home"
             sub_path   = "envbox/containers"
           }
-          # Keep Envbox's outer Docker daemon separate from the inner container's
-          # Docker state. On this Kubernetes idmapped PVC, sharing cache/docker
-          # makes dockerd fail at startup with EOVERFLOW during chmod.
+          # Envbox requires the same persistent Docker path at its outer and
+          # inner roots. CODER_DISABLE_IDMAPPED_MOUNT above avoids the prior
+          # EOVERFLOW startup failure on this cluster's idmapped PVC.
           volume_mount {
             mount_path = "/var/lib/docker"
-            name       = "home"
-            sub_path   = "envbox/docker"
+            name       = "docker-cache"
           }
           volume_mount {
             mount_path = "/usr/src"

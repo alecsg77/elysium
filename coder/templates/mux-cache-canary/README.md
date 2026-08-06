@@ -16,13 +16,13 @@ Provisions an isolated Kubernetes workspace running [Mux](https://github.com/cod
 | **Runtime** | `ghcr.io/coder/envbox:0.6.7` (privileged, built-in Docker daemon) |
 | **Inner image** | `codercom/enterprise-node:ubuntu-20260713` |
 | **Mux** | Installed via `coder/mux` registry module (`mux@next` from npm) |
-| **Storage** | Separate PVCs for `/home/coder`/Mux state and the inner Docker/BuildKit cache; the outer Envbox Docker path stays on the home PVC |
+| **Storage** | Separate PVCs for `/home/coder`/Mux state and a Docker/BuildKit cache mounted at both Envbox Docker roots |
 
 ## Experiment contract
 
-This template isolates the inner Docker/BuildKit root on its own workspace-scoped PVC and sets a 120-second pod termination grace period. The outer Envbox Docker path remains on the home PVC because sharing the two paths is incompatible with this cluster's idmapped PVC mounts.
+This template mounts one workspace-scoped Docker/BuildKit PVC at both Envbox Docker roots, matching Envbox's documented topology, and sets a 120-second pod termination grace period. It also sets `CODER_DISABLE_IDMAPPED_MOUNT=true`: the prior shared-path experiment failed during outer Docker startup with `EOVERFLOW` on this cluster's idmapped PVC.
 
-Use this template only for the controlled sequence: serialized build, normal restart plus serialized rebuild, serialized multi-worktree builds, concurrent builds, and finally an interrupted build. Retain all records under `~/.mux/docker-diagnostics/`; do not prune or rotate the canary cache before collecting a failure.
+Use this template only for the controlled sequence: serialized build, normal restart plus serialized rebuild, serialized multi-worktree builds, concurrent builds, and finally an interrupted build. Retain all records under `~/.mux/docker-diagnostics/`; do not prune or rotate a canary cache before collecting a failure.
 
 The template installs `collect-mux-docker-state` and `devcontainer-observed` under `~/.local/bin`. Use the observed wrapper for all experiment builds so a failed command retains its exact output and triggers a non-destructive Docker/BuildKit state capture.
 
