@@ -18,6 +18,14 @@ Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) â€
 | **Mux** | Installed via `coder/mux` registry module (`mux@next` from npm) |
 | **Storage** | Single PVC for `/home/coder`, Docker cache, and Mux state (`~/.mux`) |
 
+## Docker cache stability
+
+The inner Docker daemon uses Docker's classic image store (`containerd-snapshotter=false`) while retaining the existing home-PVC cache layout. Envbox's outer Docker daemon continues to use its separate home-PVC path; replacing that outer configuration would remove Envbox's required `sysbox-runc` runtime.
+
+This configuration was validated in a dedicated canary on August 6, 2026 across serialized builds, a normal workspace restart with cache reuse, simultaneous builds from separate worktrees, a deliberately interrupted no-cache build, and a subsequent rebuild. The original containerd snapshotter path had reproduced missing content-digest and snapshot errors after a normal workspace restart.
+
+The workspace continues using the existing `cache/docker-v2` home-PVC subpath, preserving the separate outer Envbox Docker path and avoiding a storage migration. The older cache subpath remains untouched for forensic retention and can be removed only through a separately approved cleanup.
+
 ## Modules
 
 - [`coder/coder-login`](https://registry.coder.com/modules/coder/coder-login) â€” injects `CODER_SESSION_TOKEN` from the workspace owner automatically

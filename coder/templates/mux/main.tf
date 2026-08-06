@@ -269,6 +269,16 @@ resource "kubernetes_deployment" "main" {
       spec {
         service_account_name = data.kubernetes_service_account_v1.workspace_owner.metadata[0].name
 
+        init_container {
+          name    = "write-inner-docker-config"
+          image   = "busybox:1.37.0"
+          command = ["/bin/sh", "-ec", "printf '%s\\n' '{\"features\":{\"containerd-snapshotter\":false}}' > /config/daemon.json"]
+          volume_mount {
+            mount_path = "/config"
+            name       = "inner-docker-config"
+          }
+        }
+
         container {
           name              = "dev"
           image             = "ghcr.io/coder/envbox:0.6.7"
@@ -310,9 +320,11 @@ resource "kubernetes_deployment" "main" {
             name  = "CODER_BOOTSTRAP_SCRIPT"
             value = coder_agent.main.init_script
           }
+          # Bind the inner daemon configuration before Envbox starts it without
+          # replacing the outer daemon's sysbox-runc configuration.
           env {
             name  = "CODER_MOUNTS"
-            value = "/home/coder:/home/coder,/var/run/secrets/kubernetes.io/serviceaccount:/var/run/secrets/kubernetes.io/serviceaccount:ro"
+            value = "/home/coder:/home/coder,/etc/coder-inner-docker:/etc/docker:ro,/var/run/secrets/kubernetes.io/serviceaccount:/var/run/secrets/kubernetes.io/serviceaccount:ro"
           }
           env {
             name = "CODER_INNER_ENVS"
@@ -350,6 +362,11 @@ resource "kubernetes_deployment" "main" {
             }
           }
 
+          volume_mount {
+            mount_path = "/etc/coder-inner-docker"
+            name       = "inner-docker-config"
+            read_only  = true
+          }
           volume_mount {
             mount_path = "/home/coder"
             name       = "home"
@@ -395,6 +412,10 @@ resource "kubernetes_deployment" "main" {
           }
         }
 
+        volume {
+          name = "inner-docker-config"
+          empty_dir {}
+        }
         volume {
           name = "home"
           persistent_volume_claim {
