@@ -68,9 +68,20 @@ cat >"$BIN_DIR/devcontainer-observed" <<'WRAPPER'
 #!/usr/bin/env bash
 set -o pipefail
 
-real_devcontainer="${DEVCONTAINER_BIN:-/tmp/coder-script-data/bin/devcontainer}"
-if [ ! -x "$real_devcontainer" ]; then
-  echo "devcontainer-observed: expected Dev Containers CLI at $real_devcontainer" >&2
+real_devcontainer="${DEVCONTAINER_BIN:-}"
+if [ -z "$real_devcontainer" ]; then
+  for candidate in \
+    /tmp/coder-script-data/bin/devcontainer \
+    "$HOME/.local/bin/devcontainer" \
+    "$HOME/.local/npm/node_modules/.bin/devcontainer"; do
+    if [ -x "$candidate" ]; then
+      real_devcontainer="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$real_devcontainer" ] || [ ! -x "$real_devcontainer" ]; then
+  echo "devcontainer-observed: Dev Containers CLI is unavailable; set DEVCONTAINER_BIN to its executable path" >&2
   exit 127
 fi
 
