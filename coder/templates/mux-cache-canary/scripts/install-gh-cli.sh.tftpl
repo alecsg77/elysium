@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Installs the GitHub CLI (gh) from the official release binaries into
+# $HOME/.local/bin. No sudo/package manager required. Safe to run multiple
+# times (idempotent).
+#
+# Rendered via templatefile() from main.tf, which injects the pinned version
+# below. Do not hardcode a version here — edit the inlined `version = "..."`
+# argument in main.tf instead (Renovate keeps it current, see the trailing
+# "renovate:" comment marker on that line).
+set -euo pipefail
+
+GH_CLI_VERSION="${version}"
+GH_BIN_DIR="$HOME/.local/bin"
+
+resolve_version() {
+  if [ "$GH_CLI_VERSION" = "latest" ]; then
+    curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+      | grep -m1 '"tag_name"' \
+      | sed -E 's/.*"v([^"]+)".*/\1/'
+  else
+    printf '%s' "$GH_CLI_VERSION"
+  fi
+}
+
+RESOLVED_VERSION="$(resolve_version)"
+
+if [ -z "$RESOLVED_VERSION" ]; then
+  echo "install-gh-cli: failed to resolve gh version" >&2
+  exit 1
+fi
+
+if command -v gh >/dev/null 2>&1; then
+  INSTALLED_VERSION="$(gh --version | head -n1 | awk '{print $3}')"
+  if [ "$INSTALLED_VERSION" = "$RESOLVED_VERSION" ]; then
+    echo "gh cli $INSTALLED_VERSION already installed, skipping"
+    exit 0
+  fi
+  echo "gh cli $INSTALLED_VERSION installed, upgrading to $RESOLVED_VERSION"
+fi
+
+ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64) GH_ARCH="amd64" ;;
+  aarch64 | arm64) GH_ARCH="arm64" ;;
+  *)
+    echo "install-gh-cli: unsupported architecture '$ARCH'" >&2
+    exit 1
+    ;;
+esac
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+GH_TARBALL="gh_$${RESOLVED_VERSION}_linux_$${GH_ARCH}.tar.gz"
+curl -fsSL "https://github.com/cli/cli/releases/download/v$${RESOLVED_VERSION}/$${GH_TARBALL}" \
+  -o "$TMP_DIR/gh.tar.gz"
+
+tar -xzf "$TMP_DIR/gh.tar.gz" -C "$TMP_DIR"
+
+mkdir -p "$GH_BIN_DIR"
+cp "$TMP_DIR/gh_$${RESOLVED_VERSION}_linux_$${GH_ARCH}/bin/gh" "$GH_BIN_DIR/gh"
+chmod +x "$GH_BIN_DIR/gh"
+
+if ! grep -q "$GH_BIN_DIR" "$HOME/.bashrc" 2>/dev/null; then
+  echo "export PATH=\"$GH_BIN_DIR:\$PATH\"" >>"$HOME/.bashrc"
+fi
+
+export PATH="$GH_BIN_DIR:$PATH"
+echo "Installed gh $RESOLVED_VERSION to $GH_BIN_DIR"

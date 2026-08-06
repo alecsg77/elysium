@@ -1,13 +1,13 @@
 ---
-displayname: Mux
-description: AI coding agent multiplexer workspace with Docker support via envbox
+displayname: Mux Cache Canary
+description: Isolated Mux workspace for Docker and BuildKit cache-stability experiments
 icon: /icon/mux.svg
 tags: [kubernetes, envbox, mux, docker, ai]
 ---
 
-# Mux
+# Mux Cache Canary
 
-Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) â€” Coder's AI coding agent multiplexer â€” inside an [envbox](https://github.com/coder/envbox) container that provides a full Docker environment without a separate sidecar.
+Provisions an isolated Kubernetes workspace running [Mux](https://github.com/coder/mux) inside an [envbox](https://github.com/coder/envbox) container. It is for controlled Docker/BuildKit cache-stability experiments and must not replace the production `mux` template until its acceptance criteria pass.
 
 ## Architecture
 
@@ -16,7 +16,15 @@ Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) â€
 | **Runtime** | `ghcr.io/coder/envbox:0.6.7` (privileged, built-in Docker daemon) |
 | **Inner image** | `codercom/enterprise-node:ubuntu-20260713` |
 | **Mux** | Installed via `coder/mux` registry module (`mux@next` from npm) |
-| **Storage** | Single PVC for `/home/coder`, Docker cache, and Mux state (`~/.mux`) |
+| **Storage** | Separate PVCs for `/home/coder`/Mux state and the inner Docker/BuildKit cache; the outer Envbox Docker path stays on the home PVC |
+
+## Experiment contract
+
+This template isolates the inner Docker/BuildKit root on its own workspace-scoped PVC and sets a 120-second pod termination grace period. The outer Envbox Docker path remains on the home PVC because sharing the two paths is incompatible with this cluster's idmapped PVC mounts.
+
+Use this template only for the controlled sequence: serialized build, normal restart plus serialized rebuild, serialized multi-worktree builds, concurrent builds, and finally an interrupted build. Retain all records under `~/.mux/docker-diagnostics/`; do not prune or rotate the canary cache before collecting a failure.
+
+The template installs `collect-mux-docker-state` and `devcontainer-observed` under `~/.local/bin`. Use the observed wrapper for all experiment builds so a failed command retains its exact output and triggers a non-destructive Docker/BuildKit state capture.
 
 ## Modules
 
@@ -30,14 +38,9 @@ Provisions a Kubernetes workspace running [Mux](https://github.com/coder/mux) â€
 
 For CLI tools without an existing Coder Registry module (e.g. GitHub CLI `gh`), standalone installer script templates live under [`scripts/`](./scripts). Each `scripts/install-<tool>.sh.tftpl` is rendered via `templatefile()` with a pinned version and run as part of a single `coder_script` on startup. Versions are pinned as `main.tf` locals decorated with `renovate:` comments so Renovate can bump them automatically â€” see [`scripts/README.md`](./scripts/README.md) for the full convention.
 
-## Docker and BuildKit diagnostics
+## Promotion criteria
 
-The startup script installs two non-destructive tools in `~/.local/bin`:
-
-- `collect-mux-docker-state [label]` captures Docker/BuildKit versions, cache metadata, mount and capacity data, and relevant daemon logs under `~/.mux/docker-diagnostics/`.
-- `devcontainer-observed <devcontainer arguments>` runs the standard Dev Containers CLI, retains the complete command/output, and automatically invokes the collector if the command fails.
-
-Use `devcontainer-observed up --workspace-folder .` when investigating a failure. Neither tool prunes cache, deletes containers, or changes Docker state.
+Do not promote this storage design to `mux` until the same canary cache PVC survives normal workspace restart, `docker system df` has no rw-layer snapshot error, and the full experiment sequence completes without a missing content digest or parent snapshot. If an experiment fails, retain the cache PVC and logs as evidence before rolling back the template.
 
 ## Local Mux API access
 

@@ -33,7 +33,21 @@ variable "namespace" {
 data "coder_parameter" "home_disk_size" {
   name         = "home_disk_size"
   display_name = "Home disk size (GiB)"
-  description  = "Size of the persistent /home/coder volume. Also stores Docker layer cache and devcontainer state via envbox."
+  description  = "Size of the persistent /home/coder volume and Mux state."
+  default      = "20"
+  type         = "number"
+  icon         = "/emojis/1f4be.png"
+  mutable      = false
+  validation {
+    min = 10
+    max = 200
+  }
+}
+
+data "coder_parameter" "docker_cache_disk_size" {
+  name         = "docker_cache_disk_size"
+  display_name = "Docker cache disk size (GiB)"
+  description  = "Size of the dedicated persistent Docker/BuildKit cache volume used by the canary."
   default      = "20"
   type         = "number"
   icon         = "/emojis/1f4be.png"
@@ -229,6 +243,38 @@ resource "kubernetes_persistent_volume_claim" "home" {
   }
 }
 
+resource "kubernetes_persistent_volume_claim" "docker_cache" {
+  metadata {
+    name      = "coder-${data.coder_workspace.me.id}-docker-cache"
+    namespace = var.namespace
+    labels = {
+      "app.kubernetes.io/name"     = "coder-docker-cache"
+      "app.kubernetes.io/instance" = "coder-docker-cache-${data.coder_workspace.me.id}"
+      "app.kubernetes.io/part-of"  = "coder"
+      "com.coder.resource"         = "true"
+      "com.coder.workspace.id"     = data.coder_workspace.me.id
+      "com.coder.workspace.name"   = data.coder_workspace.me.name
+      "com.coder.user.id"          = data.coder_workspace_owner.me.id
+      "com.coder.user.username"    = data.coder_workspace_owner.me.name
+    }
+    annotations = {
+      "com.coder.user.email" = data.coder_workspace_owner.me.email
+    }
+  }
+  wait_until_bound = false
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "${data.coder_parameter.docker_cache_disk_size.value}Gi"
+      }
+    }
+  }
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
 resource "kubernetes_deployment" "main" {
   count            = data.coder_workspace.me.start_count
   wait_for_rollout = false
@@ -267,6 +313,8 @@ resource "kubernetes_deployment" "main" {
         }
       }
       spec {
+        termination_grace_period_seconds = 120
+
         service_account_name = data.kubernetes_service_account_v1.workspace_owner.metadata[0].name
 
         container {
@@ -355,13 +403,9 @@ resource "kubernetes_deployment" "main" {
             name       = "home"
             sub_path   = "home"
           }
-          # Docker's previous cache generation has unrecoverable content-store
-          # and ownership corruption. Start the inner daemon on a fresh PVC
-          # subpath without disturbing the workspace home volume.
           volume_mount {
             mount_path = "/var/lib/coder/docker"
-            name       = "home"
-            sub_path   = "cache/docker-v2"
+            name       = "docker-cache"
           }
           volume_mount {
             mount_path = "/var/lib/coder/containers"
@@ -395,6 +439,12 @@ resource "kubernetes_deployment" "main" {
           }
         }
 
+        volume {
+          name = "docker-cache"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.docker_cache.metadata[0].name
+          }
+        }
         volume {
           name = "home"
           persistent_volume_claim {
