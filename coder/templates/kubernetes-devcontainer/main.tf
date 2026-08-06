@@ -474,6 +474,16 @@ module "jetbrains" {
   folder     = local.workspace_folder
 }
 
+module "mux" {
+  count       = data.coder_workspace.me.start_count
+  source      = "registry.coder.com/coder/mux/coder"
+  version     = "1.5.0"
+  agent_id    = coder_agent.main.id
+  add_project = local.workspace_folder
+  use_cached  = true
+  open_in     = "tab"
+}
+
 resource "coder_metadata" "container_info" {
   count       = data.coder_workspace.me.start_count
   resource_id = coder_agent.main.id
