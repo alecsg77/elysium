@@ -271,7 +271,7 @@ resource "kubernetes_deployment" "main" {
 
         init_container {
           name    = "write-inner-docker-config"
-          image   = "busybox:1.37.0"
+          image   = "busybox:1.38.0"
           command = ["/bin/sh", "-ec", "printf '%s\\n' '{\"features\":{\"containerd-snapshotter\":false}}' > /config/daemon.json"]
           volume_mount {
             mount_path = "/config"
