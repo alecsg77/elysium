@@ -113,6 +113,15 @@
 	"remoteEnv": {
 		"GH_TOKEN": "${localEnv:GH_TOKEN}"
 	},
+	// Mux may bind-mount a repository Git directory below $HOME/.mux before
+	// lifecycle hooks run. Docker creates missing mount-parent directories as
+	// root, which would otherwise prevent the non-root remote user from writing
+	// Plan Mode files under $HOME/.mux/plans. Do not recurse: the mounted Git
+	// directory remains owned by its host mount source.
+	"postStartCommand": {
+		"mux-home": "set -eu; sudo install -d -o \"$(id -u)\" -g \"$(id -g)\" -m 0700 \"$HOME/.mux\" \"$HOME/.mux/plans\""
+	},
+
 	"postCreateCommand": {
 		"kubectl": "sudo sh -c 'kubectl completion bash > /etc/bash_completion.d/kubectl'",
 		"helm": "sudo sh -c 'helm completion bash > /etc/bash_completion.d/helm'",
