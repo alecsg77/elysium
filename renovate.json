@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["custom.regex", "flux", "terraform"],
+  "enabledManagers": ["custom.regex", "devcontainer", "flux", "terraform"],
   "customManagers": [
     {
       "description": "Container image field in Kubernetes pod specs inside Coder templates",

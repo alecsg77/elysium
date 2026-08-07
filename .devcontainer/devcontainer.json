@@ -26,10 +26,20 @@
 	//      checksum against the release's published checksums file before
 	//      installing, and expose "version"/"architecture" options (see
 	//      features/{coder-cli,fission-cli,flux-operator-mcp,kompose}/install.sh).
-	//   4. Never install tools via raw Dockerfile RUN curl|wget commands — the
-	//      Dockerfile stays a single FROM line (see its comment for why it still
-	//      exists at all).
+	//   4. Never install application tools via raw Dockerfile RUN curl|wget
+	//      commands — use Features. The Dockerfile is reserved for its minimal
+	//      base image and an upstream OS-level compatibility workaround.
+	//
+	// Pin every remote Feature to a major release. Renovate's `devcontainer`
+	// manager updates these references; local Features are versioned with this repo.
 	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": "true",
+			"username": "coder",
+			"userUid": "1000",
+			"userGid": "1000",
+			"upgradePackages": "true"
+		},
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
 			"minikube": "none"
 		},
@@ -37,13 +47,13 @@
 		"ghcr.io/rio/features/k9s:1": {
 			"version": "0.51.0"
 		},
-		"ghcr.io/gickis/devcontainer-features/kubeseal": {},
+		"ghcr.io/gickis/devcontainer-features/kubeseal:1": {},
 		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
 		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
 		"./features/fission-cli": {},
-		"ghcr.io/devcontainers/features/terraform": {},
+		"ghcr.io/devcontainers/features/terraform:1": {},
 		"./features/coder-cli": {},
-		"ghcr.io/tailscale/codespace/tailscale": {},
+		"ghcr.io/tailscale/codespace/tailscale:1": {},
 		"ghcr.io/devcontainers/features/node:2": {},
 		"./features/flux-operator-mcp": {},
 		"./features/kompose": {},
@@ -80,13 +90,13 @@
 		}
 	},
 
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
-	"containerUser": "vscode",
+	// Use the explicitly provisioned non-root account for editor and lifecycle commands.
+	"containerUser": "coder",
+	"remoteUser": "coder",
 
 	"mounts": [
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,bind-create-src",
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached,bind-create-src",
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/coder/.ssh,type=bind,consistency=cached,bind-create-src",
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.kube,target=/home/coder/.kube,type=bind,consistency=cached,bind-create-src",
 		// The host source must already exist as a regular file. It is copied
 		// into $HOME during postCreateCommand rather than mounted over it.
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/tmp/host-gitconfig,type=bind,readonly",
