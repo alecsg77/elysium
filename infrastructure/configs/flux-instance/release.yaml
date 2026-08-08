@@ -1,0 +1,57 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flux-instance
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: flux-operator
+  interval: 1h
+  timeout: 10m
+  chartRef:
+    kind: OCIRepository
+    name: flux-instance
+    namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    fullnameOverride: flux
+    instance:
+      # Keep the distribution at the current bootstrap version during adoption.
+      distribution:
+        version: 2.9.3
+        registry: ghcr.io/fluxcd
+        artifact: oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests:v0.57.0@sha256:1c5bc322bce48332556bec6ca29cdf32757e5892036d954d8cd36028b8ad4035
+      components:
+        - source-controller
+        - kustomize-controller
+        - helm-controller
+        - notification-controller
+        - image-reflector-controller
+        - image-automation-controller
+      cluster:
+        type: kubernetes
+        domain: cluster.local
+        networkPolicy: true
+        multitenant: false
+      sync:
+        interval: 1m
+        kind: GitRepository
+        # refs/heads/main is the FluxInstance API equivalent of the legacy branch: main.
+        ref: refs/heads/main
+        url: ssh://git@github.com/alecsg77/elysium
+        path: ./clusters/kyrion
+        pullSecret: flux-system
+        # This name is immutable and preserves the existing bootstrap object identity.
+        name: flux-system
+      kustomize:
+        patches: []
+    # Gate HelmRelease readiness on FluxInstance readiness before considering this phase applied.
+    healthcheck:
+      enabled: true
+      timeout: 10m

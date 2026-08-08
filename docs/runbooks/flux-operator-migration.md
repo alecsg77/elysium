@@ -11,7 +11,7 @@ The migration is deliberately split into independently verifiable GitOps changes
 3. Remove the legacy generated bootstrap manifests only after the instance is stable.
 4. Optionally install `flux-operator-mcp` as an internal, read-only service.
 
-**This repository change implements only phase 1.** The existing bootstrap remains the active fallback until the phase-2 runtime checks succeed.
+**This repository change implements phases 1 and 2.** The existing bootstrap manifests remain in Git as the fallback until the phase-2 runtime checks succeed; phase 3 bootstrap cleanup is a separate change.
 
 ## Safety requirements
 
@@ -74,7 +74,13 @@ flux get all -A
 
 Only start this phase after phase 1 has been stable for at least one normal reconciliation interval.
 
-Create a second, separately reviewed HelmRelease using the `flux-instance` chart. It must render `FluxInstance/flux` in `flux-system`; the Flux Operator API only accepts that name and requires the instance in the same namespace as the operator.
+The phase-2 GitOps manifests use the pinned `flux-instance` chart and are located at:
+
+- `infrastructure/configs/flux-instance/repository.yaml`
+- `infrastructure/configs/flux-instance/release.yaml`
+- `infrastructure/configs/flux-instance/kustomization.yaml`
+
+They render `FluxInstance/flux` in `flux-system`; the Flux Operator API only accepts that name and requires the instance in the same namespace as the operator. The HelmRelease depends on `flux-operator` and waits on the chart health check for the instance to become Ready.
 
 Before rendering the instance, copy the live bootstrap configuration exactly:
 
@@ -85,9 +91,11 @@ kubectl -n flux-system get kustomization flux-system \
   -o jsonpath='{.spec.path}{"\n"}{.spec.interval}{"\n"}{.spec.prune}{"\n"}'
 ```
 
+The phase-2 release pins both the `flux-instance` chart and the matching Flux distribution artifact. The artifact must contain the exact adopted Flux version; validate this before changing the pin.
+
 The instance values must preserve:
 
-- Flux distribution minor (`2.9.x` while the existing bootstrap is `v2.9.3`), registry/artifact, and all six current controllers.
+- Flux distribution version `2.9.3` (held exactly during adoption), registry/artifact, and all six current controllers.
 - Cluster domain, network policy, tenancy, storage, common metadata, and any generated-manifest patches.
 - Git sync kind, URL, branch/ref, path, interval, prune behavior, and pull Secret.
 - Existing image automation resources; do not remove or rename `ImageUpdateAutomation/image-update` during adoption.

@@ -10,6 +10,7 @@ resources:
   - traefik-config.yaml
   - connector.yaml
   - imageupdateautomation.yaml
+  - flux-instance
   - local-storage-class.yaml
   - ts-default-proxy-class.yaml
   - copilot-agent-rbac
