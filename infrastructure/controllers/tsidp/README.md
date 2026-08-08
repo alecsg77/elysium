@@ -2,6 +2,10 @@
 
 `tsidp` is deployed as a single persistent pod in the existing `tailscale` namespace. It uses the official `ghcr.io/tailscale/tsidp` image through the local `charts/onechart` chart because upstream publishes a Docker image but no official Helm chart.
 
+## Service-link environment collision
+
+The `tsidp` Service would otherwise inject `TSIDP_PORT=tcp://...:443` into the pod through Kubernetes Service links. `tsidp` interprets `TSIDP_PORT` as its integer listener-port setting and exits when it receives that URL. Keep `podSpec.enableServiceLinks: false` in the HelmRelease to prevent this collision.
+
 ## Required secret
 
 Create `Secret/tsidp-auth` in namespace `tailscale` **before** Flux reconciles `HelmRelease/tsidp`. It must contain exactly one key named `TS_AUTHKEY`, whose value is a narrow, revocable Tailscale auth key or OAuth client secret. When using an OAuth client secret, its client needs the documented **Auth Keys: Write** scope and the pod advertises `tag:tsidp`.

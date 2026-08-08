@@ -44,6 +44,10 @@ spec:
       TS_HOSTNAME: idp
       TS_STATE_DIR: /data
       TSIDP_LOG: info
+    # Prevent the tsidp Service from injecting TSIDP_PORT=tcp://...:443.
+    # tsidp interprets TSIDP_PORT as its integer listener-port configuration.
+    podSpec:
+      enableServiceLinks: false
     podSecurityContext:
       fsGroup: 1001
       fsGroupChangePolicy: OnRootMismatch
