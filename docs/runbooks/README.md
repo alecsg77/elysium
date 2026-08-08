@@ -14,6 +14,8 @@ This directory contains step-by-step procedures for routine operational tasks. E
 - **[Resource Optimization](resource-optimization.md)** - Procedures for optimizing cluster resource usage and resolving resource constraints
 
 ### Cluster Operations
+- **[Migrating Flux to Flux Operator](flux-operator-migration.md)** - Staged, zero-downtime migration and optional internal MCP rollout
+
 Examples:
 - Flux reconciliation and forced deploy
 - Secret rotation procedures

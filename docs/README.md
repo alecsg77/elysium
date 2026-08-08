@@ -12,6 +12,7 @@ For AI coding agents, `AGENTS.md` at the repository root is the portable entry p
 - **[Runbooks](runbooks/README.md)** - Operational procedures and step-by-step guides
   - **[Adding Applications](runbooks/add-application.md)** - Complete workflow for deploying apps
   - **[Resource Optimization](runbooks/resource-optimization.md)** - Optimizing cluster resources
+  - **[Flux Operator Migration](runbooks/flux-operator-migration.md)** - Staged migration from the generated Flux bootstrap
 - **[Troubleshooting](troubleshooting/README.md)** - Diagnostic workflows, known issues, and solutions
 
 ## Conventions

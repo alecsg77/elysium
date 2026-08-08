@@ -12,3 +12,4 @@ resources:
   - nfd.yaml
   - inteldeviceplugins.yaml
   - arc.yaml
+  - flux-operator

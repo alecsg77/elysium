@@ -1,0 +1,32 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flux-operator
+  namespace: flux-system
+spec:
+  interval: 1h
+  timeout: 10m
+  chartRef:
+    kind: OCIRepository
+    name: flux-operator
+    namespace: flux-system
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    # The operator must have cluster-wide privileges to manage FluxInstance resources.
+    rbac:
+      create: true
+      createAggregation: true
+    # Do not enable the optional web UI until its access model is reviewed separately.
+    web:
+      enabled: false
+    installCRDs: true
+    image:
+      tag: v0.57.0
