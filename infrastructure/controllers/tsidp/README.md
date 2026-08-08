@@ -28,6 +28,14 @@ unset TS_AUTHKEY
 
 Add the resulting encrypted file to `kustomization.yaml` locally, verify its diff has no plaintext, then commit it in the same change that enables the release. The auth key must be tag-scoped, revocable, and not be the Tailscale Operator credential.
 
+## Service-link environment collision
+
+The HelmRelease sets `podSpec.enableServiceLinks: false`. Kubernetes otherwise injects a `TSIDP_PORT=tcp://<service-ip>:443` environment variable for the Service named `tsidp`; the official image interprets `TSIDP_PORT` as an integer listener-port setting and exits. Do not re-enable Service links unless the Service is renamed and the resulting environment-variable collision is tested.
+
+## Health checks
+
+`tsidp` serves HTTPS through its tsnet interface, not the Pod network interface. A Kubernetes TCP probe to the Pod IP on port 443 therefore fails even while the tsnet auth loop is running. The HelmRelease intentionally has no Kubernetes readiness or liveness probe; use the tailnet issuer discovery endpoint and Flux/Pod status as the operational health checks.
+
 ## Persistent state
 
 The release creates the `tsidp-tsidp-data` PVC. It stores both tsnet and OIDC server state, including registered clients and refresh-token state. Do not delete this PVC during a HelmRelease rollback or upgrade. Back it up and test restoration before upgrading `tsidp`.

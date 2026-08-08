@@ -62,21 +62,6 @@ spec:
       runAsUser: 1001
       seccompProfile:
         type: RuntimeDefault
-    container:
-      readinessProbe:
-        tcpSocket:
-          port: https
-        initialDelaySeconds: 30
-        periodSeconds: 10
-        timeoutSeconds: 3
-        failureThreshold: 18
-      livenessProbe:
-        tcpSocket:
-          port: https
-        initialDelaySeconds: 180
-        periodSeconds: 20
-        timeoutSeconds: 3
-        failureThreshold: 12
     volumes:
       - name: tsidp-data
         path: /data
