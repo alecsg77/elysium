@@ -80,7 +80,7 @@ The phase-2 GitOps manifests use the pinned `flux-instance` chart and are locate
 - `infrastructure/configs/flux-instance/release.yaml`
 - `infrastructure/configs/flux-instance/kustomization.yaml`
 
-They render `FluxInstance/flux` in `flux-system`; the Flux Operator API only accepts that name and requires the instance in the same namespace as the operator. The HelmRelease depends on `flux-operator` and waits on the chart health check for the instance to become Ready.
+They render `FluxInstance/flux` in `flux-system`; the Flux Operator API only accepts that name and requires the instance in the same namespace as the operator. The HelmRelease depends on `flux-operator`, but does not gate readiness through the chart healthcheck: it is disabled because the chart's healthcheck Job cannot render digest-suffixed chart versions as valid Kubernetes labels. Validate `FluxInstance` readiness at runtime instead.
 
 Before rendering the instance, copy the live bootstrap configuration exactly:
 
@@ -100,9 +100,12 @@ The instance values must preserve:
 - Git sync kind, URL, branch/ref, path, interval, prune behavior, and pull Secret.
 - Existing image automation resources; do not remove or rename `ImageUpdateAutomation/image-update` during adoption.
 
-After the `FluxInstance` is Ready, validate its control of the root sync:
+Validate `FluxInstance` readiness and its control of the root sync with the operator and Flux CLIs:
 
 ```bash
+flux reconcile helmrelease flux-instance -n flux-system --with-source
+flux get helmrelease flux-instance -n flux-system
+kubectl -n flux-system wait --for=condition=Ready fluxinstance/flux --timeout=10m
 kubectl -n flux-system get fluxinstance flux
 flux trace kustomization flux-system
 flux get all -A

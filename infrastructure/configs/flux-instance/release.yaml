@@ -51,7 +51,8 @@ spec:
         name: flux-system
       kustomize:
         patches: []
-    # Gate HelmRelease readiness on FluxInstance readiness before considering this phase applied.
+    # The chart healthcheck Job cannot render digest-suffixed chart versions as valid labels.
+    # Validate FluxInstance readiness with the runtime commands in the migration runbook.
     healthcheck:
-      enabled: true
+      enabled: false
       timeout: 10m
