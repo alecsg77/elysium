@@ -1,0 +1,85 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tsidp
+  namespace: tailscale
+spec:
+  releaseName: tsidp
+  dependsOn:
+    - name: tailscale-operator
+      namespace: flux-system
+  chart:
+    spec:
+      chart: ./charts/onechart
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    image:
+      repository: ghcr.io/tailscale/tsidp
+      tag: v0.0.14
+      digest: sha256:b3e7baf8dc0d309b8b34bedc286e38fd275daa302663e1b10f2ae774dff26b4a
+      pullPolicy: IfNotPresent
+    replicas: 1
+    containerPort: 443
+    ports:
+      - name: https
+        containerPort: 443
+        svcPort: 443
+    existingSecrets:
+      - name: tsidp-auth
+    vars:
+      TAILSCALE_USE_WIP_CODE: "1"
+      TS_ADVERTISE_TAGS: tag:tsidp
+      TS_HOSTNAME: idp
+      TS_STATE_DIR: /data
+      TSIDP_LOG: info
+    podSecurityContext:
+      fsGroup: 1001
+      fsGroupChangePolicy: OnRootMismatch
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsGroup: 1001
+      runAsNonRoot: true
+      runAsUser: 1001
+      seccompProfile:
+        type: RuntimeDefault
+    container:
+      readinessProbe:
+        tcpSocket:
+          port: https
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 3
+        failureThreshold: 18
+      livenessProbe:
+        tcpSocket:
+          port: https
+        initialDelaySeconds: 180
+        periodSeconds: 20
+        timeoutSeconds: 3
+        failureThreshold: 12
+    volumes:
+      - name: tsidp-data
+        path: /data
+        size: 1Gi
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
