@@ -11,7 +11,7 @@ The migration is deliberately split into independently verifiable GitOps changes
 3. Remove the legacy generated bootstrap manifests only after the instance is stable.
 4. Optionally install `flux-operator-mcp` as an internal, read-only service.
 
-**This repository change implements phases 1 and 2.** The existing bootstrap manifests remain in Git as the fallback until the phase-2 runtime checks succeed; phase 3 bootstrap cleanup is a separate change.
+**This repository now implements phases 1 through 3.** The generated bootstrap manifests were removed only after the operator-managed instance, adopted root sync, six Flux controllers, image automation, and all root Kustomizations were verified healthy.
 
 ## Safety requirements
 
@@ -117,12 +117,12 @@ The expected trace is that `Kustomization/flux-system` is no longer managed by t
 
 ## Phase 3: controlled bootstrap cleanup
 
-Only after an entire successful reconciliation cycle with the instance in control, remove the legacy generated bootstrap manifests in a dedicated commit:
+After an entire successful reconciliation cycle with the instance in control, remove the legacy generated bootstrap manifests in a dedicated commit:
 
 - `clusters/kyrion/flux-system/gotk-components.yaml`
 - `clusters/kyrion/flux-system/gotk-sync.yaml`
 
-Do not combine this deletion with the operator or instance installation. Confirm again that the instance still syncs `./clusters/kyrion`, no controller is duplicated, and all root Kustomizations are Ready.
+The cleanup also deletes `clusters/kyrion/flux-system/kustomization.yaml`: Kustomize does not accept an empty overlay. Do not combine this deletion with the operator or instance installation. Before and after the cutover, confirm the instance still syncs `./clusters/kyrion`, no controller is duplicated, and all root Kustomizations are Ready.
 
 ### Rollback
 
