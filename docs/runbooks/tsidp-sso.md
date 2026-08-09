@@ -1,44 +1,51 @@
-# tsidp OIDC for k3s
+# Configure k3s OIDC with tsidp
 
-This runbook enables personal OIDC authentication to the k3s API through the private `tsidp` issuer, then grants the first human role as read-only Kubernetes access.
+This runbook configures k3s to accept the personal OIDC tokens already issued by the private `tsidp` deployment and configures a Windows `kubelogin` client to renew them interactively.
 
-The rollout deliberately has two separate enforcement points:
+There is no intermediate application or manual token-copy workflow in this design:
 
-1. Tailscale grants control which Tailnet identities can reach the issuer and API endpoint.
-2. k3s authenticates the OIDC token; Kubernetes RBAC authorizes the resulting prefixed identity.
+```text
+kubectl -> kubelogin -> tsidp authorization-code flow -> ID token -> k3s -> Kubernetes RBAC
+```
 
-Do not use a shared ServiceAccount token or a static Kubernetes token for a human user. Do not enable Tailscale API-proxy `noauth`, Headlamp OIDC, or an operator role during this first read-only rollout.
+Tailscale grants control which human identities can reach `tsidp` and the Kubernetes API endpoint. k3s validates the signed OIDC token. Kubernetes RBAC authorizes the prefixed user and group from that token.
 
-## Current prerequisites
+This first role is read-only. Do not use a shared ServiceAccount token or a static Kubernetes token for human access. Do not enable Tailscale API-proxy `noauth`, Headlamp OIDC, or an operator role in this change.
 
-Complete these checks before changing the k3s server:
+## Prerequisites
+
+Before editing the k3s control-plane host, confirm all of the following:
 
 - `HelmRelease/tsidp` is `Ready` and its persistent PVC exists.
-- Discovery and JWKS work from a normal, authorized Tailnet device.
 - Discovery and JWKS work from the k3s control-plane host.
-- The Tailnet policy permits `tag:k8s` to reach `tag:tsidp` on TCP 443.
-- An authorized human identity can complete an Authorization Code with PKCE flow and receives `groups: ["viewer"]`.
-- An OIDC client is registered for the Kubernetes CLI test. Record its client ID locally; never commit its client secret or a private issuer hostname.
-- A current break-glass kubeconfig using the existing administrator credential has been tested from the control-plane host.
+- Tailnet policy permits `tag:k8s` to reach `tag:tsidp` on TCP 443.
+- Your Tailnet identity receives `groups: ["viewer"]` from `tsidp`.
+- You have one registered OIDC client for `kubelogin` with the exact redirect URI `http://127.0.0.1:8765/callback`.
+- Its client ID is available locally. Its client secret is available only on the workstation where `kubelogin` will run.
+- A break-glass administrator kubeconfig has been tested from the control-plane host and remains open during the restart.
 
-k3s `v1.36.3+k3s1` supports the stable `AuthenticationConfiguration` API used below. This deployment does not use the legacy `--oidc-*` flags.
+Use the existing client only if its secret has been rotated after the earlier temporary test. Otherwise, rotate that secret in `tsidp` first. The client is now the direct personal `kubelogin` client; it is not an intermediate application.
 
-## 1. Record the private values locally
+k3s `v1.36.3+k3s1` supports the stable `AuthenticationConfiguration` API used below. Do not combine it with legacy `--oidc-*` flags.
 
-On the k3s control-plane host, set the exact issuer URL and the client ID that will be the token audience for this first Kubernetes test. These values are private infrastructure identifiers; keep them out of Git and shell history where possible.
+## 1. Configure the k3s API server
+
+### 1.1 Record the issuer and audience locally
+
+On the k3s control-plane host, enter the exact issuer URL and the client ID of the direct `kubelogin` client. These are private infrastructure values: do not commit them to Git.
 
 ```bash
 read -rp 'OIDC issuer URL: ' IDP_ISSUER
-read -rp 'Kubernetes OIDC client ID: ' K8S_OIDC_CLIENT_ID
+read -rp 'kubelogin client ID: ' K8S_OIDC_CLIENT_ID
 export IDP_ISSUER K8S_OIDC_CLIENT_ID
 ```
 
-Verify both discovery and JWKS through the same network path k3s will use:
+Verify discovery and JWKS over the exact path k3s will use:
 
 ```bash
 curl --fail --silent --show-error \
   "$IDP_ISSUER/.well-known/openid-configuration" \
-  | jq '{issuer, jwks_uri, authorization_endpoint, token_endpoint}'
+  | jq '{issuer, jwks_uri}'
 
 JWKS_URI="$(curl --fail --silent --show-error \
   "$IDP_ISSUER/.well-known/openid-configuration" \
@@ -46,26 +53,23 @@ JWKS_URI="$(curl --fail --silent --show-error \
 curl --fail --silent --show-error "$JWKS_URI" | jq '.keys | length'
 ```
 
-Expected result: discovery reports the exact issuer entered above, and the JWKS command returns a positive key count.
+The returned `issuer` must exactly equal `IDP_ISSUER`, and the JWKS key count must be greater than zero.
 
-## 2. Inspect existing k3s API-server configuration
+### 1.2 Check for incompatible legacy OIDC flags
 
-Keep the current administrator session open while making this change. Do not perform the first rollout over the same experimental OIDC credential being enabled.
+Keep the break-glass administrator session open. Inspect the current k3s configuration before adding anything:
 
 ```bash
-sudo systemctl status k3s --no-pager
 sudo grep -RIn --include='*.yaml' --include='*.yml' \
   'kube-apiserver-arg\|oidc-\|authentication-config' \
   /etc/rancher/k3s/config.yaml /etc/rancher/k3s/config.yaml.d 2>/dev/null || true
 ```
 
-If any legacy `--oidc-*` API-server argument is already configured, stop and remove or migrate it as part of this change. Kubernetes does not support mixing the legacy OIDC flags with `--authentication-config`.
+If any `oidc-*` API-server argument exists, remove or migrate it before continuing. Kubernetes exits on startup when `--authentication-config` is combined with `--oidc-*` flags.
 
-Also inspect every k3s drop-in for `kube-apiserver-arg`. k3s list values replace earlier values unless the key ends in `+`; the drop-in created below deliberately uses `kube-apiserver-arg+` so it appends rather than discards existing API-server arguments.
+### 1.3 Create the authentication configuration
 
-## 3. Create the structured authentication configuration
-
-Create a root-readable configuration file on the control-plane host. The `sub` claim becomes `tsidp:<subject>` and the test token claim `groups: ["viewer"]` becomes the Kubernetes group `tsidp:viewer`.
+This maps token `sub` to `tsidp:<subject>` and token `groups: ["viewer"]` to Kubernetes group `tsidp:viewer`.
 
 ```bash
 sudo install -d -m 0700 /etc/rancher/k3s/authentication
@@ -92,13 +96,11 @@ sudo chmod 0600 /etc/rancher/k3s/authentication/tsidp.yaml
 sudo sed -n '1,80p' /etc/rancher/k3s/authentication/tsidp.yaml
 ```
 
-Leave `anonymous` out of this file. k3s starts the API server with anonymous authentication disabled; explicitly configuring `anonymous` in `AuthenticationConfiguration` would conflict with that API-server flag.
+Leave `anonymous` out of this file. k3s starts the API server with anonymous authentication disabled, and configuring `anonymous` in this file would conflict with the existing API-server flag.
 
-The configuration intentionally has no mapping for `email`, `username`, Tailscale tags, or unprefixed groups. `sub` is the stable personal identity for Kubernetes, and `groups` is the only claim used for this first RBAC role.
+### 1.4 Load the authentication configuration
 
-## 4. Add the k3s API-server argument
-
-Create a dedicated drop-in rather than editing the main k3s configuration file:
+Create a dedicated k3s drop-in. `kube-apiserver-arg+` appends this argument without replacing any existing API-server arguments.
 
 ```bash
 sudo tee /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml >/dev/null <<'EOF_CONFIG'
@@ -111,11 +113,9 @@ sudo chmod 0600 /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
 sudo cat /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
 ```
 
-Do not add `--oidc-issuer-url`, `--oidc-client-id`, `--oidc-username-claim`, or `--oidc-groups-claim`. Those legacy flags must remain absent when `authentication-config` is in use.
+### 1.5 Restart and validate k3s
 
-## 5. Restart and validate the control plane
-
-This first addition changes the k3s server process arguments and requires a restart. Plan a short API-server interruption and keep the break-glass shell open.
+This causes a short API-server interruption. Keep the break-glass shell open until all checks pass.
 
 ```bash
 sudo systemctl restart k3s
@@ -124,13 +124,11 @@ sudo journalctl -u k3s -b --no-pager -n 150
 sudo k3s kubectl get --raw='/readyz?verbose'
 ```
 
-Expected result: `k3s` is active and the readiness response ends in `ok`. If the service does not become active, follow [Rollback](#rollback) immediately; do not continue to RBAC or token testing.
+The service must be active and `/readyz` must end in `ok`. If not, go directly to [Rollback](#rollback); do not proceed to RBAC or client configuration.
 
-## 6. Add the first read-only RBAC binding through GitOps
+## 2. Bind the `viewer` claim through GitOps
 
-Use the built-in Kubernetes `view` ClusterRole for the first rollout. It provides namespace-scoped read-only access and deliberately does not grant Secret reads or write access.
-
-Create the following resource as a new Git-managed manifest under `infrastructure/configs/` and add it to that layer's `kustomization.yaml`. Do not use `kubectl apply` for this persistent cluster change.
+The token is now acceptable to k3s, but it has no Kubernetes permissions until RBAC is reconciled. Add this one resource under `infrastructure/configs/` and add it to `infrastructure/configs/kustomization.yaml`:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -147,64 +145,132 @@ roleRef:
   name: view
 ```
 
-Before committing, render the affected GitOps layer and lint changed YAML. After Flux reconciles, verify with the existing administrator credential:
+The built-in `view` ClusterRole provides namespace-scoped read-only access and deliberately excludes Secret reads and writes. Commit the manifest, let Flux reconcile `infra-configs`, then verify with the break-glass credential:
 
 ```bash
 kubectl get clusterrolebinding tsidp-viewer -o yaml
+kubectl auth can-i get pods --all-namespaces \
+  --as='tsidp:smoke-test' --as-group='tsidp:viewer'
 kubectl auth can-i get secrets --all-namespaces \
   --as='tsidp:smoke-test' --as-group='tsidp:viewer'
 ```
 
-The impersonation check must return `no` for Secrets. An administrator must not use it as proof that the OIDC flow works; the next step tests an actual signed ID token.
+Expected results are `yes` for Pod reads and `no` for Secret reads.
 
-## 7. Authenticate as the OIDC user and prove RBAC
+## 3. Configure kubelogin on Windows
 
-Use the dedicated Kubernetes CLI OIDC client and an Authorization Code with PKCE flow from a Tailnet-connected workstation. The issued ID token must have:
+Perform this on the Windows workstation already connected to the Tailnet. This configuration uses the registered `kubelogin` client directly and opens the normal browser login when tokens need renewal.
 
-- `iss` equal to the configured private issuer URL;
-- `aud` containing `K8S_OIDC_CLIENT_ID`;
-- a non-empty `sub`;
-- `groups` containing `viewer`.
+### 3.1 Install kubelogin
 
-For a one-time smoke test, place only the short-lived ID token in a local temporary file with user-only permissions. Do not paste it into a terminal history, chat, Git, a Kubernetes Secret, or a kubeconfig committed to Git.
-
-For the temporary PowerShell tester used to validate the client, add the following immediately after it assigns `$claims = ConvertFrom-JwtPayload $tokens.id_token`. This writes only the short-lived ID token to the current user's temporary directory; delete the file after the smoke test.
+In PowerShell:
 
 ```powershell
-$tokenPath = Join-Path $env:TEMP 'tsidp-id-token.txt'
-[System.IO.File]::WriteAllText(
-    $tokenPath,
-    $tokens.id_token,
-    [System.Text.UTF8Encoding]::new($false)
-)
-& icacls $tokenPath /inheritance:r /grant:r "${env:USERNAME}:(R)" | Out-Null
-Write-Host "Temporary ID token written to $tokenPath" -ForegroundColor Yellow
+winget install --id int128.kubelogin --exact
+kubectl oidc-login --help
 ```
 
-On Windows PowerShell, assuming the local test script has written the token to `$env:TEMP\tsidp-id-token.txt`:
+If `winget` reports that the package is already installed, keep the installed version only if `kubectl oidc-login --help` succeeds. `kubelogin` is used as a `kubectl` exec credential plugin; no permanent ID token is stored in the kubeconfig.
+
+### 3.2 Create a separate personal kubeconfig
+
+Do not overwrite or share the administrator kubeconfig. This starts with a local copy so the existing cluster endpoint and certificate authority remain intact.
 
 ```powershell
-$idToken = [System.IO.File]::ReadAllText("$env:TEMP\tsidp-id-token.txt").Trim()
+$SourceKubeconfig = "$HOME\.kube\config"       # change if your working kubeconfig is elsewhere
+$OidcKubeconfig = "$HOME\.kube\kyrion-tsidp.yaml"
 
-kubectl auth whoami --token $idToken
-kubectl auth can-i get pods --all-namespaces --token $idToken
-kubectl auth can-i get secrets --all-namespaces --token $idToken
+Copy-Item -LiteralPath $SourceKubeconfig -Destination $OidcKubeconfig -Force
+$env:KUBECONFIG = $OidcKubeconfig
 
-Remove-Item "$env:TEMP\tsidp-id-token.txt" -Force
-Remove-Variable idToken
+$ClusterName = kubectl config view --minify -o jsonpath='{.clusters[0].name}'
+if ([string]::IsNullOrWhiteSpace($ClusterName)) {
+    throw 'No current cluster was found in the copied kubeconfig.'
+}
+```
+
+Restrict the local file to your Windows account. The registered OIDC client secret is stored in the exec configuration, so this kubeconfig must remain private and must never be committed, emailed, or shared.
+
+```powershell
+icacls $OidcKubeconfig /inheritance:r /grant:r "${env:USERNAME}:(R,W)" | Out-Null
+```
+
+### 3.3 Add the direct OIDC exec credential
+
+Enter the private issuer, client ID, and the rotated client secret. The secret is requested interactively and is not put into PowerShell history.
+
+```powershell
+$Issuer = Read-Host 'OIDC issuer URL'
+$ClientId = Read-Host 'kubelogin client ID'
+$SecureClientSecret = Read-Host 'kubelogin client secret' -AsSecureString
+$SecretPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureClientSecret)
+
+try {
+    $ClientSecret = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($SecretPointer)
+
+    kubectl config set-credentials tsidp `
+      --exec-command=kubectl `
+      --exec-api-version=client.authentication.k8s.io/v1 `
+      --exec-interactive-mode=Never `
+      --exec-arg=oidc-login `
+      --exec-arg=--grant-type=authcode `
+      --exec-arg=get-token `
+      --exec-arg="--oidc-issuer-url=$Issuer" `
+      --exec-arg="--oidc-client-id=$ClientId" `
+      --exec-arg="--oidc-client-secret=$ClientSecret" `
+      --exec-arg=--listen-address=127.0.0.1:8765 `
+      --exec-arg=--oidc-redirect-url=http://127.0.0.1:8765/callback `
+      --exec-arg=--token-cache-storage=keyring
+}
+finally {
+    if ($SecretPointer -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($SecretPointer)
+    }
+    Remove-Variable ClientSecret -ErrorAction SilentlyContinue
+}
+
+kubectl config set-context tsidp --cluster=$ClusterName --user=tsidp
+```
+
+The redirect URL must exactly match the URI registered in `tsidp`: `http://127.0.0.1:8765/callback`. `--token-cache-storage=keyring` stores refresh-token state in the Windows keyring instead of a filesystem cache.
+
+### 3.4 Login and verify effective access
+
+The first command opens the browser and performs the authorization-code flow. Subsequent commands reuse or refresh the cached session as needed.
+
+```powershell
+kubectl --context tsidp auth whoami
+kubectl --context tsidp auth can-i get pods --all-namespaces
+kubectl --context tsidp auth can-i get secrets --all-namespaces
+kubectl --context tsidp get pods --all-namespaces
 ```
 
 Expected results:
 
-- `kubectl auth whoami` reports a username beginning with `tsidp:` and a group `tsidp:viewer` (as well as standard authenticated groups).
-- `get pods --all-namespaces` returns `yes`.
-- `get secrets --all-namespaces` returns `no`.
+- `auth whoami` shows a username beginning with `tsidp:` and group `tsidp:viewer`.
+- Pod reads are allowed.
+- Secret reads are denied.
 
-A future persistent client configuration should use an OIDC-aware `kubectl` credential plugin that renews tokens interactively. Do not build a long-lived kubeconfig around a copied ID token.
+Use the personal kubeconfig explicitly, or make the context current only after the checks succeed:
+
+```powershell
+$env:KUBECONFIG = "$HOME\.kube\kyrion-tsidp.yaml"
+kubectl config use-context tsidp
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause and action |
+| --- | --- |
+| k3s fails to start after restart | A legacy `--oidc-*` flag remains, the YAML is invalid, or k3s cannot reach issuer discovery/JWKS. Follow [Rollback](#rollback), inspect `journalctl -u k3s -b`, then correct the first error. |
+| `kubectl` returns `401 Unauthorized` | Check the issuer URL is exact, the token `aud` is the same client ID configured in `tsidp.yaml`, and the control plane can still retrieve JWKS. |
+| `kubectl auth whoami` works but reads are forbidden | OIDC works; Flux has not yet reconciled `ClusterRoleBinding/tsidp-viewer`, or the Tailnet policy did not emit `groups: ["viewer"]` for this user. |
+| Browser login does not return to kubelogin | The registered redirect URI must exactly be `http://127.0.0.1:8765/callback`; also ensure no other local process uses port 8765. |
+| `kubectl oidc-login` is unknown | Reinstall `int128.kubelogin`, close and reopen PowerShell so PATH refreshes, then rerun `kubectl oidc-login --help`. |
 
 ## Rollback
 
-If k3s cannot start, or the API server becomes unhealthy after Step 5, remove only the new OIDC argument and configuration, then restart using the already-tested break-glass session:
+If the k3s API server does not become healthy after Step 1, remove only the OIDC files and restart through the still-open break-glass session:
 
 ```bash
 sudo rm -f /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
@@ -214,18 +280,18 @@ sudo systemctl is-active --quiet k3s
 sudo k3s kubectl get --raw='/readyz?verbose'
 ```
 
-If authentication works but authorization is wrong, revert the Git commit that added `ClusterRoleBinding/tsidp-viewer` and reconcile `infra-configs`. Do not remove the `tsidp` PVC during an OIDC or RBAC rollback: it contains issuer and registered-client state.
+If OIDC works but read-only authorization is wrong, revert the Git commit that added `ClusterRoleBinding/tsidp-viewer` and reconcile `infra-configs`. Do not delete the `tsidp` PVC during either rollback: it contains issuer, signing, registration, and refresh-token state.
 
 ## Checklist
 
-- [ ] Break-glass administrator access tested before the restart.
-- [ ] Private issuer and client ID verified from the control-plane host.
-- [ ] No legacy `--oidc-*` arguments coexist with `authentication-config`.
-- [ ] k3s is active and `/readyz` is `ok` after the restart.
-- [ ] `tsidp:viewer` binding was committed and reconciled through Flux.
-- [ ] An actual ID token authenticates as `tsidp:<subject>`.
-- [ ] `tsidp:viewer` can read permitted namespace-scoped resources but cannot read Secrets.
-- [ ] The temporary ID token was removed from the workstation.
+- [ ] Break-glass administrator access was tested before restarting k3s.
+- [ ] The control-plane host resolves discovery and JWKS from `tsidp`.
+- [ ] No legacy `--oidc-*` flag coexists with `authentication-config`.
+- [ ] k3s is active and `/readyz` is `ok` after restart.
+- [ ] `tsidp:viewer` was committed and reconciled via Flux.
+- [ ] `kubectl --context tsidp auth whoami` shows the prefixed OIDC identity.
+- [ ] Pod reads work and Secret reads are denied.
+- [ ] The OIDC kubeconfig and client secret remain local and are not shared.
 
 ## Related documentation
 
