@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: registry-helm-values
       optional: true
+    - kind: ConfigMap
+      name: registry-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: registry # {"$imagepolicy": "registry:registry-policy:name"}
-      tag: "2.8.3" # {"$imagepolicy": "registry:registry-policy:tag"}
-      digest: "" # {"$imagepolicy": "registry:registry-policy:digest"}
     volumes:
       - name: registry
         size: "100Mi"
