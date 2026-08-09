@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: pihole-helm-values
       optional: true
+    - kind: ConfigMap
+      name: pihole-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: pihole/pihole # {"$imagepolicy": "arkham:pihole-policy:name"}
-      tag: "2025.11.1" # {"$imagepolicy": "arkham:pihole-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:pihole-policy:digest"}
     vars:
       TZ: ${TZ:=Etc/UTC}
       FTLCONF_webserver_api_password: ''
@@ -61,27 +60,3 @@ spec:
       - name: dns-udp
         containerPort: 53
         protocol: UDP
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: pihole
-spec:
-  image: pihole/pihole
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: pihole-policy
-spec:
-  imageRepositoryRef:
-    name: pihole
-  filterTags:
-    pattern: '^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$'
-    extract: "$major.$minor.$patch"
-  policy:
-    semver:
-      range: "*"
-  digestReflectionPolicy: Always
-  interval: 24h

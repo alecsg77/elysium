@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: flaresolverr-helm-values
       optional: true
+    - kind: ConfigMap
+      name: flaresolverr-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: ghcr.io/flaresolverr/flaresolverr # {"$imagepolicy": "arkham:flaresolverr-policy:name"}
-      tag: "v3.5.0" # {"$imagepolicy": "arkham:flaresolverr-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:flaresolverr-policy:digest"}
     vars:
       TZ: ${TZ:=Etc/UTC}
       LOG_LEVEL: debug
@@ -39,27 +38,3 @@ spec:
       settings:
         initialDelaySeconds: 15
         timeoutSeconds: 10
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: flaresolverr
-spec:
-  image: ghcr.io/flaresolverr/flaresolverr
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: flaresolverr-policy
-spec:
-  imageRepositoryRef:
-    name: flaresolverr
-  filterTags:
-    pattern: '^v(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$'
-    extract: "$major.$minor.$patch"
-  policy:
-    semver:
-      range: 3.x
-  digestReflectionPolicy: Always
-  interval: 24h

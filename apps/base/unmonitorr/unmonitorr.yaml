@@ -17,35 +17,13 @@ spec:
     - kind: ConfigMap
       name: unmonitorr-helm-values
       optional: true
+    - kind: ConfigMap
+      name: unmonitorr-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: shraymonks/unmonitorr # {"$imagepolicy": "arkham:unmonitorr-policy:name"}
-      tag: "v1.2.0" # {"$imagepolicy": "arkham:unmonitorr-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:unmonitorr-policy:digest"}
     vars:
       PLEX_PORT: 9797
     existingSecrets:
       - name: unmonitorr
         optional: true
     containerPort: 9797
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: unmonitorr
-spec:
-  image: shraymonks/unmonitorr
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: unmonitorr-policy
-spec:
-  imageRepositoryRef:
-    name: unmonitorr
-  policy:
-    semver:
-      range: 1.x
-  digestReflectionPolicy: Always
-  interval: 24h
