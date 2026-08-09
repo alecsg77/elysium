@@ -19,9 +19,9 @@ The Gitless adapter is active for these workloads:
 
 RaiPlaySoundRSS has a staged provider manifest but is not active: its `apps/kyrion/raiplaysoundrss` overlay is not included by the `apps` root Kustomization, so no namespace, ResourceSet, ConfigMap consumer, or legacy-policy cleanup has been rolled out for it.
 
-The following workloads remain on Flux ImagePolicy/ImageUpdateAutomation because their current `filterTags.extract` semantics cannot be represented safely by Flux Operator `OCIArtifactTag` in version `v0.57.0`: apprise-api, overseerr, tautulli, and searxng. In particular, tags such as `version-v1.10.0` cannot use the provider SemVer selector without losing numeric ordering. Do not convert them to lexical selection merely to remove the final Git writes.
+The active workloads that remain on Flux ImagePolicy/ImageUpdateAutomation are apprise-api, overseerr, and tautulli. Their current `filterTags.extract` semantics cannot be represented safely by Flux Operator `OCIArtifactTag` in version `v0.57.0`: tags such as `version-v1.10.0` cannot use the provider SemVer selector without losing numeric ordering. Do not convert them to lexical selection merely to remove the final Git writes.
 
-`RomM` is not included: it has no ImagePolicy setter target.
+SearXNG also has an extraction-based legacy manifest, but its base is not selected by the `ai` overlay, so it has no live ImagePolicy or workload in this rollout. `RomM` is not included because it has no ImagePolicy setter target.
 
 ## How it works
 
