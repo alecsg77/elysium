@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: msmtpd-helm-values
       optional: true
+    - kind: ConfigMap
+      name: msmtpd-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: crazymax/msmtpd # {"$imagepolicy": "arkham:msmtpd-policy:name"}
-      tag: "1.8.32" # {"$imagepolicy": "arkham:msmtpd-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:msmtpd-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -55,24 +54,3 @@ spec:
             - echo EHLO localhost | nc 127.0.0.1 2500 | grep 250 || exit 1
         periodSeconds: 10
         timeoutSeconds: 5
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: msmtpd
-spec:
-  image: crazymax/msmtpd
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: msmtpd-policy
-spec:
-  imageRepositoryRef:
-    name: msmtpd
-  policy:
-    semver:
-      range: 1.x
-  digestReflectionPolicy: Always
-  interval: 24h

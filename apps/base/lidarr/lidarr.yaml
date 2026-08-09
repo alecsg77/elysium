@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: lidarr-helm-values
       optional: true
+    - kind: ConfigMap
+      name: lidarr-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: lscr.io/linuxserver/lidarr # {"$imagepolicy": "arkham:lidarr-policy:name"}
-      tag: "2.14.5" # {"$imagepolicy": "arkham:lidarr-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:lidarr-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -62,24 +61,3 @@ spec:
       settings:
         initialDelaySeconds: 30
         timeoutSeconds: 10
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: lidarr
-spec:
-  image: lscr.io/linuxserver/lidarr
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: lidarr-policy
-spec:
-  imageRepositoryRef:
-    name: lidarr
-  policy:
-    semver:
-      range: 2.x
-  digestReflectionPolicy: Always
-  interval: 24h

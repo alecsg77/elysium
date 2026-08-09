@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: jellyfin-helm-values
       optional: true
+    - kind: ConfigMap
+      name: jellyfin-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: lscr.io/linuxserver/jellyfin # {"$imagepolicy": "arkham:jellyfin-policy:name"}
-      tag: "10.11.11" # {"$imagepolicy": "arkham:jellyfin-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:jellyfin-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -67,24 +66,3 @@ spec:
       ports:
         - name: http
           containerPort: 8096
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: jellyfin
-spec:
-  image: lscr.io/linuxserver/jellyfin
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: jellyfin-policy
-spec:
-  imageRepositoryRef:
-    name: jellyfin
-  policy:
-    semver:
-      range: 10.x
-  digestReflectionPolicy: Always
-  interval: 24h
