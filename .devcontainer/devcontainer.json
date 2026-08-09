@@ -99,7 +99,7 @@
 		// The host source must already exist as a regular file. It is copied
 		// into $HOME during postCreateCommand rather than mounted over it.
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/tmp/host-gitconfig,type=bind,readonly",
-		"source=/var/run/secrets/kubernetes.io/serviceaccount,target=/var/run/secrets/kubernetes.io/serviceaccount,type=bind,readonly"
+		"source=/var/run/secrets/kubernetes.io/serviceaccount,target=/var/run/secrets/kubernetes.io/serviceaccount,type=bind,readonly,bind-create-src"
 	],
 	"containerEnv": {
 		"SEALED_SECRETS_CERT": "${containerWorkspaceFolder}/etc/certs/pub-sealed-secrets.pem",
