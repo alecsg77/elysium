@@ -12,6 +12,16 @@ spec:
   path: "./kubernetes"
   prune: true
   timeout: 5m
+  wait: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: n8n
+      namespace: n8n
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: n8n-image-auto
 
   patches:
     - patch: |
@@ -24,7 +34,7 @@ spec:
                 name: n8n-config
         - op: replace
           path: /spec/template/spec/containers/0/image
-          value: ghcr.io/n8n-io/n8n:latest # {"$imagepolicy": "n8n:n8n-policy"}
+          value: ${image}
       target:
         kind: Deployment
         name: n8n

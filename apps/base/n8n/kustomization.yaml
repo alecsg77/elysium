@@ -4,5 +4,4 @@ kind: Kustomization
 resources:
   - repository.yaml
   - release.yaml
-  - imageupdateautomation.yaml
   - resourceset-image-automation.yaml
