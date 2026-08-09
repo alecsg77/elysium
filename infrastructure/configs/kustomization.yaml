@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - helm-repositories.yaml
   - ts-dns.yaml
+  - tsidp-viewer-clusterrolebinding.yaml
   - k3s-upgrade.yaml
   - cluster-issuers.yaml
   - dns-cloudflare-sealed-secret.yaml
