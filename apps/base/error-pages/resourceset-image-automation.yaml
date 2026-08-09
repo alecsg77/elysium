@@ -28,14 +28,10 @@ metadata:
     app.kubernetes.io/component: image-automation
     app.kubernetes.io/part-of: error-pages
 spec:
-  # Emergency rollback pin: this temporarily replaces inputsFrom with the
-  # verified current image and tests the documented auto-to-pinned handoff.
-  inputs:
-    - provider:
-        namespace: default
-      repository: ghcr.io/tarampampam/error-pages
-      tag: "3.8.1"
-      digest: "sha256:b8ded6f847df91075429cf79cb9491bfd7d96de69936555498a2ff0614e003e4"
+  inputsFrom:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSetInputProvider
+      name: error-pages-image
   wait: true
   commonMetadata:
     labels:
