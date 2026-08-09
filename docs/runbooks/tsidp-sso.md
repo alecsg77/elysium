@@ -200,7 +200,7 @@ clusterRoleBinding:
   create: false
 ```
 
-The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Create it with the Headlamp OIDC environment-variable keys: `HEADLAMP_CONFIG_OIDC_CLIENT_ID`, `HEADLAMP_CONFIG_OIDC_CLIENT_SECRET`, `HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL`, and `HEADLAMP_CONFIG_OIDC_SCOPES`. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
+The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Create it with the chart external-secret keys: `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER_URL`, and `OIDC_SCOPES`. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
 
 Generate this manifest locally with a temporary, untracked helper or the standard Sealed Secrets workflow in [Secret Management](../security/secret-management.md). Do not commit a credential-generation helper: it is intentionally local because it handles the Headlamp client secret.
 
