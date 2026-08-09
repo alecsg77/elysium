@@ -1,0 +1,57 @@
+# Gitless image automation: the provider selects one permitted tag and its immutable digest.
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSetInputProvider
+metadata:
+  name: bazarr-image
+  annotations:
+    fluxcd.controlplane.io/reconcileEvery: 24h
+  labels:
+    app.kubernetes.io/component: image-automation
+    app.kubernetes.io/part-of: bazarr
+spec:
+  type: OCIArtifactTag
+  url: oci://lscr.io/linuxserver/bazarr
+  defaultValues:
+    repository: lscr.io/linuxserver/bazarr
+  filter:
+    semver: '1.x'
+    limit: 1
+---
+# The ResourceSet owns only this ConfigMap. The HelmRelease/Kustomization remains Git-managed.
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: bazarr-image
+  annotations:
+    fluxcd.controlplane.io/reconcileTimeout: 5m
+  labels:
+    app.kubernetes.io/component: image-automation
+    app.kubernetes.io/part-of: bazarr
+spec:
+  inputsFrom:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSetInputProvider
+      name: bazarr-image
+  wait: true
+  commonMetadata:
+    labels:
+      app.kubernetes.io/component: image-automation
+      app.kubernetes.io/part-of: bazarr
+  resourcesTemplate: |
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: bazarr-image-auto
+      namespace: << inputs.provider.namespace >>
+      labels:
+        reconcile.fluxcd.io/watch: Enabled
+    data:
+      values.yaml: |
+        image:
+          repository: << inputs.repository | quote >>
+          tag: << inputs.tag | quote >>
+          digest: << inputs.digest | quote >>
+      repository: << inputs.repository | quote >>
+      tag: << inputs.tag | quote >>
+      digest: << inputs.digest | quote >>
+      image: "<< inputs.repository >>:<< inputs.tag >>@<< inputs.digest >>"

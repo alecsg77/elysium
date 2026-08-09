@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - configarr.yaml
+  - resourceset-image-automation.yaml

@@ -28,6 +28,12 @@ kube-state-metrics:
           - imagepolicies
           - imageupdateautomations
         verbs: ["list", "watch"]
+      - apiGroups:
+          - fluxcd.controlplane.io
+        resources:
+          - resourcesets
+          - resourcesetinputproviders
+        verbs: ["list", "watch"]
   customResourceState:
     enabled: true
     config:
@@ -275,3 +281,39 @@ kube-state-metrics:
                   ready: [status, conditions, "[type=Ready]", status]
                   suspended: [spec, suspend]
                   source_name: [spec, sourceRef, name]
+          - groupVersionKind:
+              group: fluxcd.controlplane.io
+              version: v1
+              kind: ResourceSet
+            metricNamePrefix: flux_operator
+            metrics:
+              - name: "resource_set_info"
+                help: "The current state of a Flux Operator ResourceSet."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      name: [metadata, name]
+                labelsFromPath:
+                  exported_namespace: [metadata, namespace]
+                  ready: [status, conditions, "[type=Ready]", status]
+                  revision: [status, lastAppliedRevision]
+                  reconcile: [metadata, annotations, "fluxcd.controlplane.io/reconcile"]
+          - groupVersionKind:
+              group: fluxcd.controlplane.io
+              version: v1
+              kind: ResourceSetInputProvider
+            metricNamePrefix: flux_operator
+            metrics:
+              - name: "input_provider_info"
+                help: "The current state of a Flux Operator ResourceSetInputProvider."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      name: [metadata, name]
+                labelsFromPath:
+                  exported_namespace: [metadata, namespace]
+                  ready: [status, conditions, "[type=Ready]", status]
+                  revision: [status, lastExportedRevision]
+                  reconcile: [metadata, annotations, "fluxcd.controlplane.io/reconcile"]

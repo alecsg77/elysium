@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - jellyfin.yaml
+  - resourceset-image-automation.yaml

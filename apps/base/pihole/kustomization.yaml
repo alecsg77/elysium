@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - pihole.yaml
+  - resourceset-image-automation.yaml

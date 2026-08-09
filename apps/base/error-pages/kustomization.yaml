@@ -3,7 +3,8 @@ kind: Kustomization
 
 resources:
   - helmrelease.yaml
-  - imagerepository.yaml
-  - imagepolicy.yaml
   - ingress.yaml
   - middleware.yaml
+  - imagerepository.yaml
+  - imagepolicy.yaml
+  - resourceset-image-automation.yaml
