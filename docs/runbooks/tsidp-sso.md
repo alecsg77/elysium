@@ -1,48 +1,103 @@
-# Configure k3s OIDC with tsidp
+# tsidp OIDC for Headlamp
 
-This runbook configures k3s to accept the personal OIDC tokens already issued by the private `tsidp` deployment and configures a Windows `kubelogin` client to renew them interactively.
+This runbook configures per-user OIDC authentication for Headlamp through the private `tsidp` issuer and keeps Kubernetes authorization per user through the `tsidp:viewer` RBAC group.
 
-There is no intermediate application or manual token-copy workflow in this design:
+## Architecture decision
+
+There are two deliberate identity paths in this cluster. Do not merge them accidentally.
 
 ```text
-kubectl -> kubelogin -> tsidp authorization-code flow -> ID token -> k3s -> Kubernetes RBAC
+kubectl from a Tailnet device
+  -> Tailscale Kubernetes API proxy (auth mode)
+  -> Tailscale identity impersonation
+  -> Kubernetes RBAC
+
+Headlamp browser login
+  -> tsidp authorization-code flow
+  -> Headlamp forwards the personal ID token to the in-cluster API server
+  -> k3s validates tsidp JWT
+  -> Kubernetes RBAC
 ```
 
-Tailscale grants control which human identities can reach `tsidp` and the Kubernetes API endpoint. k3s validates the signed OIDC token. Kubernetes RBAC authorizes the prefixed user and group from that token.
+| Use case | Authoritative identity | Required configuration |
+| --- | --- | --- |
+| Human `kubectl` access through the Tailnet | Tailscale identity and Tailscale Kubernetes API-proxy auth mode | Keep `apiServerProxyConfig.mode: "true"`; do **not** use `kubelogin` or switch the proxy to `noauth`. |
+| Headlamp login and authorization | `tsidp` OIDC identity | k3s `AuthenticationConfiguration`, a Headlamp OIDC client, and `tsidp:viewer` RBAC. |
+| Other OIDC-capable applications | `tsidp` OIDC identity | App-specific OIDC client and application configuration. k3s configuration is not needed unless the app forwards user tokens to Kubernetes. |
 
-This first role is read-only. Do not use a shared ServiceAccount token or a static Kubernetes token for human access. Do not enable Tailscale API-proxy `noauth`, Headlamp OIDC, or an operator role in this change.
+The `ClusterRoleBinding/tsidp-viewer` remains intentional. It grants the OIDC group `tsidp:viewer` the Kubernetes built-in `view` ClusterRole, which provides namespace-scoped read-only access without Secret reads or write permissions.
+
+## Current state and guardrails
+
+- Keep the Tailscale API server proxy in auth mode:
+
+  ```yaml
+  apiServerProxyConfig:
+    mode: "true"
+  ```
+
+  Changing this to `noauth` would deliberately break the existing Tailnet-authenticated `kubectl` path and is not part of the Headlamp rollout.
+
+- Keep the k3s OIDC files already installed on the control-plane host:
+
+  ```text
+  /etc/rancher/k3s/authentication/tsidp.yaml
+  /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
+  ```
+
+  They are needed so the in-cluster API server can validate the ID token that Headlamp forwards. Do not remove them while preparing Headlamp.
+
+- The earlier `kubelogin` test client and its Windows kubeconfig are not needed for normal `kubectl` access. Remove that local exec credential and rotate its client secret because it was used for testing and should not be reused for Headlamp.
+
+- Do not use Headlamp's in-cluster ServiceAccount as the logged-in user's Kubernetes identity. The intended Headlamp configuration disables that fallback and forwards the personal OIDC identity instead.
 
 ## Prerequisites
 
-Before editing the k3s control-plane host, confirm all of the following:
+Before enabling Headlamp OIDC, confirm:
 
-- `HelmRelease/tsidp` is `Ready` and its persistent PVC exists.
-- Discovery and JWKS work from the k3s control-plane host.
-- Tailnet policy permits `tag:k8s` to reach `tag:tsidp` on TCP 443.
-- Your Tailnet identity receives `groups: ["viewer"]` from `tsidp`.
-- You have one registered OIDC client for `kubelogin` with the exact redirect URI `http://127.0.0.1:8765/callback`.
-- Its client ID is available locally. Its client secret is available only on the workstation where `kubelogin` will run.
-- A break-glass administrator kubeconfig has been tested from the control-plane host and remains open during the restart.
+- `HelmRelease/tsidp` is `Ready` and PVC `tsidp-tsidp-data` is `Bound`.
+- The control-plane host can retrieve issuer discovery and JWKS from `tsidp`.
+- An authorized Tailnet user receives `groups: ["viewer"]` from `tsidp`.
+- `ClusterRoleBinding/tsidp-viewer` is reconciled by Flux.
+- The Headlamp browser URL is reachable through the Tailnet and uses HTTPS.
+- A break-glass administrator credential remains available on the control-plane host.
 
-Use the existing client only if its secret has been rotated after the earlier temporary test. Otherwise, rotate that secret in `tsidp` first. The client is now the direct personal `kubelogin` client; it is not an intermediate application.
+Use dedicated OIDC clients per application. A client registered for the earlier local `kubelogin` callback cannot be reused for Headlamp because an OIDC provider requires an exact registered redirect URI.
 
-k3s `v1.36.3+k3s1` supports the stable `AuthenticationConfiguration` API used below. Do not combine it with legacy `--oidc-*` flags.
+## 1. Create a dedicated Headlamp OIDC client
 
-## 1. Configure the k3s API server
+In the `tsidp` administration UI, create a client specifically for Headlamp.
 
-### 1.1 Record the issuer and audience locally
+Use these values:
 
-On the k3s control-plane host, enter the exact issuer URL and the client ID of the direct `kubelogin` client. These are private infrastructure values: do not commit them to Git.
+| Field | Value |
+| --- | --- |
+| Client name | `headlamp` or an equivalent descriptive name |
+| Redirect URI | `https://<private-headlamp-host>/oidc-callback` |
+| Scopes | `openid`, `profile`, `email` |
+| Grant | Authorization Code with PKCE when the client/chart supports it |
+
+Record the generated `client_id` and `client_secret` locally. Do not paste either value in chat, a shell command line, Git, or a plaintext Kubernetes Secret.
+
+The Headlamp redirect URI must be the public browser URL plus the literal path `/oidc-callback`; it is not the local callback URI previously used for `kubelogin` testing.
+
+## 2. Align k3s OIDC audience with the Headlamp client
+
+The k3s OIDC configuration must accept tokens whose audience is the **Headlamp client ID**, not the retired `kubelogin` test-client ID.
+
+On the control-plane host, first verify the existing configuration and the issuer/JWKS path. Keep an existing administrator session open during this work.
+
+```bash
+sudo sed -n '1,120p' /etc/rancher/k3s/authentication/tsidp.yaml
+sudo k3s kubectl get --raw='/readyz?verbose'
+```
+
+If the `audiences` value is not the Headlamp client ID, replace it. Enter private values interactively so they do not enter shell history:
 
 ```bash
 read -rp 'OIDC issuer URL: ' IDP_ISSUER
-read -rp 'kubelogin client ID: ' K8S_OIDC_CLIENT_ID
-export IDP_ISSUER K8S_OIDC_CLIENT_ID
-```
+read -rp 'Headlamp OIDC client ID: ' HEADLAMP_CLIENT_ID
 
-Verify discovery and JWKS over the exact path k3s will use:
-
-```bash
 curl --fail --silent --show-error \
   "$IDP_ISSUER/.well-known/openid-configuration" \
   | jq '{issuer, jwks_uri}'
@@ -53,27 +108,9 @@ JWKS_URI="$(curl --fail --silent --show-error \
 curl --fail --silent --show-error "$JWKS_URI" | jq '.keys | length'
 ```
 
-The returned `issuer` must exactly equal `IDP_ISSUER`, and the JWKS key count must be greater than zero.
-
-### 1.2 Check for incompatible legacy OIDC flags
-
-Keep the break-glass administrator session open. Inspect the current k3s configuration before adding anything:
+The returned issuer must exactly equal `IDP_ISSUER`, and the JWKS key count must be greater than zero. Then rewrite only the tsidp authentication configuration:
 
 ```bash
-sudo grep -RIn --include='*.yaml' --include='*.yml' \
-  'kube-apiserver-arg\|oidc-\|authentication-config' \
-  /etc/rancher/k3s/config.yaml /etc/rancher/k3s/config.yaml.d 2>/dev/null || true
-```
-
-If any `oidc-*` API-server argument exists, remove or migrate it before continuing. Kubernetes exits on startup when `--authentication-config` is combined with `--oidc-*` flags.
-
-### 1.3 Create the authentication configuration
-
-This maps token `sub` to `tsidp:<subject>` and token `groups: ["viewer"]` to Kubernetes group `tsidp:viewer`.
-
-```bash
-sudo install -d -m 0700 /etc/rancher/k3s/authentication
-
 sudo tee /etc/rancher/k3s/authentication/tsidp.yaml >/dev/null <<EOF_CONFIG
 apiVersion: apiserver.config.k8s.io/v1
 kind: AuthenticationConfiguration
@@ -81,7 +118,7 @@ jwt:
   - issuer:
       url: ${IDP_ISSUER}
       audiences:
-        - ${K8S_OIDC_CLIENT_ID}
+        - ${HEADLAMP_CLIENT_ID}
     claimMappings:
       username:
         claim: sub
@@ -93,42 +130,21 @@ EOF_CONFIG
 
 sudo chown root:root /etc/rancher/k3s/authentication/tsidp.yaml
 sudo chmod 0600 /etc/rancher/k3s/authentication/tsidp.yaml
-sudo sed -n '1,80p' /etc/rancher/k3s/authentication/tsidp.yaml
-```
-
-Leave `anonymous` out of this file. k3s starts the API server with anonymous authentication disabled, and configuring `anonymous` in this file would conflict with the existing API-server flag.
-
-### 1.4 Load the authentication configuration
-
-Create a dedicated k3s drop-in. `kube-apiserver-arg+` appends this argument without replacing any existing API-server arguments.
-
-```bash
-sudo tee /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml >/dev/null <<'EOF_CONFIG'
-kube-apiserver-arg+:
-  - authentication-config=/etc/rancher/k3s/authentication/tsidp.yaml
-EOF_CONFIG
-
-sudo chown root:root /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
-sudo chmod 0600 /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
-sudo cat /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
-```
-
-### 1.5 Restart and validate k3s
-
-This causes a short API-server interruption. Keep the break-glass shell open until all checks pass.
-
-```bash
 sudo systemctl restart k3s
 sudo systemctl is-active --quiet k3s
-sudo journalctl -u k3s -b --no-pager -n 150
 sudo k3s kubectl get --raw='/readyz?verbose'
 ```
 
-The service must be active and `/readyz` must end in `ok`. If not, go directly to [Rollback](#rollback); do not proceed to RBAC or client configuration.
+Do not add legacy `--oidc-*` API-server flags. The existing k3s drop-in must remain the only OIDC API-server configuration:
 
-## 2. Bind the `viewer` claim through GitOps
+```yaml
+kube-apiserver-arg+:
+  - authentication-config=/etc/rancher/k3s/authentication/tsidp.yaml
+```
 
-The token is now acceptable to k3s, but it has no Kubernetes permissions until RBAC is reconciled. Add this one resource under `infrastructure/configs/` and add it to `infrastructure/configs/kustomization.yaml`:
+## 3. Keep and verify the viewer binding
+
+Flux already manages this binding in `infrastructure/configs/tsidp-viewer-clusterrolebinding.yaml`:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -145,7 +161,7 @@ roleRef:
   name: view
 ```
 
-The built-in `view` ClusterRole provides namespace-scoped read-only access and deliberately excludes Secret reads and writes. Commit the manifest, let Flux reconcile `infra-configs`, then verify with the break-glass credential:
+Verify its reconciliation with the existing administrator credential:
 
 ```bash
 kubectl get clusterrolebinding tsidp-viewer -o yaml
@@ -157,120 +173,58 @@ kubectl auth can-i get secrets --all-namespaces \
 
 Expected results are `yes` for Pod reads and `no` for Secret reads.
 
-## 3. Configure kubelogin on Windows
+## 4. Configure Headlamp through GitOps
 
-Perform this on the Windows workstation already connected to the Tailnet. This configuration uses the registered `kubelogin` client directly and opens the normal browser login when tokens need renewal.
+This is a separate GitOps change under `monitoring/controllers/headlamp/`. It requires three pieces that must be released together:
 
-### 3.1 Install kubelogin
+1. a `SealedSecret` named `headlamp-oidc` in `kube-system`, containing the Headlamp OIDC client values;
+2. HelmRelease values that enable Headlamp OIDC and reference that Secret;
+3. removal of Headlamp's ServiceAccount-token fallback and its broad in-cluster RBAC binding.
 
-In PowerShell:
+The required intent for the Headlamp values is:
 
-```powershell
-winget install --id int128.kubelogin --exact
-kubectl oidc-login --help
+```yaml
+config:
+  inCluster: true
+  unsafeUseServiceAccountToken: false
+  oidc:
+    secret:
+      create: false
+    externalSecret:
+      enabled: true
+      name: headlamp-oidc
+
+automountServiceAccountToken: false
+
+clusterRoleBinding:
+  create: false
 ```
 
-If `winget` reports that the package is already installed, keep the installed version only if `kubectl oidc-login --help` succeeds. `kubelogin` is used as a `kubectl` exec credential plugin; no permanent ID token is stored in the kubeconfig.
+The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Its values must contain the Headlamp client ID, client secret, issuer URL, and requested scopes in the exact key names required by the chart version being deployed. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the exact external-secret keys and OIDC options.
 
-### 3.2 Create a separate personal kubeconfig
+Do not configure Headlamp OIDC until the k3s `audiences` value in Step 2 is the same Headlamp client ID. A token minted for a different client audience is rejected by the API server even if issuer, signature, and groups are otherwise valid.
 
-Do not overwrite or share the administrator kubeconfig. This starts with a local copy so the existing cluster endpoint and certificate authority remain intact.
+## 5. Validate Headlamp per-user RBAC
 
-```powershell
-$SourceKubeconfig = "$HOME\.kube\config"       # change if your working kubeconfig is elsewhere
-$OidcKubeconfig = "$HOME\.kube\kyrion-tsidp.yaml"
+After Flux reconciles the Headlamp change:
 
-Copy-Item -LiteralPath $SourceKubeconfig -Destination $OidcKubeconfig -Force
-$env:KUBECONFIG = $OidcKubeconfig
+1. Open Headlamp from an authorized Tailnet device.
+2. Complete the `tsidp` browser login.
+3. Confirm Headlamp can list Pods but cannot view Secrets or perform writes.
+4. In Headlamp's Kubernetes identity/debug display, confirm the effective username begins with `tsidp:` and the effective group includes `tsidp:viewer`.
+5. From the existing Tailnet-authenticated `kubectl` context, confirm administrator access still works. This validates that Tailscale proxy auth mode was not changed.
 
-$ClusterName = kubectl config view --minify -o jsonpath='{.clusters[0].name}'
-if ([string]::IsNullOrWhiteSpace($ClusterName)) {
-    throw 'No current cluster was found in the copied kubeconfig.'
-}
-```
-
-Restrict the local file to your Windows account. The registered OIDC client secret is stored in the exec configuration, so this kubeconfig must remain private and must never be committed, emailed, or shared.
-
-```powershell
-icacls $OidcKubeconfig /inheritance:r /grant:r "${env:USERNAME}:(R,W)" | Out-Null
-```
-
-### 3.3 Add the direct OIDC exec credential
-
-Enter the private issuer, client ID, and the rotated client secret. The secret is requested interactively and is not put into PowerShell history.
-
-```powershell
-$Issuer = Read-Host 'OIDC issuer URL'
-$ClientId = Read-Host 'kubelogin client ID'
-$SecureClientSecret = Read-Host 'kubelogin client secret' -AsSecureString
-$SecretPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureClientSecret)
-
-try {
-    $ClientSecret = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($SecretPointer)
-
-    kubectl config set-credentials tsidp `
-      --exec-command=kubectl `
-      --exec-api-version=client.authentication.k8s.io/v1 `
-      --exec-interactive-mode=Never `
-      --exec-arg=oidc-login `
-      --exec-arg=--grant-type=authcode `
-      --exec-arg=get-token `
-      --exec-arg="--oidc-issuer-url=$Issuer" `
-      --exec-arg="--oidc-client-id=$ClientId" `
-      --exec-arg="--oidc-client-secret=$ClientSecret" `
-      --exec-arg=--listen-address=127.0.0.1:8765 `
-      --exec-arg=--oidc-redirect-url=http://127.0.0.1:8765/callback `
-      --exec-arg=--token-cache-storage=keyring
-}
-finally {
-    if ($SecretPointer -ne [IntPtr]::Zero) {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($SecretPointer)
-    }
-    Remove-Variable ClientSecret -ErrorAction SilentlyContinue
-}
-
-kubectl config set-context tsidp --cluster=$ClusterName --user=tsidp
-```
-
-The redirect URL must exactly match the URI registered in `tsidp`: `http://127.0.0.1:8765/callback`. `--token-cache-storage=keyring` stores refresh-token state in the Windows keyring instead of a filesystem cache.
-
-### 3.4 Login and verify effective access
-
-The first command opens the browser and performs the authorization-code flow. Subsequent commands reuse or refresh the cached session as needed.
-
-```powershell
-kubectl --context tsidp auth whoami
-kubectl --context tsidp auth can-i get pods --all-namespaces
-kubectl --context tsidp auth can-i get secrets --all-namespaces
-kubectl --context tsidp get pods --all-namespaces
-```
-
-Expected results:
-
-- `auth whoami` shows a username beginning with `tsidp:` and group `tsidp:viewer`.
-- Pod reads are allowed.
-- Secret reads are denied.
-
-Use the personal kubeconfig explicitly, or make the context current only after the checks succeed:
-
-```powershell
-$env:KUBECONFIG = "$HOME\.kube\kyrion-tsidp.yaml"
-kubectl config use-context tsidp
-```
-
-## Troubleshooting
-
-| Symptom | Likely cause and action |
-| --- | --- |
-| k3s fails to start after restart | A legacy `--oidc-*` flag remains, the YAML is invalid, or k3s cannot reach issuer discovery/JWKS. Follow [Rollback](#rollback), inspect `journalctl -u k3s -b`, then correct the first error. |
-| `kubectl` returns `401 Unauthorized` | Check the issuer URL is exact, the token `aud` is the same client ID configured in `tsidp.yaml`, and the control plane can still retrieve JWKS. |
-| `kubectl auth whoami` works but reads are forbidden | OIDC works; Flux has not yet reconciled `ClusterRoleBinding/tsidp-viewer`, or the Tailnet policy did not emit `groups: ["viewer"]` for this user. |
-| Browser login does not return to kubelogin | The registered redirect URI must exactly be `http://127.0.0.1:8765/callback`; also ensure no other local process uses port 8765. |
-| `kubectl oidc-login` is unknown | Reinstall `int128.kubelogin`, close and reopen PowerShell so PATH refreshes, then rerun `kubectl oidc-login --help`. |
+If Headlamp authenticates successfully but sees `forbidden` errors, inspect the `tsidp-viewer` binding and verify that the user token includes the raw `groups: ["viewer"]` claim. If Headlamp receives `401 Unauthorized`, verify the issuer URL and that the token audience equals the Headlamp client ID configured in k3s.
 
 ## Rollback
 
-If the k3s API server does not become healthy after Step 1, remove only the OIDC files and restart through the still-open break-glass session:
+### Headlamp-only failure
+
+Revert the Git commit that enabled Headlamp OIDC and reconcile the Headlamp HelmRelease. Keep the k3s OIDC configuration and `tsidp-viewer` binding if another OIDC application will use them; otherwise schedule their removal as a separate, deliberate cleanup.
+
+### k3s API-server failure
+
+Keep the break-glass administrator session open. Remove only the structured OIDC configuration and restart k3s:
 
 ```bash
 sudo rm -f /etc/rancher/k3s/config.yaml.d/90-tsidp-auth.yaml
@@ -280,21 +234,22 @@ sudo systemctl is-active --quiet k3s
 sudo k3s kubectl get --raw='/readyz?verbose'
 ```
 
-If OIDC works but read-only authorization is wrong, revert the Git commit that added `ClusterRoleBinding/tsidp-viewer` and reconcile `infra-configs`. Do not delete the `tsidp` PVC during either rollback: it contains issuer, signing, registration, and refresh-token state.
+This disables OIDC-backed Headlamp access but does not alter the Tailscale API-proxy auth-mode path for `kubectl`. Do not delete the `tsidp` PVC: it stores issuer, signing, registration, and refresh-token state.
 
 ## Checklist
 
-- [ ] Break-glass administrator access was tested before restarting k3s.
-- [ ] The control-plane host resolves discovery and JWKS from `tsidp`.
-- [ ] No legacy `--oidc-*` flag coexists with `authentication-config`.
-- [ ] k3s is active and `/readyz` is `ok` after restart.
-- [ ] `tsidp:viewer` was committed and reconciled via Flux.
-- [ ] `kubectl --context tsidp auth whoami` shows the prefixed OIDC identity.
-- [ ] Pod reads work and Secret reads are denied.
-- [ ] The OIDC kubeconfig and client secret remain local and are not shared.
+- [ ] Tailscale API proxy remains in `mode: "true"`.
+- [ ] A dedicated Headlamp client has the exact `/oidc-callback` redirect URI.
+- [ ] The Headlamp client secret is stored only in a SealedSecret and the local secret-manager/keyring.
+- [ ] k3s accepts the Headlamp client ID as the OIDC audience.
+- [ ] `ClusterRoleBinding/tsidp-viewer` remains reconciled.
+- [ ] Headlamp forwards the personal token; no ServiceAccount token is used as the user identity.
+- [ ] Headlamp user can read permitted resources but cannot read Secrets or write resources.
+- [ ] Existing Tailnet-authenticated administrator `kubectl` access still works.
 
 ## Related documentation
 
 - [`infrastructure/controllers/tsidp/README.md`](../../infrastructure/controllers/tsidp/README.md)
-- [Repository Structure](../standards/repository-structure.md)
+- [`monitoring/controllers/headlamp/release.yaml`](../../monitoring/controllers/headlamp/release.yaml)
 - [Secret Management](../security/secret-management.md)
+- [Repository Structure](../standards/repository-structure.md)

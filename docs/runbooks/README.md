@@ -12,7 +12,7 @@ This directory contains step-by-step procedures for routine operational tasks. E
 - **[Adding or Changing an Application](add-application.md)** - Complete workflow for deploying new apps or modifying existing ones using Flux CD, Kustomize, and Helm
 - **[HelmRelease Recovery](helm-release-recovery.md)** - Systematic procedures for recovering from failed HelmRelease deployments (timeouts, values errors, CRD issues, MongoDB failures)
 - **[Resource Optimization](resource-optimization.md)** - Procedures for optimizing cluster resource usage and resolving resource constraints
-- **[tsidp OIDC for k3s](tsidp-sso.md)** - Staged OIDC authentication and read-only RBAC rollout for k3s
+- **[tsidp OIDC for Headlamp](tsidp-sso.md)** - Per-user Headlamp OIDC and Kubernetes RBAC rollout
 - **[Gitless ResourceSet Image Automation](resourceset-image-automation.md)** - Gitless workload image updates, safety gates, and rollback pins
 
 ### Cluster Operations
