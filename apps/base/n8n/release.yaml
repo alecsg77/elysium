@@ -34,7 +34,9 @@ spec:
                 name: n8n-config
         - op: replace
           path: /spec/template/spec/containers/0/image
-          value: ${image}
+          # Escape the outer apps Kustomization substitution so the n8n
+          # Kustomization resolves this value from n8n-image-auto post-build.
+          value: $${image}
       target:
         kind: Deployment
         name: n8n
