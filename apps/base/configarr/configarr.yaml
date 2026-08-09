@@ -17,10 +17,10 @@ spec:
     - kind: ConfigMap
       name: configarr-helm-values
       optional: true
+    - kind: ConfigMap
+      name: configarr-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: ghcr.io/raydak-labs/configarr # {"$imagepolicy": "arkham:configarr-policy:name"}
-      tag: "1.29.1" # {"$imagepolicy": "arkham:configarr-policy:tag"}
     schedule: "0 0 * * *" # Runs every 24 hours (daily at midnight)
     overrideCommand: false
     vars:
@@ -38,24 +38,3 @@ spec:
         path: /config
         subPath: configarr/config
         existingClaim: pvc-storage
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: configarr
-spec:
-  image: ghcr.io/raydak-labs/configarr
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: configarr-policy
-spec:
-  imageRepositoryRef:
-    name: configarr
-  policy:
-    semver:
-      range: 1.x
-  digestReflectionPolicy: Always
-  interval: 24h
