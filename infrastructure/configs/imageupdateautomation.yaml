@@ -37,6 +37,9 @@ spec:
             - {{ $change.OldValue }} -> {{ $change.NewValue }}
         {{ end -}}
         {{ end -}}
+  # ResourceSet image automation owns the migrated workloads without Git writes.
+  # This writer remains only for policies whose tag format cannot yet be selected
+  # with equivalent OCIArtifactTag SemVer semantics (see the ResourceSet runbook).
   update:
     strategy: Setters
     path: ./

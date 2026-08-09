@@ -130,6 +130,12 @@ The cleanup also deletes `clusters/kyrion/flux-system/kustomization.yaml`: Kusto
 - **After bootstrap cleanup:** restore the pre-migration bootstrap manifests from the recorded commit first, validate source and root-sync readiness, then suspend or remove the instance in a separate change.
 - **Operator-only rollback:** revert the phase-1 manifests. Do not manually delete CRDs or the `flux-system` namespace.
 
+## Phase 3.5: Gitless workload image automation
+
+After the operator-managed control plane is stable, workload image updates can move from Git-writing Flux Image Automation to Flux Operator ResourceSets. The implementation uses a ResourceSet-generated ConfigMap consumed by the existing HelmRelease or Flux Kustomization, so the workload object remains owned by the Git root and no image-update commit is needed for normal tag/digest changes.
+
+See [Gitless ResourceSet Image Automation](resourceset-image-automation.md) for the supported workloads, tag-format exclusions, alerting, freeze, and digest-pinned rollback procedure. Do not remove the remaining `ImageUpdateAutomation/image-update` until every legacy marker has a semantically equivalent ResourceSet provider.
+
 ## Phase 4: optional Flux Operator MCP
 
 Deploy MCP only after the Flux migration is stable and after approving its client namespace and RBAC model. It is a separate service from the local stdio MCP configuration in `.mux/mcp.jsonc` and `.vscode/mcp.json`.
