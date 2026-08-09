@@ -202,19 +202,25 @@ clusterRoleBinding:
 
 The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Create it with the Headlamp OIDC environment-variable keys: `HEADLAMP_CONFIG_OIDC_CLIENT_ID`, `HEADLAMP_CONFIG_OIDC_CLIENT_SECRET`, `HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL`, and `HEADLAMP_CONFIG_OIDC_SCOPES`. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
 
-From the repository root in the Linux workspace terminal, run the helper:
+Generate this manifest locally with a temporary, untracked helper or the standard Sealed Secrets workflow in [Secret Management](../security/secret-management.md). Do not commit a credential-generation helper: it is intentionally local because it handles the Headlamp client secret.
 
-```bash
-bash scripts/create-headlamp-oidc-sealed-secret.sh
-```
-
-It prompts for the issuer URL, client ID, and client secret without putting them in command-line arguments. It writes a strict, namespace-bound manifest to:
+The resulting strict, namespace-bound manifest belongs at:
 
 ```text
 monitoring/controllers/headlamp/headlamp-oidc-sealed-secret.yaml
 ```
 
-The helper refuses to overwrite an existing output file and deletes a partial/empty file if sealing fails. If it prints an error, leave the terminal open and report only the first error line—never credentials.
+Before staging it, validate only its metadata and encrypted structure. Do not decode it or print its contents:
+
+```bash
+kubeconform -strict -ignore-missing-schemas \
+  monitoring/controllers/headlamp/headlamp-oidc-sealed-secret.yaml
+kubectl create --dry-run=client \
+  -f monitoring/controllers/headlamp/headlamp-oidc-sealed-secret.yaml \
+  -o jsonpath='{.metadata.namespace}/{.metadata.name}{"\n"}'
+```
+
+Expected output is `kube-system/headlamp-oidc`.
 
 Do not configure Headlamp OIDC until the k3s `audiences` value in Step 2 is the same Headlamp client ID. A token minted for a different client audience is rejected by the API server even if issuer, signature, and groups are otherwise valid.
 
