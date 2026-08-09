@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: qbittorrent-helm-values
       optional: true
+    - kind: ConfigMap
+      name: qbittorrent-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: lscr.io/linuxserver/qbittorrent # {"$imagepolicy": "arkham:qbittorrent-policy:name"}
-      tag: "5.2.3" # {"$imagepolicy": "arkham:qbittorrent-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:qbittorrent-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -58,24 +57,3 @@ spec:
           protocol: UDP
           containerPort: 51413
           hostPort: 51413
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: qbittorrent
-spec:
-  image: lscr.io/linuxserver/qbittorrent
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: qbittorrent-policy
-spec:
-  imageRepositoryRef:
-    name: qbittorrent
-  policy:
-    semver:
-      range: 5.x
-  digestReflectionPolicy: Always
-  interval: 24h

@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: radarr-helm-values
       optional: true
+    - kind: ConfigMap
+      name: radarr-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: lscr.io/linuxserver/radarr # {"$imagepolicy": "arkham:radarr-policy:name"}
-      tag: "5.28.0" # {"$imagepolicy": "arkham:radarr-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:radarr-policy:digest"}
     vars:
       PUID: ${PUID:=1000}
       PGID: ${PGID:=1000}
@@ -62,24 +61,3 @@ spec:
       settings:
         initialDelaySeconds: 30
         timeoutSeconds: 10
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: radarr
-spec:
-  image: lscr.io/linuxserver/radarr
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: radarr-policy
-spec:
-  imageRepositoryRef:
-    name: radarr
-  policy:
-    semver:
-      range: 5.x
-  digestReflectionPolicy: Always
-  interval: 24h
