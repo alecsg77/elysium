@@ -46,11 +46,6 @@ spec:
       labels:
         reconcile.fluxcd.io/watch: Enabled
     data:
-      values.yaml: |
-        image:
-          repository: << inputs.repository | quote >>
-          tag: << inputs.tag | quote >>
-          digest: << inputs.digest | quote >>
       repository: << inputs.repository | quote >>
       tag: << inputs.tag | quote >>
       digest: << inputs.digest | quote >>
