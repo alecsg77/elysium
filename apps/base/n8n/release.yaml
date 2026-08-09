@@ -19,6 +19,12 @@ spec:
       name: n8n
       namespace: n8n
   postBuild:
+    # Preserve n8n-hosting's runtime PostgreSQL environment references while
+    # resolving only the ResourceSet-generated image variable.
+    substitute:
+      POSTGRES_NON_ROOT_USER: "$${POSTGRES_NON_ROOT_USER}"
+      POSTGRES_NON_ROOT_PASSWORD: "$${POSTGRES_NON_ROOT_PASSWORD}"
+      POSTGRES_DB: "$${POSTGRES_DB}"
     substituteFrom:
       - kind: ConfigMap
         name: n8n-image-auto
