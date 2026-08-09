@@ -200,7 +200,70 @@ clusterRoleBinding:
   create: false
 ```
 
-The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Its values must contain the Headlamp client ID, client secret, issuer URL, and requested scopes in the exact key names required by the chart version being deployed. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the exact external-secret keys and OIDC options.
+The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Create it with the Headlamp OIDC environment-variable keys: `HEADLAMP_CONFIG_OIDC_CLIENT_ID`, `HEADLAMP_CONFIG_OIDC_CLIENT_SECRET`, `HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL`, and `HEADLAMP_CONFIG_OIDC_SCOPES`. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
+
+From PowerShell at the repository root, create the sealed manifest without writing plaintext credentials to Git or command-line arguments:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$Cert = Join-Path (Get-Location) 'etc\certs\pub-sealed-secrets.pem'
+$Output = Join-Path (Get-Location) 'monitoring\controllers\headlamp\headlamp-oidc-sealed-secret.yaml'
+
+if (-not (Get-Command kubectl -ErrorAction SilentlyContinue)) { throw 'kubectl is not on PATH.' }
+if (-not (Get-Command kubeseal -ErrorAction SilentlyContinue)) { throw 'kubeseal is not on PATH.' }
+if (-not (Test-Path -LiteralPath $Cert)) { throw "Sealed Secrets certificate not found: $Cert" }
+if (Test-Path -LiteralPath $Output) { throw "Refusing to overwrite existing file: $Output" }
+
+$Issuer = Read-Host 'tsidp issuer URL'
+$ClientId = Read-Host 'Headlamp client ID'
+$SecureSecret = Read-Host 'Headlamp client secret' -AsSecureString
+$SecretPointer = [IntPtr]::Zero
+$TempDir = Join-Path ([IO.Path]::GetTempPath()) ("headlamp-oidc-" + [guid]::NewGuid())
+$Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
+try {
+    $SecretPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureSecret)
+    $ClientSecret = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($SecretPointer)
+    New-Item -ItemType Directory -Path $TempDir | Out-Null
+
+    $Values = @{
+        HEADLAMP_CONFIG_OIDC_CLIENT_ID     = $ClientId
+        HEADLAMP_CONFIG_OIDC_CLIENT_SECRET = $ClientSecret
+        HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL = $Issuer
+        HEADLAMP_CONFIG_OIDC_SCOPES        = 'profile,email'
+    }
+    foreach ($Entry in $Values.GetEnumerator()) {
+        [IO.File]::WriteAllText((Join-Path $TempDir $Entry.Key), $Entry.Value, $Utf8NoBom)
+    }
+
+    $KubectlArgs = @(
+        'create', 'secret', 'generic', 'headlamp-oidc',
+        '--namespace', 'kube-system',
+        "--from-file=HEADLAMP_CONFIG_OIDC_CLIENT_ID=$(Join-Path $TempDir 'HEADLAMP_CONFIG_OIDC_CLIENT_ID')",
+        "--from-file=HEADLAMP_CONFIG_OIDC_CLIENT_SECRET=$(Join-Path $TempDir 'HEADLAMP_CONFIG_OIDC_CLIENT_SECRET')",
+        "--from-file=HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL=$(Join-Path $TempDir 'HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL')",
+        "--from-file=HEADLAMP_CONFIG_OIDC_SCOPES=$(Join-Path $TempDir 'HEADLAMP_CONFIG_OIDC_SCOPES')",
+        '--dry-run=client', '--output=yaml'
+    )
+    $PlainSecret = & kubectl @KubectlArgs
+    if ($LASTEXITCODE -ne 0) { throw 'kubectl could not create the temporary Secret manifest.' }
+
+    $SealedSecret = $PlainSecret | & kubeseal --cert $Cert --format yaml --scope strict
+    if ($LASTEXITCODE -ne 0) { throw 'kubeseal could not encrypt the Secret.' }
+
+    [IO.File]::WriteAllText($Output, (($SealedSecret -join [Environment]::NewLine) + [Environment]::NewLine), $Utf8NoBom)
+    Write-Host "Created $Output" -ForegroundColor Green
+}
+finally {
+    if ($SecretPointer -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($SecretPointer)
+    }
+    Remove-Variable ClientSecret -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+}
+```
+
+Run the block by pasting it into an already-open PowerShell window; do not double-click it as a `.ps1` file. The script intentionally does not use `exit`, so an error remains visible in that terminal. If it fails, report the first error line but not the client secret.
 
 Do not configure Headlamp OIDC until the k3s `audiences` value in Step 2 is the same Headlamp client ID. A token minted for a different client audience is rejected by the API server even if issuer, signature, and groups are otherwise valid.
 
