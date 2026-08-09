@@ -16,11 +16,13 @@ spec:
       interval: 60m
   dependsOn:
     - name: kube-prometheus-stack
+  valuesFrom:
+    - kind: ConfigMap
+      name: grafana-mcp-image-auto
+      valuesKey: values.yaml
   values:
-    # Official Grafana MCP Server image
+    # Keep the registry pinned while the ResourceSet supplies repository and tag.
     image:
-      repository: grafana/mcp-grafana  # {"$imagepolicy": "flux-system:grafana-mcp-policy:name"}
-      tag: ""  # {"$imagepolicy": "flux-system:grafana-mcp-policy:tag"}
       registry: docker.io
 
     # Use Grafana's externally named HTTPS endpoint so TLS SNI matches the
@@ -54,26 +56,3 @@ spec:
 
     ingress:
       enabled: false
----
-# ImageRepository for automated image updates
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: grafana-mcp
-  namespace: flux-system
-spec:
-  image: docker.io/grafana/mcp-grafana
-  interval: 24h
----
-# ImagePolicy for automated image updates
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: grafana-mcp-policy
-  namespace: flux-system
-spec:
-  imageRepositoryRef:
-    name: grafana-mcp
-  policy:
-    semver:
-      range: "*"
