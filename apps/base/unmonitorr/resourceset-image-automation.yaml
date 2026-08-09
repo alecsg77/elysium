@@ -14,7 +14,7 @@ spec:
   defaultValues:
     repository: shraymonks/unmonitorr
   filter:
-    includeTag: '^v[0-9]+\\.[0-9]+\\.[0-9]+$'
+    includeTag: '^v[0-9]+\.[0-9]+\.[0-9]+$'
     semver: '1.x'
     limit: 1
 ---
