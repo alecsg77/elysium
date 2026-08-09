@@ -17,11 +17,10 @@ spec:
     - kind: ConfigMap
       name: error-pages-helm-values
       optional: true
+    - kind: ConfigMap
+      name: error-pages-image-auto
+      valuesKey: values.yaml
   values:
-    image:
-      repository: ghcr.io/tarampampam/error-pages # {"$imagepolicy": "default:error-pages-policy:name"}
-      tag: "3.8.1" # {"$imagepolicy": "default:error-pages-policy:tag"}
-      digest: "" # {"$imagepolicy": "default:error-pages-policy:digest"}
     vars:
       TEMPLATES_ROTATION_MODE: "random-on-each-request"
     containerPort: 8080

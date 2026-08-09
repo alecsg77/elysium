@@ -1,8 +1,0 @@
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: error-pages
-spec:
-  image: ghcr.io/tarampampam/error-pages
-  interval: 24h

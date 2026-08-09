@@ -5,6 +5,4 @@ resources:
   - helmrelease.yaml
   - ingress.yaml
   - middleware.yaml
-  - imagerepository.yaml
-  - imagepolicy.yaml
   - resourceset-image-automation.yaml
