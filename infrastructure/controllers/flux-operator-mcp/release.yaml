@@ -35,7 +35,10 @@ spec:
     networkPolicy:
       create: true
       ingress:
-        namespaces: []
+        # Allow approved in-cluster MCP clients to reach the internal HTTP endpoint.
+        namespaces:
+          - coder
+          - ai
     ingress:
       enabled: false
     httpRoute:

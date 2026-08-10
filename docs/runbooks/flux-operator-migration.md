@@ -150,7 +150,7 @@ The HelmRelease waits for the `flux-operator` HelmRelease, enables Streamable HT
 
 ### Access and identity boundary
 
-The Service is a `ClusterIP` Service in `flux-system`, listening on port `9090`. Ingress and Gateway API HTTPRoute are disabled. The chart NetworkPolicy permits connections only from the `flux-system` namespace; use `kubectl port-forward` from a trusted administrative environment for the initial smoke test:
+The Service is a `ClusterIP` Service in `flux-system`, listening on port `9090`. Ingress and Gateway API HTTPRoute are disabled. The chart NetworkPolicy permits connections from `flux-system` and the approved `coder` and `ai` namespaces only. Workloads in either approved namespace can use `http://flux-operator-mcp.flux-system.svc:9090/mcp`; use `kubectl port-forward` from a trusted administrative environment for the initial smoke test:
 
 ```bash
 kubectl port-forward -n flux-system svc/flux-operator-mcp 9090:9090
