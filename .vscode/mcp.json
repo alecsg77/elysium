@@ -9,14 +9,8 @@
 			"type": "stdio"
 		},
 		"flux-operator-mcp": {
-			"command": "/usr/local/bin/flux-operator-mcp",
-			"args": [
-				"serve"
-			],
-			"env": {
-				"KUBECONFIG": "etc/kubeconfig"
-			},
-			"type": "stdio"
+			"url": "http://flux-operator-mcp.flux-system.svc:9090/mcp",
+			"type": "http"
 		},
 		"grafana": {
 			"url": "http://grafana-mcp.monitoring.svc:8000/mcp",

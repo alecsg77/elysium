@@ -14,14 +14,10 @@
       "type": "stdio",
       "command": "npx -y kubernetes-mcp-server@latest"
     },
-    // Flux GitOps operator: inspect Kustomizations/HelmReleases and reconciliation status.
+    // Read-only Flux GitOps status and diagnostics through the in-cluster MCP Service.
     "flux-operator-mcp": {
-      "type": "stdio",
-      "command": "/usr/local/bin/flux-operator-mcp",
-      "args": ["serve"],
-      "env": {
-        "KUBECONFIG": "etc/kubeconfig"
-      }
+      "transport": "http",
+      "url": "http://flux-operator-mcp.flux-system.svc:9090/mcp"
     },
     // Grafana dashboards/alerts/datasources for the kyrion cluster.
     // Reachable only through the in-cluster Service endpoint.

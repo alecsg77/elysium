@@ -25,7 +25,7 @@
 	//      same pattern: download the exact GitHub release asset, verify its SHA256
 	//      checksum against the release's published checksums file before
 	//      installing, and expose "version"/"architecture" options (see
-	//      features/{coder-cli,fission-cli,flux-operator-mcp,kompose}/install.sh).
+	//      features/{coder-cli,fission-cli,kompose}/install.sh).
 	//   4. Never install application tools via raw Dockerfile RUN curl|wget
 	//      commands — use Features. The Dockerfile is reserved for its minimal
 	//      base image and an upstream OS-level compatibility workaround.
@@ -55,7 +55,6 @@
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale:1": {},
 		"ghcr.io/devcontainers/features/node:2": {},
-		"./features/flux-operator-mcp": {},
 		"./features/kompose": {},
 		// Renovate CLI: no local-feature pattern applies here (Renovate ships as
 		// an npm package, not a checksummed GitHub-release binary), so this uses

@@ -146,7 +146,7 @@ The repository deploys the official `flux-operator-mcp` OCI Helm chart at versio
 - `infrastructure/controllers/flux-operator-mcp/clusterrolebinding.yaml`
 - `infrastructure/controllers/flux-operator-mcp/release.yaml`
 
-The HelmRelease waits for the `flux-operator` HelmRelease, enables Streamable HTTP at `/mcp`, and is explicitly configured as read-only. It remains a separate service from the local stdio MCP configurations in `.mux/mcp.jsonc` and `.vscode/mcp.json`; those clients continue to use their local binary unless deliberately reconfigured to reach a trusted port-forward or proxy.
+The HelmRelease waits for the `flux-operator` HelmRelease, enables Streamable HTTP at `/mcp`, and is explicitly configured as read-only. The repository MCP configurations in `.mux/mcp.jsonc` and `.vscode/mcp.json` use the in-cluster Service endpoint; their workloads must run in an approved NetworkPolicy source namespace.
 
 ### Access and identity boundary
 
