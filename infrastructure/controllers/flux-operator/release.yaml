@@ -55,6 +55,12 @@ spec:
           sessionDuration: 8h
           oauth2:
             provider: OIDC
+            # tsidp supports only standard OpenID, email, and profile scopes.
+            # Override Flux's default set, which also requests unsupported groups/offline_access.
+            scopes:
+              - openid
+              - email
+              - profile
             autoLogin: true
             validations:
               - expression: "has(claims.groups) && claims.groups.exists(g, g == 'viewer')"

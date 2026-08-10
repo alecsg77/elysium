@@ -32,7 +32,7 @@ In the tsidp administration UI, register a new confidential client exclusively f
 | Client name | `flux-web` or an equivalent descriptive name |
 | Redirect URI | `https://flux.${PRIVATE_DOMAIN}/oauth2/callback` |
 | Grant | Authorization Code |
-| Allowed scopes/claims | Permit `openid`, `offline_access`, `profile`, `email`, and `groups`; Flux Operator `v0.57.0` requests this fixed OIDC scope set |
+| Allowed scopes/claims | `openid`, `email`, `profile`; tsidp supports only these standard scopes. The Flux Web config explicitly overrides Flux's broader default scope set. |
 
 Record the client ID and client secret only in a trusted local secret manager. The client secret is shown once; do not paste it into chat, shell history, Git, or a plaintext Kubernetes Secret.
 
@@ -119,6 +119,11 @@ spec:
           sessionDuration: 8h
           oauth2:
             provider: OIDC
+            # tsidp rejects Flux's default offline_access and groups scopes.
+            scopes:
+              - openid
+              - email
+              - profile
             validations:
               - expression: "claims.groups.exists(g, g == 'viewer')"
                 message: "user must belong to the viewer group"
@@ -141,7 +146,7 @@ spec:
               - flux.${PRIVATE_DOMAIN}
 ```
 
-Do not add `oauth2.scopes` to the deployed v0.57.0 configuration: that release’s OIDC implementation requests the fixed scope set listed above. Ensure the tsidp client is allowed to issue those scopes and claims instead.
+Set `oauth2.scopes` exactly as shown: without this override, Flux Operator v0.57.0 requests `offline_access` and `groups`, which tsidp rejects with `invalid_scope`. tsidp injects the `groups` claim through its configured capability rules rather than through an OAuth scope.
 
 The group transformation is mandatory: tsidp emits `viewer`, while the existing Kubernetes binding is to `tsidp:viewer`. Do not change the global `tsidp-viewer` binding merely to compensate for an incorrect Flux claim mapping.
 
