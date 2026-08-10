@@ -204,11 +204,15 @@ env:
   - name: OIDC_USE_PKCE
     value: "true"
 
-automountServiceAccountToken: false
+# Required only to discover the in-cluster API endpoint and CA.
+# With unsafeUseServiceAccountToken: false, it is not used as the browser user's identity.
+automountServiceAccountToken: true
 
 clusterRoleBinding:
   create: false
 ```
+
+Keep `automountServiceAccountToken: true`. Headlamp still needs the mounted ServiceAccount token and CA to construct its in-cluster API endpoint. This does **not** re-enable shared ServiceAccount authentication: `unsafeUseServiceAccountToken: false` makes Headlamp forward the logged-in user's OIDC token instead. Since `clusterRoleBinding.create: false`, the Headlamp ServiceAccount has no broad Kubernetes authorization.
 
 The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Create it with the chart external-secret keys: `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER_URL`, and `OIDC_SCOPES`. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
 

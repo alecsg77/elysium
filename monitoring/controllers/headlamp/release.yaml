@@ -14,7 +14,10 @@ spec:
         namespace: kube-system
   interval: 12h
   values:
-    automountServiceAccountToken: false
+    # Headlamp needs the mounted token/CA to construct its in-cluster endpoint.
+    # unsafeUseServiceAccountToken below remains false, so it never authenticates
+    # browser users with this ServiceAccount token.
+    automountServiceAccountToken: true
     clusterRoleBinding:
       create: false
     config:
