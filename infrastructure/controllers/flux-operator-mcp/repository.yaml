@@ -1,0 +1,11 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: flux-operator-mcp
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator-mcp
+  ref:
+    tag: 0.57.0
+    digest: sha256:fee0d514380ba7818bada8295efb261f5a43e434ef6008363d90068d96217464

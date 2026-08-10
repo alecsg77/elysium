@@ -13,3 +13,4 @@ resources:
   - inteldeviceplugins.yaml
   - arc.yaml
   - flux-operator
+  - flux-operator-mcp

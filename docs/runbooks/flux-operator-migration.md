@@ -9,9 +9,9 @@ The migration is deliberately split into independently verifiable GitOps changes
 1. Install Flux Operator and its CRDs.
 2. Create an equivalent `FluxInstance` named `flux` and verify resource adoption.
 3. Remove the legacy generated bootstrap manifests only after the instance is stable.
-4. Optionally install `flux-operator-mcp` as an internal, read-only service.
+4. Install `flux-operator-mcp` as an internal, read-only service.
 
-**This repository now implements phases 1 through 3.** The generated bootstrap manifests were removed only after the operator-managed instance, adopted root sync, six Flux controllers, image automation, and all root Kustomizations were verified healthy.
+**This repository now implements phases 1 through 4.** The generated bootstrap manifests were removed only after the operator-managed instance, adopted root sync, six Flux controllers, image automation, and all root Kustomizations were verified healthy. Phase 4 is reconciled as an internal-only, read-only service with a dedicated Kubernetes identity; complete its post-reconciliation checks before relying on it operationally.
 
 ## Safety requirements
 
@@ -136,26 +136,47 @@ After the operator-managed control plane is stable, workload image updates can m
 
 See [Gitless ResourceSet Image Automation](resourceset-image-automation.md) for the supported workloads, tag-format exclusions, alerting, freeze, and digest-pinned rollback procedure. Do not remove the remaining `ImageUpdateAutomation/image-update` until every legacy marker has a semantically equivalent ResourceSet provider.
 
-## Phase 4: optional Flux Operator MCP
+## Phase 4: Flux Operator MCP
 
-Deploy MCP only after the Flux migration is stable and after approving its client namespace and RBAC model. It is a separate service from the local stdio MCP configuration in `.mux/mcp.jsonc` and `.vscode/mcp.json`.
+The repository deploys the official `flux-operator-mcp` OCI Helm chart at version `0.57.0`, pinned to its OCI digest, through these manifests:
 
-The production baseline must be:
+- `infrastructure/controllers/flux-operator-mcp/repository.yaml`
+- `infrastructure/controllers/flux-operator-mcp/serviceaccount.yaml`
+- `infrastructure/controllers/flux-operator-mcp/clusterrole.yaml`
+- `infrastructure/controllers/flux-operator-mcp/clusterrolebinding.yaml`
+- `infrastructure/controllers/flux-operator-mcp/release.yaml`
 
-```yaml
-transport: http
-readonly: true
-ingress:
-  enabled: false
-httpRoute:
-  enabled: false
-networkPolicy:
-  create: true
+The HelmRelease waits for the `flux-operator` HelmRelease, enables Streamable HTTP at `/mcp`, and is explicitly configured as read-only. It remains a separate service from the local stdio MCP configurations in `.mux/mcp.jsonc` and `.vscode/mcp.json`; those clients continue to use their local binary unless deliberately reconfigured to reach a trusted port-forward or proxy.
+
+### Access and identity boundary
+
+The Service is a `ClusterIP` Service in `flux-system`, listening on port `9090`. Ingress and Gateway API HTTPRoute are disabled. The chart NetworkPolicy permits connections only from the `flux-system` namespace; use `kubectl port-forward` from a trusted administrative environment for the initial smoke test:
+
+```bash
+kubectl port-forward -n flux-system svc/flux-operator-mcp 9090:9090
 ```
 
-Keep the Service internal. Initially use `kubectl port-forward` for trusted administrative testing rather than exposing it with an Ingress or HTTPRoute. The chart's default ServiceAccount binding is `cluster-admin`; disable that generated binding if the chosen chart release permits it and provide a reviewed, least-privilege read-only RBAC policy. Block production rollout if that substitution cannot be validated.
+Connect an HTTP-capable MCP client to `http://localhost:9090/mcp` only through that trusted tunnel. Do not expose this endpoint publicly without a separately reviewed TLS, authentication, and NetworkPolicy design.
 
-Validate the `/mcp` HTTP endpoint, secret masking, NetworkPolicy denial from unauthorized namespaces, and that mutation tools such as reconcile, suspend, resume, apply, and delete are unavailable in read-only mode.
+Flux Operator MCP does not implement incoming OIDC authentication, bearer-token validation, token exchange, or per-request Kubernetes impersonation. It acts as its configured backend Kubernetes identity. The deployment therefore uses the dedicated `flux-operator-mcp-readonly` ServiceAccount, not the chart's default `cluster-admin` binding. Its ClusterRole permits only the read operations needed for Flux Operator/Flux Toolkit status, events, pod logs, and pod metrics; it intentionally does not grant any Secret access, mutation verbs, or wildcard resource access. Helm release inventory is unavailable because that optional feature requires reading Helm storage Secrets.
+
+### Post-reconciliation validation
+
+From a trusted administrative environment, verify the source, release, workload, and permission boundary:
+
+```bash
+flux get sources oci -n flux-system
+flux get helmreleases -n flux-system
+kubectl -n flux-system get deployment,service,networkpolicy flux-operator-mcp
+kubectl auth can-i --as=system:serviceaccount:flux-system:flux-operator-mcp-readonly list helmreleases.helm.toolkit.fluxcd.io --all-namespaces
+kubectl auth can-i --as=system:serviceaccount:flux-system:flux-operator-mcp-readonly get pods/log --all-namespaces
+kubectl auth can-i --as=system:serviceaccount:flux-system:flux-operator-mcp-readonly get secrets --all-namespaces
+kubectl auth can-i --as=system:serviceaccount:flux-system:flux-operator-mcp-readonly create helmreleases.helm.toolkit.fluxcd.io --all-namespaces
+```
+
+The first two authorization checks must return `yes`; the Secret and mutation checks must return `no`. Through the port-forward, verify the `/mcp` HTTP endpoint can retrieve Flux status and that mutation tools such as reconcile, suspend, resume, apply, and delete are absent or rejected in read-only mode.
+
+Do not add an OIDC token through `--kube-token` to this workload: it would configure a static outbound Kubernetes credential, not authenticate MCP callers. Per-user Kubernetes RBAC requires a separately designed OIDC-aware adapter or controlled impersonation layer.
 
 ## Repository validation
 
@@ -164,11 +185,20 @@ Run these before every migration-phase commit:
 ```bash
 kustomize build infrastructure/controllers
 kustomize build infrastructure/configs
-kubectl apply --dry-run=server -k infrastructure/controllers/flux-operator
+kubectl apply --dry-run=server -k infrastructure/controllers/flux-operator-mcp
 yamllint .
 ```
 
-Also run `flux build kustomization infra-controllers --path clusters/kyrion` and the equivalent `infra-configs` build after any existing cluster-Kustomization patch mismatches have been resolved. These full builds validate the rendered Flux path, but a pre-existing patch mismatch must not be attributed to the migration manifests.
+Also run a local Flux dry-run build for the changed layer and the equivalent `infra-configs` build after any existing cluster-Kustomization patch mismatches have been resolved:
+
+```bash
+flux build kustomization infra-controllers \
+  --path ./infrastructure/controllers \
+  --kustomization-file clusters/kyrion/infrastructure.yaml \
+  --dry-run
+```
+
+These builds validate the rendered Flux path while intentionally skipping values substituted from the cluster Secret.
 
 For a chart change, also render the exact pinned chart and inspect CRDs, RBAC, NetworkPolicy, Service, and generated Flux resources before merging.
 

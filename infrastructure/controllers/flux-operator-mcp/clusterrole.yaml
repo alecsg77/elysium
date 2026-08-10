@@ -1,0 +1,81 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: flux-operator-mcp-readonly
+rules:
+  # Flux Operator status and API discovery.
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - list
+  - apiGroups:
+      - fluxcd.controlplane.io
+    resources:
+      - fluxinstances
+      - fluxreports
+    verbs:
+      - list
+
+  # Explicit non-secret allowlist for the generic read-only resource tool.
+  - apiGroups:
+      - source.toolkit.fluxcd.io
+    resources:
+      - buckets
+      - gitrepositories
+      - helmcharts
+      - helmrepositories
+      - ocirepositories
+    verbs:
+      - list
+  - apiGroups:
+      - kustomize.toolkit.fluxcd.io
+    resources:
+      - kustomizations
+    verbs:
+      - list
+  - apiGroups:
+      - helm.toolkit.fluxcd.io
+    resources:
+      - helmreleases
+    verbs:
+      - list
+  - apiGroups:
+      - notification.toolkit.fluxcd.io
+    resources:
+      - alerts
+      - providers
+      - receivers
+    verbs:
+      - list
+  - apiGroups:
+      - image.toolkit.fluxcd.io
+    resources:
+      - imagepolicies
+      - imagerepositories
+      - imageupdateautomations
+    verbs:
+      - list
+
+  # Read-only diagnostics. Helm release inventory is intentionally unavailable
+  # because it requires reading Helm storage Secrets.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods/log
+    verbs:
+      - get
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
