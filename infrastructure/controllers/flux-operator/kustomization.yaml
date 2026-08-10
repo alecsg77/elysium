@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - repository.yaml
   - release.yaml
+  - flux-web-client-sealed-secret.yaml
