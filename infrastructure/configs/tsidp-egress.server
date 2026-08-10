@@ -1,0 +1,5 @@
+idp.${ts_net} {
+    errors
+    rewrite name exact idp.${ts_net} tsidp-egress.kube-system.svc.cluster.local
+    kubernetes cluster.local
+}

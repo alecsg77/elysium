@@ -29,5 +29,6 @@ configMapGenerator:
     options:
       disableNameSuffixHash: true
     files:
+      - tsidp-egress.server
       - ts.net.server
       - arkham.docker.local.server

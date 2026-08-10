@@ -240,9 +240,9 @@ Do not configure Headlamp OIDC until the k3s `audiences` value in Step 2 is the 
 
 ## 5. Provide the Headlamp Pod a Tailnet DNS and egress path
 
-The Headlamp Pod uses cluster DNS, not the workstation's MagicDNS configuration. `DNSConfig/ts-dns` resolves tailnet service names only when a Tailscale egress Service exists for that name.
+The Headlamp Pod uses cluster DNS, not the workstation's MagicDNS configuration. A Tailscale egress Service gives cluster workloads a network path to `tsidp`, while a narrow CoreDNS rewrite maps only the private issuer FQDN to that Service. This preserves the issuer hostname used for TLS and OIDC validation.
 
-`infrastructure/configs/tsidp-egress-proxygroup.yaml` and `infrastructure/configs/tsidp-egress-service.yaml` provide this path. The egress Service uses the Flux-substituted `${ts_net}` variable from `cluster-secret-vars`, so the private Tailnet domain is never committed in the manifest:
+`infrastructure/configs/tsidp-egress-proxygroup.yaml`, `infrastructure/configs/tsidp-egress-service.yaml`, and `infrastructure/configs/tsidp-egress.server` provide this path. Both the egress Service and CoreDNS rewrite use the Flux-substituted `${ts_net}` variable from `cluster-secret-vars`, so the private Tailnet domain is never committed in manifests:
 
 ```yaml
 metadata:
@@ -250,6 +250,14 @@ metadata:
     tailscale.com/proxy-group: tsidp-egress
     tailscale.com/tailnet-fqdn: idp.${ts_net}
 ```
+
+The CoreDNS rewrite is intentionally exact-name only:
+
+```text
+idp.${ts_net} -> tsidp-egress.kube-system.svc.cluster.local
+```
+
+It does not redirect any other Tailnet hostname.
 
 The egress ProxyGroup uses the existing default ProxyClass and `tag:k8s`. Keep the Tailnet grant that permits `tag:k8s` to reach `tag:tsidp` on TCP 443.
 
