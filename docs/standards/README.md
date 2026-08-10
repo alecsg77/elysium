@@ -5,6 +5,7 @@ This README is the index for standards documents.
 ## Standards index
 
 - [Repository structure (monorepo standards)](repository-structure.md)
+- [Infrastructure organization](infrastructure-organization.md) — controller/config ownership, cluster parameter wrappers, and secret delivery
 
 ## Related standards and instructions
 

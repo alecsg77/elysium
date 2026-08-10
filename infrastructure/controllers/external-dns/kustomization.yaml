@@ -4,5 +4,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - repository.yaml
-  - cloudflare-sealed-secret.yaml
   - release.yaml

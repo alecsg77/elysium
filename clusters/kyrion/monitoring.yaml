@@ -15,7 +15,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./monitoring/controllers
+  path: ./clusters/kyrion/monitoring/controllers
   postBuild:
     substituteFrom:
       - kind: Secret

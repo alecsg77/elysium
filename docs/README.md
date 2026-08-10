@@ -8,9 +8,11 @@ For AI coding agents, `AGENTS.md` at the repository root is the portable entry p
 - **[Architecture](architecture/README.md)** - Cluster topology, network design, storage architecture, and security boundaries
 - **[Standards](standards/README.md)** - Repository structure, coding standards, and best practices
   - **[Repository Structure](standards/repository-structure.md)** - Authoritative guide to monorepo organization
+  - **[Infrastructure Organization](standards/infrastructure-organization.md)** - Controller/config ownership and cluster parameter wrappers
 - **[Security](security/README.md)** - Secret management, RBAC policies, and incident response
 - **[Runbooks](runbooks/README.md)** - Operational procedures and step-by-step guides
   - **[Adding Applications](runbooks/add-application.md)** - Complete workflow for deploying apps
+  - **[Adding Infrastructure Components](runbooks/add-infrastructure-component.md)** - Platform controller/config workflow
   - **[Resource Optimization](runbooks/resource-optimization.md)** - Optimizing cluster resources
   - **[Flux Web UI with tsidp OIDC](runbooks/flux-web-ui.md)** - Private-domain authenticated Flux dashboard and read-only RBAC
   - **[Flux Operator Migration](runbooks/flux-operator-migration.md)** - Staged migration from the generated Flux bootstrap

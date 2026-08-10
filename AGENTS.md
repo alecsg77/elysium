@@ -46,6 +46,8 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 - Respect the base/overlay split:
   - Base: `apps/base/<app>/`
   - Environment overlay: `apps/kyrion/`
+- Infrastructure is a shared catalog: `infrastructure/controllers` installs platform APIs/controllers and `infrastructure/configs` instantiates/configures them. Cluster wrappers under `clusters/<cluster>/infrastructure/` may parameterize the complete catalog but must not select components, alter namespaces, or add/remove functional infrastructure. Follow `docs/standards/infrastructure-organization.md`.
+- Deliver secret values via a consumer-native Secret reference or HelmRelease `valuesFrom` before considering Flux post-build substitution; reserve substitution for sensitive raw identifier composition that has no native reference.
 - Respect Flux dependency ordering: controllers/CRDs before dependent resources.
 - Keep documentation authoritative in `/docs`, not duplicated across agent files.
 

@@ -13,18 +13,7 @@ spec:
     name: flux-system
   prune: true
   wait: true
-  path: ./infrastructure/controllers
-  patches:
-    - patch: |
-        apiVersion: helm.toolkit.fluxcd.io/v2
-        kind: HelmRelease
-        metadata:
-          name: tailscale-operator
-          namespace: flux-system
-        spec:
-          values:
-            operatorConfig:
-              hostname: kyrion
+  path: ./clusters/kyrion/infrastructure/controllers
   postBuild:
     substituteFrom:
       - kind: Secret
@@ -46,27 +35,7 @@ spec:
     name: flux-system
   prune: true
   wait: true
-  path: ./infrastructure/configs
-  patches:
-    - patch: |
-        - op: replace
-          path: /spec/acme/server
-          value: https://acme-v02.api.letsencrypt.org/directory
-      target:
-        kind: ClusterIssuer
-        name: letsencrypt
-    - patch: |
-        apiVersion: tailscale.com/v1alpha1
-        kind: Connector
-        metadata:
-          name: connector
-          namespace: tailscale
-        spec:
-          hostname: svizzera
-          subnetRouter:
-            advertiseRoutes:
-              - "10.43.0.0/16"  # Service CIDR
-              - "10.42.0.0/16"  # Pod CIDR
+  path: ./clusters/kyrion/infrastructure/configs
   postBuild:
     substituteFrom:
       - kind: Secret

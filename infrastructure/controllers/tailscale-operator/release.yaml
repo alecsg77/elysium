@@ -22,11 +22,13 @@ spec:
   values:
     apiServerProxyConfig:
       mode: "true"
-    oauth:
-      clientId: ${ts_oauth_clientID}
     proxyConfig:
       defaultProxyClass: default
   valuesFrom:
+    - kind: Secret
+      name: tailscale-operator-secret
+      valuesKey: oauth-client-id
+      targetPath: oauth.clientId
     - kind: Secret
       name: tailscale-operator-secret
       valuesKey: oauth-client-secret

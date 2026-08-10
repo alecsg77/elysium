@@ -47,9 +47,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Every namespace overlay under apps/kyrion/<ns>/, plus the infrastructure/
-        # and monitoring/ paths referenced by the top-level Flux Kustomizations in
-        # clusters/kyrion/infrastructure.yaml and clusters/kyrion/monitoring.yaml.
+        # Every namespace overlay under apps/kyrion/<ns>/, the shared platform
+        # catalog bases, and the cluster parameter wrappers referenced by the top-level
+        # Flux Kustomizations in clusters/kyrion/infrastructure.yaml and monitoring.yaml.
         target:
           - apps/kyrion/ai
           - apps/kyrion/airflow
@@ -63,7 +63,10 @@ jobs:
           - apps/kyrion/romm
           - infrastructure/controllers
           - infrastructure/configs
+          - clusters/kyrion/infrastructure/controllers
+          - clusters/kyrion/infrastructure/configs
           - monitoring/controllers
+          - clusters/kyrion/monitoring/controllers
           - monitoring/configs
     steps:
       - name: Check out code
@@ -124,13 +127,13 @@ jobs:
             path: ./apps/kyrion
           - name: infra-controllers
             file: infrastructure.yaml
-            path: ./infrastructure/controllers
+            path: ./clusters/kyrion/infrastructure/controllers
           - name: infra-configs
             file: infrastructure.yaml
-            path: ./infrastructure/configs
+            path: ./clusters/kyrion/infrastructure/configs
           - name: monitoring-controllers
             file: monitoring.yaml
-            path: ./monitoring/controllers
+            path: ./clusters/kyrion/monitoring/controllers
           - name: monitoring-configs
             file: monitoring.yaml
             path: ./monitoring/configs

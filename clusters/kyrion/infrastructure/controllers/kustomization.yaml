@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../../infrastructure/controllers
+  - tailscale-operator-sealed-secret.yaml
+  - external-dns-cloudflare-sealed-secret.yaml
+  - tsidp-auth-sealed-secret.yaml
+
+patches:
+  - target:
+      group: helm.toolkit.fluxcd.io
+      version: v2
+      kind: HelmRelease
+      name: tailscale-operator
+      namespace: flux-system
+    patch: |-
+      - op: add
+        path: /spec/values/operatorConfig
+        value:
+          hostname: kyrion

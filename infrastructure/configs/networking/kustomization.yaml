@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - traefik-config.yaml
+  - ts-ingress-arkham.yaml
+
+configMapGenerator:
+  - name: coredns-custom
+    namespace: kube-system
+    options:
+      disableNameSuffixHash: true
+    files:
+      - tsidp-egress.server
+      - ts.net.server
+      - arkham.docker.local.server

@@ -9,7 +9,8 @@ description: "Flux CD GitOps patterns and conventions"
 - All cluster state managed through Git (single source of truth)
 - Flux automatically reconciles cluster state with Git
 - Use dependency chains to ensure ordered deployment
-- Leverage variable substitution for environment-specific values
+- Keep infrastructure component selection shared across clusters; cluster wrappers may only parameterize the complete catalog
+- Prefer consumer-native Secret references or HelmRelease `valuesFrom`; reserve variable substitution for raw value composition that lacks a native reference
 - Encrypt sensitive data with Sealed Secrets
 
 ## Flux Resource Types
@@ -22,7 +23,7 @@ description: "Flux CD GitOps patterns and conventions"
 
 ### Kustomization
 - Define clear dependency chains with `dependsOn`
-- Use `postBuild.substituteFrom` for variable injection
+- Use `postBuild.substituteFrom` only for raw string interpolation/composition that cannot use a native value reference
 - Set health checks with appropriate timeouts
 - Use `prune: true` for automatic resource cleanup
 - Configure retry intervals and timeout values appropriately
@@ -71,7 +72,7 @@ Use variables in manifests: `${VARIABLE_NAME}`
 - Never commit plain text secrets
 - Use `kubeseal` to encrypt secrets with cluster public key
 - Store sealed secrets in Git as `*-sealed-secret.yaml`
-- Reference sealed secrets in Flux resources via `valuesFrom`
+- Place a SealedSecret beside its direct consumer's cluster parameter wrapper and reference it through `valuesFrom` or the consumer's native Secret field
 
 ## Image Automation
 - Create ImageRepository resources for container registries

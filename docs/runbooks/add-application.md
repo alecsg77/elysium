@@ -55,7 +55,6 @@ apps/base/<app>/
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - namespace.yaml           # If app-specific namespace
   - helmrelease.yaml
   # Add one line per resource file
 

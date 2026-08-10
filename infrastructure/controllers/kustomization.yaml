@@ -6,11 +6,10 @@ resources:
   - tailscale-operator
   - tsidp
   - external-dns
-  - https://github.com/rancher/system-upgrade-controller/releases/latest/download/crd.yaml
-  - system-upgrade.yaml
-  - cert-manager.yaml
-  - nfd.yaml
-  - inteldeviceplugins.yaml
-  - arc.yaml
+  - system-upgrade
+  - cert-manager
+  - nfd
+  - intel-device-plugins
+  - arc
   - flux-operator
   - flux-operator-mcp

@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - connector.yaml
+  - default-proxy-class.yaml
+  - dns.yaml
+  - tsidp-egress-proxygroup.yaml
+  - tsidp-egress-service.yaml

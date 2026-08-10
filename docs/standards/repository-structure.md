@@ -21,7 +21,7 @@ This repository follows a layered GitOps layout inspired by common Flux patterns
 | Path | Purpose | Rules |
 |------|---------|-------|
 | `clusters/` | **Cluster entry point(s)**. Flux `Kustomization` resources that define *what gets applied* and in which order. | Keep minimal. Only orchestration + cluster-wide vars/secrets. |
-| `infrastructure/` | Controllers/operators and cluster-wide configuration (ingress, cert-manager, device plugins, policies, issuers, etc.). | Split `controllers/` (CRDs/operators) vs `configs/` (their configuration). |
+| `infrastructure/` | Shared controllers/operators and cluster-wide configuration (ingress, cert-manager, device plugins, policies, issuers, etc.). | Split `controllers/` (CRDs/operators) vs `configs/` (their configuration); see [Infrastructure organization](infrastructure-organization.md). |
 | `apps/` | User/workload applications. Typically `HelmRelease` + supporting manifests. | Use `base/` + environment overlays (e.g. `kyrion/`). |
 | `monitoring/` | Observability stack (controllers + configs), often independent from apps. | Keep dashboards, datasources, monitors here; avoid scattering. |
 | `docs/` | Human documentation: architecture, standards, runbooks, troubleshooting. | Prefer linking to source manifests instead of copying YAML. |
@@ -55,13 +55,13 @@ Use this quick guide when adding or changing manifests.
   - Yes → `clusters/<cluster>/` (e.g., Kustomizations that point at `apps/`, `infrastructure/`, `monitoring/`).
   - No → continue.
 
-2. **Is it a controller/operator/CRD install (things that enable other resources)?**
-  - Yes → `infrastructure/controllers/` (or `monitoring/controllers/` for observability operators).
+2. **Does it install an API, CRD, webhook, or controller that enables other resources?**
+  - Yes → `infrastructure/controllers/<component>/` (or `monitoring/controllers/<component>/` for observability operators). Keep the dedicated source and direct installation prerequisites with that controller.
   - No → continue.
 
-3. **Is it configuration/policy for cluster-wide infrastructure?**
-  Examples: issuers, ingress config, StorageClass, cluster DNS, shared HelmRepository sources.
-  - Yes → `infrastructure/configs/`.
+3. **Is it a custom resource, configuration, or policy that uses an installed platform API?**
+  Examples: issuers, certificates, ingress config, StorageClass, cluster DNS, controller custom resources, and shared Flux sources.
+  - Yes → `infrastructure/configs/<component-or-domain>/`.
   - No → continue.
 
 4. **Is it an application workload (HelmRelease, Deployment, Service, Ingress, app ConfigMap/Secret)?**
@@ -73,10 +73,12 @@ Use this quick guide when adding or changing manifests.
   - Yes → `monitoring/configs/` (or alongside the relevant monitoring component under `monitoring/controllers/<component>/` if tightly coupled).
   - No → continue.
 
-6. **Is it a Secret?**
-  - Cluster-wide variables used via Flux substitution → `clusters/<cluster>/sealed-secrets.yaml` (encrypted only).
-  - App-specific credentials/config → `apps/base/<app>/*-sealed-secret.yaml` (encrypted only).
-  - Never commit plaintext secrets anywhere.
+6. **Is it a Secret or cluster parameter?**
+  - Use the consumer's native `secretRef`/`secretKeyRef` where possible, otherwise HelmRelease `valuesFrom`.
+  - Infrastructure credentials → a SealedSecret parameter artifact in the relevant `clusters/<cluster>/infrastructure/` wrapper, with the same name/namespace/key contract across clusters.
+  - Raw sensitive identifiers that must be interpolated into a manifest → `clusters/<cluster>/sealed-secrets.yaml` through Flux substitution.
+  - App-specific credentials/config → the appropriate `apps/<cluster>/` overlay SealedSecret.
+  - Never commit plaintext secrets or sensitive infrastructure identifiers anywhere.
 
 7. **Is it documentation?**
   - General guides/runbooks/standards → `docs/`.
@@ -85,8 +87,9 @@ Use this quick guide when adding or changing manifests.
 ### 1) One resource, one home
 
 - A resource should have exactly one authoritative definition in Git.
-- Avoid duplicating the same `Namespace`, `HelmRepository`, or `ConfigMap` in multiple places.
+- Avoid duplicating the same `Namespace`, Flux source, Secret, or ConfigMap in multiple places.
 - If multiple apps need a shared dependency (e.g., a cluster issuer), it belongs under `infrastructure/configs/`.
+- Cluster infrastructure wrappers parameterize the full shared catalog; unlike `apps/<cluster>/`, they never select or relocate components. See [Infrastructure organization](infrastructure-organization.md).
 
 **Kustomize best practice**: Each YAML file should contain only one Kubernetes resource (exception: multi-document YAML with `---` is acceptable only when resources are tightly coupled and always deployed together, but prefer separate files for clarity and reusability).
 
@@ -176,15 +179,15 @@ Consistency matters more than creativity.
 
 ### 4) Secrets policy (non-negotiable)
 
-- Never commit plaintext secrets.
+- Never commit plaintext secrets or sensitive infrastructure identifiers.
 - Use Bitnami Sealed Secrets (`SealedSecret`) and keep files named `*-sealed-secret.yaml`.
-- Prefer referencing Secrets/ConfigMaps through:
-  - Flux `spec.postBuild.substituteFrom` for *string substitution* in manifests.
-  - HelmRelease `spec.valuesFrom` for Helm values injection.
+- Deliver values in this order: consumer-native Secret reference, HelmRelease `valuesFrom`, non-sensitive ConfigMap/patch, then Flux `spec.postBuild.substituteFrom` only for raw string interpolation that cannot reference a value natively.
+- Keep cluster-wide substitution values in `clusters/<cluster>/sealed-secrets.yaml`; keep dedicated infrastructure credentials in the matching cluster parameter wrapper.
 
 If you need a new secret:
 
-- Create it as a SealedSecret in the **same domain** as its consumer (app secret under `apps/base/<app>/`, cluster-wide secret under `clusters/<cluster>/sealed-secrets.yaml`).
+- Create a SealedSecret in the same domain as its direct consumer and preserve the expected name, namespace, and key contract across clusters.
+- Re-seal an existing live Secret with the destination cluster certificate rather than copying ciphertext between independently keyed clusters.
 - Add a minimal README note describing what the secret is for (never the secret value).
 
 ### 5) Helm chart management best practices
@@ -206,12 +209,12 @@ If you need a new secret:
 - ❌ **Never use `latest` chart version**
 - ❌ **Don't use `*` or floating versions in production**
 
-**HelmRepository organization:**
+**Flux source organization:**
 
-- Define `HelmRepository`/`OCIRepository` resources in `infrastructure/configs/helm-repositories.yaml`
-- Reuse repository references across all HelmReleases
-- Group by vendor/source: bitnami, prometheus-community, official apps
-- Use consistent naming: `<vendor>-charts` or `<app>-official`
+- Keep a dedicated `HelmRepository`, `OCIRepository`, or `GitRepository` beside its first/only controller or release consumer.
+- Place a genuinely shared source under `infrastructure/configs/flux/` and document its shared ownership.
+- Do not move all sources into a global pre-install layer; that can invert controller dependencies.
+- Use consistent naming: `<vendor>-charts` or `<app>-official`.
 
 **HelmRelease structure:**
 

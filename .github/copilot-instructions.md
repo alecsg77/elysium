@@ -87,6 +87,8 @@ docs/                   # Authoritative documentation
 └── troubleshooting/  # Known issues and workflows
 ```
 
+
+**Infrastructure rule**: every cluster applies the same infrastructure catalog. `clusters/<cluster>/infrastructure/` contains value-only wrappers and required parameter artifacts; it does not choose controllers, omit configuration, or change namespaces. See [Infrastructure Organization](/docs/standards/infrastructure-organization.md).
 **Key Principle**: Authoritative documentation lives in `/docs/`, Copilot customizations live in `.github/`, and cross-agent compatibility entry points live in `/AGENTS.md` and `/CLAUDE.md`.
 
 ### Dependency Chain
