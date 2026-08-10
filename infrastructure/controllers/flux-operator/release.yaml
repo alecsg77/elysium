@@ -19,14 +19,63 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
+  valuesFrom:
+    # Keep OIDC client material out of Git and inject it only into the rendered Web Config.
+    - kind: Secret
+      name: flux-web-client
+      valuesKey: client-id
+      targetPath: web.config.authentication.oauth2.clientID
+    - kind: Secret
+      name: flux-web-client
+      valuesKey: client-secret
+      targetPath: web.config.authentication.oauth2.clientSecret
+    - kind: Secret
+      name: flux-web-client
+      valuesKey: issuer-url
+      targetPath: web.config.authentication.oauth2.issuerURL
   values:
     # The operator must have cluster-wide privileges to manage FluxInstance resources.
     rbac:
       create: true
       createAggregation: true
-    # Do not enable the optional web UI until its access model is reviewed separately.
     web:
-      enabled: false
+      enabled: true
+      # Avoid creating the chart's broad convenience roles; user access is bound
+      # only through the reviewed tsidp:viewer read-only RBAC manifests.
+      rbac:
+        createRoles: false
+      userActions:
+        # Any future action must pass both Flux action and Kubernetes RBAC as the user.
+        access: Impersonated
+      config:
+        baseURL: https://flux.${PRIVATE_DOMAIN}
+        insecure: false
+        authentication:
+          type: OAuth2
+          sessionDuration: 8h
+          oauth2:
+            provider: OIDC
+            autoLogin: true
+            validations:
+              - expression: "has(claims.groups) && claims.groups.exists(g, g == 'viewer')"
+                message: "user must belong to the viewer group"
+            impersonation:
+              username: "has(claims.email) ? claims.email : claims.sub"
+              groups: "claims.groups.map(g, 'tsidp:' + g)"
+      ingress:
+        enabled: true
+        className: traefik
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: flux.${PRIVATE_DOMAIN}
+        hosts:
+          - host: flux.${PRIVATE_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: flux-web-tls
+            hosts:
+              - flux.${PRIVATE_DOMAIN}
     installCRDs: true
     image:
       tag: v0.57.0
