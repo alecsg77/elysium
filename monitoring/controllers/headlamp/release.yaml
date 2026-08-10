@@ -14,12 +14,31 @@ spec:
         namespace: kube-system
   interval: 12h
   values:
+    automountServiceAccountToken: false
+    clusterRoleBinding:
+      create: false
     config:
       inCluster: true
       inClusterContextName: kyrion
       pluginsDir: /build/plugins
       tlsCertPath: /etc/headlamp/tls/tls.crt
       tlsKeyPath: /etc/headlamp/tls/tls.key
+      unsafeUseServiceAccountToken: false
+      oidc:
+        callbackURL: https://headlamp.${PRIVATE_DOMAIN}/oidc-callback
+        externalSecret:
+          enabled: true
+          hasScopes: true
+          name: headlamp-oidc
+        secret:
+          create: false
+        useAccessToken: false
+        usePKCE: true
+    env:
+      - name: OIDC_CALLBACK_URL
+        value: https://headlamp.${PRIVATE_DOMAIN}/oidc-callback
+      - name: OIDC_USE_PKCE
+        value: "true"
     service:
       port: 443
       annotations:

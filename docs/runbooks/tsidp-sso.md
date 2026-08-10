@@ -188,11 +188,21 @@ config:
   inCluster: true
   unsafeUseServiceAccountToken: false
   oidc:
+    callbackURL: https://headlamp.${PRIVATE_DOMAIN}/oidc-callback
     secret:
       create: false
     externalSecret:
       enabled: true
+      hasScopes: true
       name: headlamp-oidc
+    useAccessToken: false
+    usePKCE: true
+
+env:
+  - name: OIDC_CALLBACK_URL
+    value: https://headlamp.${PRIVATE_DOMAIN}/oidc-callback
+  - name: OIDC_USE_PKCE
+    value: "true"
 
 automountServiceAccountToken: false
 

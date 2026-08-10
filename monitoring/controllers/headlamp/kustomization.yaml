@@ -5,4 +5,5 @@ namespace: kube-system
 resources:
   - repository.yaml
   - release.yaml
+  - headlamp-oidc-sealed-secret.yaml
   - tls-certificate.yaml
