@@ -25,6 +25,7 @@ spec:
             key: apiToken
     sources:
       - service
+      - ingress
     domainFilters:
       - ${PRIVATE_DOMAIN}
     registry: txt

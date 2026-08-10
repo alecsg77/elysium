@@ -6,6 +6,8 @@ resources:
   - tsidp-egress-proxygroup.yaml
   - tsidp-egress-service.yaml
   - ts-dns.yaml
+  - flux-web-rbac.yaml
+  - flux-web-tls-certificate.yaml
   - tsidp-viewer-clusterrolebinding.yaml
   - k3s-upgrade.yaml
   - cluster-issuers.yaml
