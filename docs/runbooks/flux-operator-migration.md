@@ -178,6 +178,12 @@ The first two authorization checks must return `yes`; the Secret and mutation ch
 
 Do not add an OIDC token through `--kube-token` to this workload: it would configure a static outbound Kubernetes credential, not authenticate MCP callers. Per-user Kubernetes RBAC requires a separately designed OIDC-aware adapter or controlled impersonation layer.
 
+## Phase 5: private Flux Web UI with tsidp OIDC
+
+The Flux Operator chart includes an optional Web UI. This repository exposes it only through the private-domain Traefik ingress and only after an authenticated `tsidp` OIDC client is available as a SealedSecret. The initial UI role is read-only and is intentionally not bound to `flux-web-admin`.
+
+The prerequisite Certificate, ExternalDNS Ingress source, and least-privilege `tsidp:viewer` discovery RBAC are reconciled before enabling `web.enabled`. The separate [Flux Web UI with tsidp OIDC](flux-web-ui.md) runbook is authoritative for dedicated-client registration, sealing, claim mapping, private DNS/TLS validation, and rollback. Do not expose the UI anonymously or reuse Headlamp, kubelogin, or tsidp join credentials for the Flux client.
+
 ## Repository validation
 
 Run these before every migration-phase commit:
