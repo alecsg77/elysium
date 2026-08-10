@@ -1,0 +1,8 @@
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: tsidp-egress
+spec:
+  type: egress
+  proxyClass: default
+  replicas: 2

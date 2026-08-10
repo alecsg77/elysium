@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsidp-egress
+  namespace: kube-system
+  annotations:
+    tailscale.com/proxy-group: tsidp-egress
+    tailscale.com/tailnet-fqdn: idp.${ts_net}
+spec:
+  type: ExternalName
+  externalName: placeholder.invalid
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP

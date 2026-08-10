@@ -238,7 +238,31 @@ Expected output is `kube-system/headlamp-oidc`.
 
 Do not configure Headlamp OIDC until the k3s `audiences` value in Step 2 is the same Headlamp client ID. A token minted for a different client audience is rejected by the API server even if issuer, signature, and groups are otherwise valid.
 
-## 5. Validate Headlamp per-user RBAC
+## 5. Provide the Headlamp Pod a Tailnet DNS and egress path
+
+The Headlamp Pod uses cluster DNS, not the workstation's MagicDNS configuration. `DNSConfig/ts-dns` resolves tailnet service names only when a Tailscale egress Service exists for that name.
+
+`infrastructure/configs/tsidp-egress-proxygroup.yaml` and `infrastructure/configs/tsidp-egress-service.yaml` provide this path. The egress Service uses the Flux-substituted `${ts_net}` variable from `cluster-secret-vars`, so the private Tailnet domain is never committed in the manifest:
+
+```yaml
+metadata:
+  annotations:
+    tailscale.com/proxy-group: tsidp-egress
+    tailscale.com/tailnet-fqdn: idp.${ts_net}
+```
+
+The egress ProxyGroup uses the existing default ProxyClass and `tag:k8s`. Keep the Tailnet grant that permits `tag:k8s` to reach `tag:tsidp` on TCP 443.
+
+After Flux reconciles `infra-configs`, verify issuer discovery from the Headlamp Pod without printing token or Secret values:
+
+```bash
+kubectl -n kube-system exec deploy/headlamp -- /bin/sh -c \
+  'nslookup idp.<tailnet>.ts.net && wget -qO- https://idp.<tailnet>.ts.net/.well-known/openid-configuration >/dev/null'
+```
+
+Expected result: the lookup succeeds and the discovery request exits successfully.
+
+## 6. Validate Headlamp per-user RBAC
 
 After Flux reconciles the Headlamp change:
 
