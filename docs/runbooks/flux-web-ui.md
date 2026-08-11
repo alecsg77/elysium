@@ -54,25 +54,13 @@ client-secret
 issuer-url
 ```
 
-Generate it locally using the repository’s Sealed Secrets public certificate and environment variables supplied from a trusted terminal. Keep the generated plaintext Secret only in a temporary file and remove it immediately after sealing:
+Use the repository rotation script from a trusted terminal:
 
 ```bash
-read -rp 'Flux Web OIDC client ID: ' FLUX_WEB_CLIENT_ID
-read -rsp 'Flux Web OIDC client secret: ' FLUX_WEB_CLIENT_SECRET; echo
-read -rp 'tsidp issuer URL: ' FLUX_WEB_ISSUER_URL
-
-export FLUX_WEB_CLIENT_ID FLUX_WEB_CLIENT_SECRET FLUX_WEB_ISSUER_URL
-
-kubectl -n flux-system create secret generic flux-web-client \
-  --from-literal=client-id="$FLUX_WEB_CLIENT_ID" \
-  --from-literal=client-secret="$FLUX_WEB_CLIENT_SECRET" \
-  --from-literal=issuer-url="$FLUX_WEB_ISSUER_URL" \
-  --dry-run=client -o yaml \
-  | kubeseal --format yaml --cert etc/certs/pub-sealed-secrets.pem \
-  > infrastructure/controllers/flux-operator/flux-web-client-sealed-secret.yaml
-
-unset FLUX_WEB_CLIENT_ID FLUX_WEB_CLIENT_SECRET FLUX_WEB_ISSUER_URL
+sh scripts/rotate-oidc-sealed-secrets.sh
 ```
+
+Every prompt is optional, so press Enter to preserve an existing encrypted value when rotating only one credential. The script prompts without echoing client secrets, uses the repository Sealed Secrets public certificate, and updates only the supplied keys in this manifest and/or Headlamp's OIDC SealedSecret. Plaintext is never written to Git and is removed from its protected temporary directory immediately after sealing.
 
 Before committing, inspect only metadata and encrypted structure; do not decode the SealedSecret:
 

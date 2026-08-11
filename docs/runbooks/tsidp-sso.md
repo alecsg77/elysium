@@ -81,6 +81,18 @@ Record the generated `client_id` and `client_secret` locally. Do not paste eithe
 
 The Headlamp redirect URI must be the public browser URL plus the literal path `/oidc-callback`; it is not the local callback URI previously used for `kubelogin` testing.
 
+### Rotate GitOps OIDC credentials
+
+After creating replacement clients, re-seal the Flux Web and Headlamp credentials locally from the repository root:
+
+```bash
+sh scripts/rotate-oidc-sealed-secrets.sh
+```
+
+The script prompts at the terminal for the common tsidp issuer URL and each UI's client ID and client secret. Every prompt is optional: press Enter to retain the existing encrypted value, allowing a single client secret or a single UI to be rotated independently. Secret prompts are not echoed; plaintext is never written to Git. It updates only `flux-web-client-sealed-secret.yaml` and `headlamp-oidc-sealed-secret.yaml`; it does not alter `tsidp-auth` or the persistent tsidp state PVC.
+
+If the Headlamp client ID changes, complete the API-server audience update below before reconciling Headlamp.
+
 ## 2. Align k3s OIDC audience with the Headlamp client
 
 The k3s OIDC configuration must accept tokens whose audience is the **Headlamp client ID**, not the retired `kubelogin` test-client ID.
