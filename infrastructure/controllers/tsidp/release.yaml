@@ -17,13 +17,17 @@ spec:
         name: flux-system
         namespace: flux-system
   interval: 12h
+  # tsidp's PVC contains its issuer keys, registered clients, and refresh-token
+  # state. Retry in place instead of uninstalling failed installs or rolling back
+  # failed upgrades, which can discard chart-managed state after a failed release.
   install:
-    remediation:
-      retries: 3
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 5m
   upgrade:
-    remediation:
-      retries: 3
-      remediateLastFailure: true
+    strategy:
+      name: RetryOnFailure
+      retryInterval: 5m
   values:
     image:
       repository: ghcr.io/tailscale/tsidp

@@ -38,6 +38,10 @@ The HelmRelease sets `podSpec.enableServiceLinks: false`. Kubernetes otherwise i
 
 ## Persistent state
 
-The release creates the `tsidp-tsidp-data` PVC. It stores both tsnet and OIDC server state, including registered clients and refresh-token state. Do not delete this PVC during a HelmRelease rollback or upgrade. Back it up and test restoration before upgrading `tsidp`.
+The release creates the `tsidp-tsidp-data` PVC, mounted at `TS_STATE_DIR=/data`. It stores both tsnet and OIDC server state, including issuer signing material, registered clients, and refresh-token state.
+
+The HelmRelease explicitly uses Flux's `RetryOnFailure` strategy for installs and upgrades. This retries a failed action in place rather than uninstalling a failed install or rolling back a failed upgrade, so normal pod restarts, image/chart updates, and transient reconciliation failures retain the claim and its contents. Do not delete this PVC during recovery, rollback, or upgrade.
+
+A deliberate GitOps uninstallation removes the Helm-managed PVC and therefore its state. Back up and test restoration before upgrading `tsidp`; only delete the claim as part of an intentional full uninstall or a documented disaster-recovery procedure.
 
 See [`docs/runbooks/tsidp-sso.md`](../../../docs/runbooks/tsidp-sso.md) for the required Tailscale policy, k3s configuration, test sequence, and recovery process.
