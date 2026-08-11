@@ -386,7 +386,7 @@ module "git-config" {
 module "git_clone" {
   count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
   source   = "registry.coder.com/coder/git-clone/coder"
-  version  = "2.0.2"
+  version  = "2.0.3"
   agent_id = coder_agent.main.id
   url      = data.coder_parameter.git_repo.value
 }
