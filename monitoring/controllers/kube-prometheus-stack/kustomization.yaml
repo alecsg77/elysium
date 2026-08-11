@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - namespace.yaml
+  - monitoring-wildcard-tls.yaml
   - repository.yaml
   - release.yaml
 configMapGenerator:

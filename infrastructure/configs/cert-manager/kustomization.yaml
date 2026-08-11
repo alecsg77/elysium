@@ -4,4 +4,3 @@ kind: Kustomization
 resources:
   - cluster-issuers.yaml
   - web-public.yaml
-  - monitoring-wildcard-tls.yaml
