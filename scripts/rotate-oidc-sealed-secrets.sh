@@ -11,8 +11,9 @@ Usage: sh scripts/rotate-oidc-sealed-secrets.sh [--dry-run]
 Interactively update the OIDC credentials for Flux Web and Headlamp. Every
 prompt is optional: press Enter to preserve that encrypted value. The script
 uses kubeseal --merge-into, so it updates only supplied keys and never needs to
-decrypt the existing SealedSecrets. --dry-run verifies sealing and discards any
-changes instead of replacing repository files.
+decrypt the existing SealedSecrets. A Headlamp credential change also regenerates
+an opaque rollout token so its Pod restarts with the new environment. --dry-run
+verifies sealing and discards any changes instead of replacing repository files.
 EOF
 }
 
@@ -36,7 +37,7 @@ esac
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
-for command in kubectl kubeseal mktemp; do
+for command in kubectl kubeseal mktemp openssl; do
   command -v "$command" >/dev/null 2>&1 || {
     printf 'Required command not found: %s\n' "$command" >&2
     exit 1
@@ -128,6 +129,7 @@ merge_headlamp() {
   test ! -f "$tmpdir/headlamp-client-id" || set -- "$@" --from-file=OIDC_CLIENT_ID="$tmpdir/headlamp-client-id"
   test ! -f "$tmpdir/headlamp-client-secret" || set -- "$@" --from-file=OIDC_CLIENT_SECRET="$tmpdir/headlamp-client-secret"
   test ! -f "$tmpdir/issuer-url" || set -- "$@" --from-file=OIDC_ISSUER_URL="$tmpdir/issuer-url"
+  test ! -f "$tmpdir/headlamp-rollout-token" || set -- "$@" --from-file=HEADLAMP_ROLLOUT_TOKEN="$tmpdir/headlamp-rollout-token"
   "$@" | kubeseal --cert "$certificate" --format yaml --merge-into "$target"
 }
 
@@ -141,6 +143,10 @@ if test -f "$tmpdir/flux-client-id" || test -f "$tmpdir/flux-client-secret" || t
 fi
 
 if test -f "$tmpdir/headlamp-client-id" || test -f "$tmpdir/headlamp-client-secret" || test -f "$tmpdir/issuer-url"; then
+  # Environment variables from a Secret are fixed when a Pod starts. Rotate this
+  # opaque token with Headlamp OIDC values so helm-controller upgrades the chart
+  # and the pod-template annotation triggers a rollout.
+  openssl rand -hex 32 >"$tmpdir/headlamp-rollout-token"
   cp "$headlamp_output" "$tmpdir/headlamp-oidc-sealed-secret.yaml"
   merge_headlamp "$tmpdir/headlamp-oidc-sealed-secret.yaml"
   headlamp_updated=true

@@ -13,6 +13,15 @@ spec:
         name: headlamp
         namespace: kube-system
   interval: 12h
+  # The generated Secret is watched by helm-controller. Its opaque rollout token
+  # changes with Headlamp OIDC credentials, updating this pod-template annotation
+  # so environment variables are reloaded in a new Pod.
+  valuesFrom:
+    - kind: Secret
+      name: headlamp-oidc
+      valuesKey: HEADLAMP_ROLLOUT_TOKEN
+      targetPath: podAnnotations.oidc-restart-token
+      literal: true
   values:
     # Headlamp needs the mounted token/CA to construct its in-cluster endpoint.
     # unsafeUseServiceAccountToken below remains false, so it never authenticates

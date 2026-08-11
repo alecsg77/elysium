@@ -60,7 +60,7 @@ Use the repository rotation script from a trusted terminal:
 sh scripts/rotate-oidc-sealed-secrets.sh
 ```
 
-Every prompt is optional, so press Enter to preserve an existing encrypted value when rotating only one credential. The script prompts without echoing client secrets, uses the repository Sealed Secrets public certificate, and updates only the supplied keys in this manifest and/or Headlamp's OIDC SealedSecret. Plaintext is never written to Git and is removed from its protected temporary directory immediately after sealing.
+Every prompt is optional, so press Enter to preserve an existing encrypted value when rotating only one credential. The script prompts without echoing client secrets, uses the repository Sealed Secrets public certificate, and updates only the supplied keys in this manifest and/or Headlamp's OIDC SealedSecret. A Headlamp credential change also regenerates its opaque rollout token so Flux replaces the Pod with one that reads the rotated environment variables. Plaintext is never written to Git and is removed from its protected temporary directory immediately after sealing.
 
 Before committing, inspect only metadata and encrypted structure; do not decode the SealedSecret:
 

@@ -89,7 +89,7 @@ After creating replacement clients, re-seal the Flux Web and Headlamp credential
 sh scripts/rotate-oidc-sealed-secrets.sh
 ```
 
-The script prompts at the terminal for the common tsidp issuer URL and each UI's client ID and client secret. Every prompt is optional: press Enter to retain the existing encrypted value, allowing a single client secret or a single UI to be rotated independently. Secret prompts are not echoed; plaintext is never written to Git. It updates only `flux-web-client-sealed-secret.yaml` and `headlamp-oidc-sealed-secret.yaml`; it does not alter `tsidp-auth` or the persistent tsidp state PVC.
+The script prompts at the terminal for the common tsidp issuer URL and each UI's client ID and client secret. Every prompt is optional: press Enter to retain the existing encrypted value, allowing a single client secret or a single UI to be rotated independently. Secret prompts are not echoed; plaintext is never written to Git. When any Headlamp OIDC value changes, the script also regenerates a non-secret opaque rollout token. Flux watches that generated Secret and upgrades Headlamp with a changed pod-template annotation, ensuring the new environment variables reach a fresh Pod. It updates only `flux-web-client-sealed-secret.yaml` and `headlamp-oidc-sealed-secret.yaml`; it does not alter `tsidp-auth` or the persistent tsidp state PVC.
 
 If the Headlamp client ID changes, complete the API-server audience update below before reconciling Headlamp.
 
@@ -226,7 +226,7 @@ clusterRoleBinding:
 
 Keep `automountServiceAccountToken: true`. Headlamp still needs the mounted ServiceAccount token and CA to construct its in-cluster API endpoint. This does **not** re-enable shared ServiceAccount authentication: `unsafeUseServiceAccountToken: false` makes Headlamp forward the logged-in user's OIDC token instead. Since `clusterRoleBinding.create: false`, the Headlamp ServiceAccount has no broad Kubernetes authorization.
 
-The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. Create it with the chart external-secret keys: `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER_URL`, and `OIDC_SCOPES`. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
+The encrypted `Secret/headlamp-oidc` must be created locally with `kubeseal`; never commit a plaintext Secret. It contains the chart external-secret keys `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER_URL`, and `OIDC_SCOPES`, plus the script-managed `HEADLAMP_ROLLOUT_TOKEN`. The rollout token is not an OIDC credential: Flux maps it to a Headlamp pod-template annotation and watches the Secret so a credential rotation restarts the Pod. Use `profile,email` for scopes; Headlamp always requests mandatory `openid` itself. Before changing the HelmRelease, inspect that chart version's `values.yaml` and schema to verify the external-secret wiring and OIDC options.
 
 Generate this manifest locally with a temporary, untracked helper or the standard Sealed Secrets workflow in [Secret Management](../security/secret-management.md). Do not commit a credential-generation helper: it is intentionally local because it handles the Headlamp client secret.
 
