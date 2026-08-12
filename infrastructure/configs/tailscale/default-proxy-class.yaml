@@ -3,6 +3,9 @@ kind: ProxyClass
 metadata:
   name: default
   namespace: tailscale
+  annotations:
+    # Retain the default proxy policy used by recovery access resources.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   metrics:
     enable: true

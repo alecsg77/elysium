@@ -294,6 +294,15 @@ After Flux reconciles the Headlamp change:
 
 If Headlamp authenticates successfully but sees `forbidden` errors, inspect the `tsidp-viewer` binding and verify that the user token includes the raw `groups: ["viewer"]` claim. If Headlamp receives `401 Unauthorized`, verify the issuer URL and that the token audience equals the Headlamp client ID configured in k3s.
 
+## Persistent-state protection
+
+`tsidp` stores issuer, signing, registration, and refresh-token state in its PVC.
+Before any upgrade, rollback, Helm uninstall, or PVC-related operation that could
+replace that state, verify a tested backup and restore reference. Do not treat a
+local application PVC as an off-cluster backup. For destructive changes, follow
+[Destructive GitOps Changes](destructive-gitops-change.md) and the
+[Backup, Restore, and Out-of-Band Recovery](backup-and-restore.md) contract.
+
 ## Rollback
 
 ### Headlamp-only failure

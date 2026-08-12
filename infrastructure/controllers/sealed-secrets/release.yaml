@@ -4,6 +4,9 @@ kind: HelmRelease
 metadata:
   name: sealed-secrets
   namespace: flux-system
+  annotations:
+    # Keep the controller required to recover all encrypted Git secrets.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   chart:
     spec:

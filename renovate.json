@@ -44,20 +44,16 @@
   ],
   "packageRules": [
     {
-      "description": "Automerge Docker image updates via GitHub native automerge (compatible with branch protection)",
+      "description": "Pause custom-regex auto-merge until PR Gate / required is enforced and R0 rules are proven",
       "matchManagers": ["custom.regex"],
-      "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "squash",
+      "automerge": false,
       "commitMessagePrefix": "chore(deps): "
     },
     {
-      "description": "Automerge terraform minor/patch updates (providers and modules)",
+      "description": "Pause Terraform minor/patch auto-merge until PR Gate / required is enforced and R0 rules are proven",
       "matchManagers": ["terraform"],
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "squash",
+      "automerge": false,
       "commitMessagePrefix": "chore(deps): "
     },
     {

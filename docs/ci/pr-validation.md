@@ -3,6 +3,48 @@
 This document describes the GitHub Actions workflows that validate pull requests before merge.
 See `AGENTS.md` for the full command reference used by these workflows.
 
+## Current merge boundary
+
+The repository is moving to one always-present monorepo workflow:
+**`PR Gate / required`**. It detects the paths changed by a PR, runs baseline and
+applicable domain validators, and fails closed when a selected validator does not
+succeed. The ruleset requires this one context rather than path-filtered workflow
+contexts.
+
+The legacy path-filtered workflows remain temporarily for diagnostic continuity
+while the ruleset is migrated, but they are not merge requirements. Do not add
+their individual job names as additional required checks; once the GitHub ruleset
+requires `PR Gate / required`, they can be retired in a follow-up PR. See [Merge
+and auto-merge policy](merge-and-automerge-policy.md) for the agent flow and
+[Destructive GitOps changes](../runbooks/destructive-gitops-change.md) for the R2
+procedure.
+
+## `PR Gate` fan-in behavior
+
+The target ruleset configuration is intentionally enabled only after this workflow
+has reached the default branch and passed a test PR. Until that server-side step is
+complete, the workflow is diagnostic and repository policy still requires agents to
+use PRs and native auto-merge voluntarily.
+
+`pr-gate.yml` is loaded from the trusted default branch with
+`pull_request_target`. It checks out the proposed head SHA only as data, uses
+read-only permissions, disables persistent checkout credentials, and does not use
+production secrets or mutate the cluster. Its jobs are:
+
+- **baseline** — trusted YAML configuration, YAML parsing, bare-Secret rejection,
+  and gitleaks;
+- **critical** — the trusted-base rendered-diff guard, including root-composition,
+  dependency, remote-base, R1/R2, and intent checks;
+- **GitOps, Helm, Coder, Actions/scripts, functions** — conditional validators;
+- **required** — the only status context configured in the ruleset. It fails if a
+  selected validator fails, is cancelled, or unexpectedly skips.
+
+A change to a Tier 0 enforcement path—workflow, guard, guard policy,
+`.github/actionlint.yaml`, or `CODEOWNERS`—selects every domain validator. This
+prevents an enforcement-boundary change from being validated by only its own
+narrow job. The Coder validator consequently validates every current template when
+Tier 0 changes select that domain.
+
 ## Level 1 — repository-wide checks (always run on every PR)
 
 ### YAML lint (`pr-lint-yaml.yml`)

@@ -1,9 +1,12 @@
 # Implementation Status
 
-**Date**: 2025-01-24  
-**Status**: ✅ Complete
+**Date**: 2026-08-12
+**Status**: Historical implementation record; active safety/recovery work is tracked in [#87](https://github.com/alecsg77/elysium/issues/87).
 
-Web-based troubleshooting system implementation for cluster issue resolution via GitHub Issues and Copilot agents.
+This document records the original web-based troubleshooting implementation. It is
+not the source of truth for current PR-only merge controls, destructive GitOps
+protection, or backup/restore readiness; see the current runbooks under
+`docs/runbooks/`.
 
 ## What Was Built
 

@@ -34,6 +34,14 @@ kube-state-metrics:
           - resourcesets
           - resourcesetinputproviders
         verbs: ["list", "watch"]
+      - apiGroups:
+          - tailscale.com
+        resources:
+          - connectors
+          - dnsconfigs
+          - proxyclasses
+          - proxygroups
+        verbs: ["list", "watch"]
   customResourceState:
     enabled: true
     config:
@@ -58,6 +66,70 @@ kube-state-metrics:
                   suspended: [spec, suspend]
                   revision: [status, lastAppliedRevision]
                   source_name: [spec, sourceRef, name]
+          - groupVersionKind:
+              group: tailscale.com
+              version: v1alpha1
+              kind: Connector
+            metricNamePrefix: gotk
+            metrics:
+              - name: "resource_info"
+                help: "The current state of a Tailscale Connector resource."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      name: [metadata, name]
+                labelsFromPath:
+                  exported_namespace: [metadata, namespace]
+                  ready: [status, conditions, "[type=ConnectorReady]", status]
+          - groupVersionKind:
+              group: tailscale.com
+              version: v1alpha1
+              kind: DNSConfig
+            metricNamePrefix: gotk
+            metrics:
+              - name: "resource_info"
+                help: "The current state of a Tailscale DNSConfig resource."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      name: [metadata, name]
+                labelsFromPath:
+                  exported_namespace: [metadata, namespace]
+                  ready: [status, conditions, "[type=NameserverReady]", status]
+          - groupVersionKind:
+              group: tailscale.com
+              version: v1alpha1
+              kind: ProxyClass
+            metricNamePrefix: gotk
+            metrics:
+              - name: "resource_info"
+                help: "The current state of a Tailscale ProxyClass resource."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      name: [metadata, name]
+                labelsFromPath:
+                  exported_namespace: [metadata, namespace]
+                  ready: [status, conditions, "[type=ProxyClassReady]", status]
+          - groupVersionKind:
+              group: tailscale.com
+              version: v1alpha1
+              kind: ProxyGroup
+            metricNamePrefix: gotk
+            metrics:
+              - name: "resource_info"
+                help: "The current state of a Tailscale ProxyGroup resource."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      name: [metadata, name]
+                labelsFromPath:
+                  exported_namespace: [metadata, namespace]
+                  ready: [status, conditions, "[type=ProxyGroupReady]", status]
           - groupVersionKind:
               group: helm.toolkit.fluxcd.io
               version: v2

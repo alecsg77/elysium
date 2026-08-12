@@ -9,6 +9,28 @@ resources:
 
 patches:
   - target:
+      group: bitnami.com
+      version: v1alpha1
+      kind: SealedSecret
+      name: tailscale-operator-secret
+      namespace: flux-system
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          kustomize.toolkit.fluxcd.io/prune: disabled
+  - target:
+      group: bitnami.com
+      version: v1alpha1
+      kind: SealedSecret
+      name: tsidp-auth
+      namespace: tailscale
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          kustomize.toolkit.fluxcd.io/prune: disabled
+  - target:
       group: helm.toolkit.fluxcd.io
       version: v2
       kind: HelmRelease

@@ -4,6 +4,8 @@ metadata:
   name: tsidp-egress
   namespace: kube-system
   annotations:
+    # Preserve the egress service if the source inventory is accidentally pruned.
+    kustomize.toolkit.fluxcd.io/prune: disabled
     tailscale.com/proxy-group: tsidp-egress
     tailscale.com/tailnet-fqdn: idp.${ts_net}
 spec:

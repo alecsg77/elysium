@@ -1,0 +1,8 @@
+# ARC runner-scale-set labels used by repository workflows. Keeping these here
+# lets actionlint validate the rest of each workflow strictly.
+self-hosted-runner:
+  labels:
+    - coder-runner-set
+    - copilot-runner-set
+    - fission-runner-set
+    - raiplaysoundrss-runner-set

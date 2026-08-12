@@ -3,6 +3,9 @@ kind: HelmRelease
 metadata:
   name: flux-operator
   namespace: flux-system
+  annotations:
+    # Preserve the Flux control-plane operator if a parent inventory is damaged.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   interval: 1h
   timeout: 10m

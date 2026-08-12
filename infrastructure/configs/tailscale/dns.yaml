@@ -3,6 +3,9 @@ kind: DNSConfig
 metadata:
   name: ts-dns
   namespace: tailscale
+  annotations:
+    # Keep Tailscale DNS available while repairing parent reconciliation.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   nameserver:
     image:

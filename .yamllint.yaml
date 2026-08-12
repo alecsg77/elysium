@@ -24,3 +24,11 @@ ignore: |
   node_modules/
   *.md
   clusters/*/flux-system/
+  # Go-templated chart sources and helm-unittest suites are validated by ct and
+  # helm-unittest; plain YAML parsing cannot interpret their template/test DSL.
+  charts/**/templates/
+  charts/**/charts/
+  charts/**/tests/
+  # Preserve the upstream formatting and byte-level provenance of this vendored CRD.
+  # Its pinned source SHA-256 is recorded beside the manifest.
+  infrastructure/controllers/system-upgrade/crd.yaml

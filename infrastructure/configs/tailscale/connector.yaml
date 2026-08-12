@@ -3,5 +3,8 @@ kind: Connector
 metadata:
   name: connector
   namespace: tailscale
+  annotations:
+    # Retain recovery egress if its parent source is accidentally pruned.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   exitNode: true

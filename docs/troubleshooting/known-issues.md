@@ -2,7 +2,11 @@
 
 This knowledge base documents common cluster problems, their symptoms, root causes, and verified resolutions.
 
-**Last Updated**: 2025-01-24
+**Last Updated**: 2026-08-12
+
+> Merge-control and recovery work after the August 11, 2026 Flux root-composition
+> incident is tracked in issue #87. See the [GitHub break-glass](../runbooks/github-break-glass.md)
+> and [destructive GitOps](../runbooks/destructive-gitops-change.md) runbooks.
 
 ## How to Use
 

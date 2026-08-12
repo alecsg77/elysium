@@ -3,5 +3,8 @@ kind: ConfigMap
 metadata:
   name: cluster-vars
   namespace: flux-system
+  annotations:
+    # Keep substitution inputs if the root sync composition is accidentally removed.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 data:
   TZ: Europe/Rome

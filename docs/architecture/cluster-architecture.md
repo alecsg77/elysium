@@ -378,17 +378,28 @@ functions/            # Serverless functions
 ## Disaster Recovery
 
 ### Backup Strategy
-- **Git repository**: Primary backup (entire cluster state)
-- **Sealed secrets key**: Quarterly backup to secure location
-- **Persistent volumes**: Application-specific backup procedures
-- **Monitoring data**: Long-term storage in Minio (Loki/Tempo blocks)
+- **Git repository**: Source of declarative cluster state, not a backup of runtime data.
+- **Sealed Secrets key**: Must be encrypted, stored off-cluster, and recovery-tested.
+- **Persistent volumes and databases**: Require a workload-specific, off-cluster backup
+  and tested restore; a PVC named `pvc-backups` is not sufficient evidence.
+- **Monitoring data**: Retention and any long-term storage must be covered by the same
+  recovery contract.
+
+The required inventory, RPO/RTO, encryption, retention, and restore-drill record
+are defined in [Backup, Restore, and Out-of-Band Recovery](../runbooks/backup-and-restore.md).
 
 ### Recovery Procedure
-1. **Bootstrap Flux**: Run `scripts/bootstrap_flux.sh` on new cluster
-2. **Restore sealed-secrets key**: Apply backup to enable secret decryption
-3. **Wait for reconciliation**: Flux rebuilds entire cluster state from Git
-4. **Restore PVs**: Restore application data from backups if needed
-5. **Validate**: Check all applications are running and healthy
+1. **Recover access**: Use the pre-verified out-of-band path that does not depend
+   on the Kubernetes Tailscale Operator.
+2. **Bootstrap Flux**: Run `scripts/bootstrap_flux.sh` on a new cluster only when
+   the documented recovery design calls for a rebuild.
+3. **Restore the Sealed Secrets key**: Use the tested encrypted backup procedure.
+4. **Wait for reconciliation**: Flux rebuilds declarative controllers and workloads
+   from Git.
+5. **Restore application data**: Use the specific, tested backup procedure for each
+   backup-required workload.
+6. **Validate**: Check Flux readiness, access-plane resources, applications, and data
+   integrity without exposing credentials in logs.
 
 ### Key Recovery Points
 - **Flux bootstrap**: Restores all controllers and infrastructure

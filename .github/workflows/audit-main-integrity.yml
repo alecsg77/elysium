@@ -1,0 +1,41 @@
+name: Audit Main Integrity
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Commit SHA on main to audit (defaults to the dispatched ref)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: audit-main-integrity-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  verify-pr-association:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when a main commit has no associated pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ inputs.commit_sha || github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pull_requests="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/${REPOSITORY}/commits/${COMMIT_SHA}/pulls" \
+            --jq '.[].number')"
+          if [ -z "$pull_requests" ]; then
+            echo "::error::main commit ${COMMIT_SHA} has no associated pull request"
+            exit 1
+          fi
+          printf 'main commit %s is associated with pull request(s): %s\n' \
+            "$COMMIT_SHA" "$(tr '\n' ' ' <<<"$pull_requests")"

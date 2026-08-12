@@ -3,6 +3,9 @@ kind: Ingress
 metadata:
   name: arkham
   namespace: kube-system
+  annotations:
+    # Retain the recovery ingress while its parent reconciliation is repaired.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   ingressClassName: tailscale
   defaultBackend:

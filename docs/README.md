@@ -17,6 +17,10 @@ For AI coding agents, `AGENTS.md` at the repository root is the portable entry p
   - **[Flux Web UI with tsidp OIDC](runbooks/flux-web-ui.md)** - Private-domain authenticated Flux dashboard and read-only RBAC
   - **[Flux Operator Migration](runbooks/flux-operator-migration.md)** - Staged migration from the generated Flux bootstrap
   - **[Gitless ResourceSet Image Automation](runbooks/resourceset-image-automation.md)** - Gitless workload image updates and rollback controls
+  - **[Destructive GitOps Changes](runbooks/destructive-gitops-change.md)** - Two-PR deletion protection, backup evidence, and rollback
+  - **[Backup, Restore, and Out-of-Band Recovery](runbooks/backup-and-restore.md)** - Recovery contract and restore-drill requirements
+  - **[GitHub Merge-Control Break-Glass](runbooks/github-break-glass.md)** - Required-gate recovery without direct pushes
+
 - **[Troubleshooting](troubleshooting/README.md)** - Diagnostic workflows, known issues, and solutions
 
 ## Conventions

@@ -2,31 +2,48 @@ name: Deploy Functions
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'functions/**'
+      - functions/**
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-functions-main
+  cancel-in-progress: false
+
+env:
+  FISSION_VERSION: v1.21.0
+  FISSION_SHA256: b12b0d4499fa74406b885c3d5be642ae698d87251e3d19ec09c4588935de5555
 
 jobs:
   deploy:
+    # Configure this repository environment to allow only main and scope its
+    # deployment credentials. This workflow never runs on an untrusted PR.
+    environment: functions-production
     runs-on: fission-runner-set
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
+      - name: Check out protected main revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
       
-      - name: Install Fission CLI
+      - name: Install checksum-verified Fission CLI
         run: |
-            curl -Lo fission https://github.com/fission/fission/releases/download/${FISSION_VERSION}/fission-${FISSION_VERSION}-linux-amd64
-            chmod +x fission
-            sudo mv fission /usr/local/bin/
-        env:
-          FISSION_VERSION: 'v1.21.0'
+          set -euo pipefail
+          archive="fission-${FISSION_VERSION}-linux-amd64"
+          curl -fsSL -o fission \
+            "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/${archive}"
+          echo "${FISSION_SHA256}  fission" | sha256sum --check --strict
+          install -m 0755 fission /usr/local/bin/fission
       
-      - name: Verify connection to cluster
+      - name: Verify cluster connection
         run: fission version
       
-      - name: Deploy functions with Fission
+      - name: Apply reviewed function specification
         working-directory: functions
         run: |
           fission spec apply -n default --delete --wait
