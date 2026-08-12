@@ -22,9 +22,11 @@ procedure.
 ## `PR Gate` fan-in behavior
 
 The target ruleset configuration is intentionally enabled only after this workflow
-has reached the default branch and passed a test PR. Until that server-side step is
-complete, the workflow is diagnostic and repository policy still requires agents to
-use PRs and native auto-merge voluntarily.
+has reached the default branch and passed a test PR. Before configuring the
+server-side required context, maintainers must use a documentation-only PR to
+verify baseline and critical success plus intentional skips by the conditional
+validators. Until that server-side step is complete, the workflow is diagnostic and
+repository policy still requires agents to use PRs and native auto-merge voluntarily.
 
 `pr-gate.yml` is loaded from the trusted default branch with
 `pull_request_target`. It checks out the proposed head SHA only as data, uses
