@@ -1,0 +1,59 @@
+# Gitless image automation: the provider selects the upstream latest tag and its immutable digest.
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSetInputProvider
+metadata:
+  name: paperclip-image
+  annotations:
+    fluxcd.controlplane.io/reconcileEvery: 24h
+  labels:
+    app.kubernetes.io/component: image-automation
+    app.kubernetes.io/part-of: paperclip
+spec:
+  type: OCIArtifactTag
+  url: oci://ghcr.io/paperclipai/paperclip
+  defaultValues:
+    repository: ghcr.io/paperclipai/paperclip
+  filter:
+    # Upstream's sha-* tags have no release ordering; select only latest.
+    includeTag: '^latest$'
+    limit: 1
+---
+# The ResourceSet owns only this ConfigMap. The HelmRelease remains Git-managed.
+apiVersion: fluxcd.controlplane.io/v1
+kind: ResourceSet
+metadata:
+  name: paperclip-image
+  annotations:
+    fluxcd.controlplane.io/reconcileTimeout: 5m
+  labels:
+    app.kubernetes.io/component: image-automation
+    app.kubernetes.io/part-of: paperclip
+spec:
+  inputsFrom:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSetInputProvider
+      name: paperclip-image
+  wait: true
+  commonMetadata:
+    labels:
+      app.kubernetes.io/component: image-automation
+      app.kubernetes.io/part-of: paperclip
+  resourcesTemplate: |
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: paperclip-image-auto
+      namespace: << inputs.provider.namespace >>
+      labels:
+        reconcile.fluxcd.io/watch: Enabled
+    data:
+      values.yaml: |
+        image:
+          repository: << inputs.repository | quote >>
+          tag: << inputs.tag | quote >>
+          digest: << inputs.digest | quote >>
+          pullPolicy: Always
+      repository: << inputs.repository | quote >>
+      tag: << inputs.tag | quote >>
+      digest: << inputs.digest | quote >>
+      image: "<< inputs.repository >>:<< inputs.tag >>@<< inputs.digest >>"

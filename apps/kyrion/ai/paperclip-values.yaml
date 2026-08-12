@@ -1,0 +1,12 @@
+vars:
+  HOST: "0.0.0.0"
+  PAPERCLIP_DEPLOYMENT_MODE: authenticated
+  PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+  PAPERCLIP_PUBLIC_URL: https://paperclip.${ts_net}
+  PAPERCLIP_AUTH_PUBLIC_BASE_URL: https://paperclip.${ts_net}
+  PAPERCLIP_ALLOWED_HOSTNAMES: paperclip.${ts_net}
+ingress:
+  # The Tailscale Ingress controller expands this short name in the tailnet.
+  host: paperclip
+  ingressClassName: tailscale
+  tlsEnabled: true

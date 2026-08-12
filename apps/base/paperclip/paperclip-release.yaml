@@ -1,0 +1,79 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperclip
+spec:
+  dependsOn:
+    - name: paperclip-db
+  releaseName: paperclip
+  chart:
+    spec:
+      chart: ./charts/onechart
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  interval: 12h
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  valuesFrom:
+    - kind: ConfigMap
+      name: paperclip-helm-values
+      valuesKey: values.yaml
+      optional: true
+    - kind: ConfigMap
+      name: paperclip-image-auto
+      valuesKey: values.yaml
+  values:
+    replicas: 1
+    containerPort: 3100
+    svcPort: 3100
+    podSecurityContext:
+      fsGroup: 1000
+    # The upstream entrypoint supports direct non-root execution as uid/gid 1000.
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    probe:
+      enabled: true
+      path: /api/health
+      settings:
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 6
+    livenessProbe:
+      enabled: true
+      path: /api/health
+      settings:
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        timeoutSeconds: 5
+        failureThreshold: 3
+    existingSecrets:
+      - name: paperclip-secrets
+    volumes:
+      - name: data
+        path: /paperclip
+        size: 10Gi
+        pvcAnnotations:
+          helm.sh/resource-policy: keep
