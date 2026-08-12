@@ -117,6 +117,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           ref: ${{ needs.detect.outputs.head_sha }}
+          clean: false
           persist-credentials: false
 
       - name: Install YAML parser and linter
@@ -360,6 +361,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           ref: ${{ needs.detect.outputs.head_sha }}
+          clean: false
           persist-credentials: false
 
       - name: Fetch and identify changed templates
@@ -430,6 +432,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           ref: ${{ needs.detect.outputs.head_sha }}
+          clean: false
           persist-credentials: false
 
       - name: Install checksum-verified actionlint
