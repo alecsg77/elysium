@@ -106,18 +106,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect
     steps:
+      - name: Check out proposed content as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          ref: ${{ needs.detect.outputs.head_sha }}
+          persist-credentials: false
+
       - name: Check out trusted base configuration
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           ref: ${{ needs.detect.outputs.base_sha }}
           path: base
-          persist-credentials: false
-
-      - name: Check out proposed content as data
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
-        with:
-          ref: ${{ needs.detect.outputs.head_sha }}
-          clean: false
           persist-credentials: false
 
       - name: Install YAML parser and linter
@@ -350,18 +349,17 @@ jobs:
     needs: detect
     if: needs.detect.outputs.coder == 'true'
     steps:
+      - name: Check out proposed templates as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          ref: ${{ needs.detect.outputs.head_sha }}
+          persist-credentials: false
+
       - name: Check out trusted base for changed-template detection
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           ref: ${{ needs.detect.outputs.base_sha }}
           path: base
-          persist-credentials: false
-
-      - name: Check out proposed templates as data
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
-        with:
-          ref: ${{ needs.detect.outputs.head_sha }}
-          clean: false
           persist-credentials: false
 
       - name: Fetch and identify changed templates
@@ -421,18 +419,17 @@ jobs:
     needs: detect
     if: needs.detect.outputs.actions == 'true'
     steps:
+      - name: Check out proposed workflows and scripts as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          ref: ${{ needs.detect.outputs.head_sha }}
+          persist-credentials: false
+
       - name: Check out trusted actionlint configuration
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           ref: ${{ needs.detect.outputs.base_sha }}
           path: base
-          persist-credentials: false
-
-      - name: Check out proposed workflows and scripts as data
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
-        with:
-          ref: ${{ needs.detect.outputs.head_sha }}
-          clean: false
           persist-credentials: false
 
       - name: Install checksum-verified actionlint
