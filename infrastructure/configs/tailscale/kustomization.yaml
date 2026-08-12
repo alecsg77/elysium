@@ -6,4 +6,5 @@ resources:
   - default-proxy-class.yaml
   - dns.yaml
   - tsidp-egress-proxygroup.yaml
+  - homeassistant-egress-service.yaml
   - tsidp-egress-service.yaml
