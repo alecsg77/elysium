@@ -4,6 +4,9 @@ kind: Kustomization
 metadata:
   name: monitoring-controllers
   namespace: flux-system
+  annotations:
+    # Protect monitoring controller reconciliation from accidental root-sync pruning.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   dependsOn:
     - name: infra-configs
@@ -15,6 +18,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  # Preserve managed resources if this child Kustomization is deleted.
+  deletionPolicy: Orphan
   path: ./clusters/kyrion/monitoring/controllers
   postBuild:
     substituteFrom:
@@ -26,6 +31,9 @@ kind: Kustomization
 metadata:
   name: monitoring-configs
   namespace: flux-system
+  annotations:
+    # Protect monitoring configuration reconciliation from root-sync pruning.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   dependsOn:
     - name: monitoring-controllers
@@ -37,6 +45,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  # Preserve managed resources if this child Kustomization is deleted.
+  deletionPolicy: Orphan
   path: ./monitoring/configs
   postBuild:
     substituteFrom:

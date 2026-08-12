@@ -1,0 +1,82 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: flux-safety
+  labels:
+    app.kubernetes.io/part-of: flux
+    app.kubernetes.io/component: monitoring
+spec:
+  groups:
+    - name: flux-gitops-safety
+      rules:
+        - alert: FluxBootstrapKustomizationNotReady
+          expr: >-
+            gotk_resource_info{customresource_group="kustomize.toolkit.fluxcd.io",customresource_kind="Kustomization",exported_namespace="flux-system",name=~"apps|infra-controllers|infra-configs|monitoring-controllers|monitoring-configs",ready!="True"} == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Critical Flux bootstrap Kustomization is not Ready
+            description: >-
+              Flux Kustomization {{ $labels.name }} has been non-ready for ten minutes.
+              Follow the destructive GitOps and GitHub break-glass runbooks; do not
+              mutate the cluster directly to clear the alert.
+        - alert: FluxCriticalHelmReleaseNotReady
+          expr: >-
+            gotk_resource_info{customresource_group="helm.toolkit.fluxcd.io",customresource_kind="HelmRelease",name=~"flux-operator|flux-instance|sealed-secrets|tailscale-operator|tsidp",ready!="True"} == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Critical Flux-managed HelmRelease is not Ready
+            description: >-
+              HelmRelease {{ $labels.exported_namespace }}/{{ $labels.name }} has
+              been non-ready for ten minutes. Preserve access and recovery state;
+              diagnose through Git and Flux status before any destructive action.
+        - alert: TailscaleAccessPlaneResourceNotReady
+          expr: >-
+            gotk_resource_info{customresource_group="tailscale.com",customresource_kind=~"Connector|DNSConfig|ProxyClass|ProxyGroup",ready!="True"} == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Tailscale access-plane resource is not Ready
+            description: >-
+              Tailscale {{ $labels.customresource_kind }} {{ $labels.name }} has
+              been non-ready for ten minutes. Use the verified out-of-band path if
+              administrative connectivity is affected.
+        - alert: TailscaleCriticalResourceInventoryReduced
+          expr: >-
+            count(gotk_resource_info{customresource_group="tailscale.com",customresource_kind=~"Connector|DNSConfig|ProxyClass|ProxyGroup",name=~"connector|default|ts-dns|tsidp-egress"}) < 4
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Tailscale critical custom-resource inventory is reduced
+            description: >-
+              Fewer than four required Connector, ProxyClass, DNSConfig, and
+              ProxyGroup resources are observed. Investigate Git history and Flux
+              reconciliation through the out-of-band recovery path.
+        - alert: TailscaleRecoveryServiceInventoryReduced
+          expr: >-
+            count(kube_service_info{namespace="kube-system",service=~"tsidp-egress|homeassistant-egress"}) < 2
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Tailscale recovery Service inventory is reduced
+            description: >-
+              Fewer than two expected recovery egress Services are observed in
+              kube-system. Check the protected GitOps inventory before changing
+              Kubernetes resources directly.
+        - alert: TailscaleRecoveryIngressMissing
+          expr: >-
+            count(kube_ingress_info{namespace="kube-system",ingress="arkham"}) < 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Tailscale recovery ingress is missing
+            description: >-
+              The protected Arkham recovery Ingress is absent. Use out-of-band
+              access and recover its known-good Git state through a pull request.

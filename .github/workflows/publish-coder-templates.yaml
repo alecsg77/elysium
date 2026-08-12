@@ -2,9 +2,9 @@ name: Publish Coder Template
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'coder/templates/**'
+      - coder/templates/**
 
   workflow_dispatch:
     inputs:
@@ -19,15 +19,23 @@ on:
         default: "HEAD"
         type: string
 
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-coder-templates-main
+  cancel-in-progress: false
+
 jobs:
   init:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Get changed Coder templates
         id: changes
@@ -38,28 +46,33 @@ jobs:
               # Publish all templates
               find coder/templates -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
             else
-              # Only changed templates
-              git diff --name-only ${{ inputs.since || github.event.commits[0].id }}~1 ${{ github.sha }} -- coder/templates | xargs ls -d 2>/dev/null | sed -r 's/^coder\/templates\/([^\/]+).*$/\1/' | sort | uniq
+              # Only changed templates.
+              base_ref="${{ inputs.since || github.event.commits[0].id }}~1"
+              head_ref="${{ github.sha }}"
+              git diff --name-only "$base_ref" "$head_ref" -- coder/templates \
+                | xargs -r -n1 dirname \
+                | sed -nE 's#^coder/templates/([^/]+).*#\1#p' \
+                | sort -u
             fi
             echo "EOF"
-          } >> $GITHUB_ENV
+          } >> "$GITHUB_ENV"
 
       - name: Get latest commit title to use as template version description
         id: message
-        run:
-          echo "pr_message=$(git log --format=%s -n 1 ${{ github.sha }})" >> $GITHUB_OUTPUT
+        run: |
+          echo "pr_message=$(git log --format=%s -n 1 "${{ github.sha }}")" >> "$GITHUB_OUTPUT"
 
       - name: Define matrix based on changed templates
         id: matrix
         run: |
           if [ -n "$TEMPLATES" ]; then
-            echo "templates=$(echo "$TEMPLATES" | jq -c -R -s 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+            echo "templates=$(printf '%s' "$TEMPLATES" | jq -c -R -s 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
           else
-            echo "templates=[]" >> $GITHUB_OUTPUT
+            echo "templates=[]" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload Coder templates
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
           name: templates
           path: coder/templates
@@ -69,6 +82,9 @@ jobs:
       templates: ${{ steps.matrix.outputs.templates }}
 
   publish:
+    # Configure this repository environment to allow only main and scope the
+    # Coder session token. The publish job never runs for a pull request.
+    environment: coder-production
     runs-on: coder-runner-set
     needs: init
     if: needs.init.outputs.templates != '[]'
@@ -79,20 +95,20 @@ jobs:
 
     steps:
       - name: Download Coder templates
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.0
         with:
           name: templates
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 20
       
       - name: Set up terraform
-        uses: hashicorp/setup-terraform@v4
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
 
       - name: Set up Coder CLI
-        uses: coder/setup-action@v1
+        uses: coder/setup-action@4a607a8113d4e676e2d7c34caa20a814bc88bfda # v1.0.0
         with:
           access_url: "http://coder.coder.svc"
           coder_session_token: ${{ secrets.CODER_SESSION_TOKEN }}
@@ -109,7 +125,7 @@ jobs:
 
       - name: Extract README frontmatter
         id: frontmatter
-        uses: mheap/markdown-meta-action@v1
+        uses: mheap/markdown-meta-action@f2cf287beda7ee926c7c504e9e2adc803d2bb958 # v1.0.1
         with:
           file: ./${{ matrix.template }}/README.md
 

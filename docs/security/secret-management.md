@@ -198,12 +198,31 @@ spec:
 
 ### Backup Procedure (Quarterly Recommended)
 
-```bash
-# Export sealed-secrets keys (TLS cert and key)
-kubectl get secret -n sealed-secrets-system sealed-secrets-key -o yaml > sealed-secrets-backup.yaml
+Export only to a controlled temporary directory, encrypt before any persistent
+write, and remove the plaintext export immediately after verifying the encrypted
+artifact. Keep the output path and recipient/key reference in private operational
+documentation, not in Git.
 
-# Store securely (encrypted, off-cluster location)
-# Options: password manager, encrypted USB drive, secure cloud storage
+```bash
+set -euo pipefail
+umask 077
+tmpdir="$(mktemp -d)"
+trap 'rm -rf -- "$tmpdir"' EXIT
+
+# The plaintext exists only inside the mode-0700 temporary directory.
+kubectl get secret -n sealed-secrets-system sealed-secrets-key -o yaml \
+  > "$tmpdir/sealed-secrets-key.yaml"
+
+# Example: use the approved off-cluster encryption recipient from the private
+# operations record. Do not commit either artifact or recipient details.
+age --encrypt --recipient "<approved-recipient>" \
+  --output "$tmpdir/sealed-secrets-key.yaml.age" \
+  "$tmpdir/sealed-secrets-key.yaml"
+
+# Verify decryptability with an authorized custodian before storing the encrypted
+# artifact in the approved off-cluster location.
+age --decrypt --identity "<authorized-identity>" \
+  "$tmpdir/sealed-secrets-key.yaml.age" >/dev/null
 ```
 
 **CRITICAL**: The sealed-secrets private key is required to decrypt all SealedSecret resources. Loss of this key means **permanent loss of all encrypted secrets**.

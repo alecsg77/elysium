@@ -3,6 +3,9 @@ kind: HelmRelease
 metadata:
   name: flux-instance
   namespace: flux-system
+  annotations:
+    # Keep the generated FluxInstance reconciler when a parent inventory changes.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   dependsOn:
     - name: flux-operator

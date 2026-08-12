@@ -4,6 +4,10 @@ kind: Kustomization
 metadata:
   name: apps
   namespace: flux-system
+  annotations:
+    # Keep the child reconciler if the root Flux sync composition is damaged.
+    # Intentional removal must first remove this annotation in a separate R2 PR.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   dependsOn:
     - name: infra-configs
@@ -13,6 +17,9 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
+  # Orphan managed resources if this Kustomization object is deleted; normal
+  # source reconciliation still uses prune: true.
+  deletionPolicy: Orphan
   prune: true
   wait: false
   path: ./apps/kyrion

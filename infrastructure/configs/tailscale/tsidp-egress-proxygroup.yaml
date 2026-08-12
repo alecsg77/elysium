@@ -2,6 +2,9 @@ apiVersion: tailscale.com/v1alpha1
 kind: ProxyGroup
 metadata:
   name: tsidp-egress
+  annotations:
+    # Retain egress routing required by the authentication access plane.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   type: egress
   proxyClass: default

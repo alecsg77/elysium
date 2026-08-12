@@ -4,6 +4,9 @@ kind: HelmRelease
 metadata:
   name: tailscale-operator
   namespace: flux-system
+  annotations:
+    # Preserve the operator that provides the cluster recovery access plane.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   chart:
     spec:

@@ -3,6 +3,9 @@ kind: HelmRelease
 metadata:
   name: tsidp
   namespace: tailscale
+  annotations:
+    # Preserve tsidp's stateful authentication service during parent recovery.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   releaseName: tsidp
   dependsOn:

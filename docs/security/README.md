@@ -47,10 +47,10 @@ rg -n 'password|secret|token|apikey|bearer' diagnostics/
 
 ### Key Backup
 
-```bash
-# Backup sealed-secrets key (quarterly)
-kubectl get secret -n sealed-secrets-system sealed-secrets-key -o yaml > sealed-secrets-backup.yaml
-```
+Export the Sealed Secrets key only to a mode-0700 temporary directory, encrypt it
+before persistent storage, verify an authorized custodian can decrypt it, and
+remove the plaintext export. See the full [Secret Management Guide](secret-management.md)
+and [Backup, Restore, and Out-of-Band Recovery](../runbooks/backup-and-restore.md).
 
 ## Security Principles
 

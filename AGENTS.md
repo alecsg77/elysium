@@ -51,6 +51,12 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 - Respect Flux dependency ordering: controllers/CRDs before dependent resources.
 - Keep documentation authoritative in `/docs`, not duplicated across agent files.
 
+## Pull Request and Auto-Merge Safety
+- Never commit or push directly to `main`, including when authenticated as a repository administrator. Create a branch, open/update a PR, and enable native squash auto-merge with `gh pr merge --auto --squash`.
+- Never use `gh pr merge --admin`, a direct merge API bypass, or a force push as a routine workaround. The only break-glass path is documented in `docs/runbooks/github-break-glass.md`.
+- After the server-side ruleset migration, `PR Gate / required` is the single required monorepo status. It runs only the validation domains applicable to the PR and fails closed on a failed or unexpected skipped validator; until then, agents still follow this PR-only policy and never exploit legacy settings.
+- Treat changes to Flux bootstrap/ownership, Tailscale access resources, secrets, storage, and CI guardrail files as critical. Follow `docs/runbooks/destructive-gitops-change.md` for R2 removals; persistent-data changes additionally require the backup/restore contract in `docs/runbooks/backup-and-restore.md`.
+
 ## Essential Commands
 This repo has no application build/test suite — "validation" means rendering manifests locally and linting YAML.
 - **Render/build a single app**: `kustomize build apps/base/<app>/`
@@ -83,13 +89,11 @@ This repo has no application build/test suite — "validation" means rendering m
 - Troubleshoot Flux and Kubernetes issues: `.agents/skills/troubleshoot-flux/SKILL.md`
 - Create/update Coder workspace templates: `.agents/skills/coder-templates/SKILL.md`
 
-## PR Validation Workflows
-- Lint YAML manifests on every PR: `.github/workflows/pr-lint-yaml.yml`
-- Scan PR diffs for leaked secrets: `.github/workflows/pr-secret-scan.yml`
-- Validate Helm charts (`ct lint` + `helm unittest`) on `charts/**` changes: `.github/workflows/pr-validate-charts.yml`
-- Validate changed Coder/Terraform templates on PRs: `.github/workflows/pr-validate-coder-templates.yml`
-- Validate Flux/Kustomize manifests on PRs touching `clusters/**`, `infrastructure/**`, `apps/**`, or `monitoring/**`: `.github/workflows/pr-validate-flux.yml`
-- See `docs/ci/pr-validation.md` for the full two-level validation model.
+## PR Validation Workflow
+- `.github/workflows/pr-gate.yml` is the always-present monorepo fan-in. Its final job publishes the only required context: `PR Gate / required`.
+- The gate always runs baseline secret/YAML and trusted-base critical-resource checks; it runs GitOps, chart, Coder, Actions/scripts, and Fission-spec validators only when the detector marks them applicable.
+- Do not make path-filtered workflow jobs required. A skipped domain is accepted only when the gate's detector marked that domain not applicable.
+- See `docs/ci/pr-validation.md` for the validator matrix and `docs/ci/merge-and-automerge-policy.md` for the merge flow.
 
 ## Copilot-Specific Workflows
 - Copilot is the primary hosted workflow for issue-page diagnostics, coding-agent handoff, and GitHub web-based resolution.

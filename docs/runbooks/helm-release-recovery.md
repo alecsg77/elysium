@@ -143,6 +143,16 @@ helm rollback <name> <revision> -n <namespace>
 # Update HelmRelease in Git to prevent re-upgrade
 ```
 
+#### Destructive-operation checkpoint
+
+Before deleting a HelmRelease, uninstalling a release, or deleting a PVC:
+
+1. Confirm the action is represented by a Git PR, not a direct cluster mutation.
+2. For a critical/R2 resource, follow [Destructive GitOps Changes](destructive-gitops-change.md).
+3. Verify and record a tested backup/restore reference for persistent data. If no
+   tested restore exists, stop and complete the backup contract first.
+4. Preserve the current known-good Git revision for rollback.
+
 #### Option D: Delete and Recreate (Last Resort)
 
 ```bash
@@ -186,9 +196,9 @@ kubectl describe pvc <mongodb-pvc> -n ai
 # 2. Delete pod to force restart
 kubectl delete pod -n ai <mongodb-pod>
 
-# 3. If PV corrupted, delete PVC and recreate
-kubectl delete pvc <mongodb-pvc> -n ai
-# HelmRelease will recreate PVC automatically
+# 3. If PV corruption is confirmed, do NOT delete the PVC immediately.
+# Follow docs/runbooks/destructive-gitops-change.md and restore from the tested
+# backup procedure. PVC deletion/recreation without a verified restore can lose data.
 
 # 4. Check MongoDB container image
 # Verify image exists and is pullable

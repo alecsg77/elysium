@@ -4,6 +4,7 @@ namespace: monitoring
 resources:
   - podmonitor.yaml
   - grafana-mcp-monitor.yaml
+  - flux-safety-rules.yaml
   - resourceset-image-automation-rules.yaml
 
 configMapGenerator:
