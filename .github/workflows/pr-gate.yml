@@ -143,15 +143,179 @@ jobs:
                       list(yaml.safe_load_all(stream))
           PY
 
-      - name: Reject plaintext Secret manifests anywhere in GitOps content
+      - name: Reject changed plaintext Secret manifests from the trusted diff
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          if grep -RInE --include='*.yaml' --include='*.yml' \
-            "^[[:space:]]*kind:[[:space:]]*[\"']?Secret[\"']?[[:space:]]*$" \
-            apps clusters infrastructure monitoring functions; then
-            echo "::error::Bare kind: Secret manifests are forbidden; use SealedSecret or a consumer-native Secret reference."
-            exit 1
-          fi
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git fetch --no-tags --depth=1 origin "pull/${PR_NUMBER}/head:refs/remotes/origin/pr-head"
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          test "$(git rev-parse "$BASE_SHA")" = "$BASE_SHA"
+          test "$(git rev-parse refs/remotes/origin/pr-head)" = "$HEAD_SHA"
+          python3 - <<'PY'
+          import os
+          import subprocess
+          import sys
+          from pathlib import PurePosixPath
+
+          import yaml
+
+          BASE_SHA = os.environ["BASE_SHA"]
+          HEAD_SHA = os.environ["HEAD_SHA"]
+          ROOTS = ("apps", "clusters", "infrastructure", "monitoring", "functions")
+          EXCEPTION_PATH = "infrastructure/configs/ci/copilot-agent-rbac/secret.yaml"
+
+
+          class UniqueKeyLoader(yaml.SafeLoader):
+              pass
+
+
+          def construct_mapping(loader, node, deep=False):
+              mapping = {}
+              for key_node, value_node in node.value:
+                  key = loader.construct_object(key_node, deep=deep)
+                  if key in mapping:
+                      raise yaml.YAMLError(f"duplicate mapping key: {key!r}")
+                  mapping[key] = loader.construct_object(value_node, deep=deep)
+              return mapping
+
+
+          UniqueKeyLoader.add_constructor(
+              yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
+          )
+
+
+          def fail(message):
+              print(f"::error::{message}", file=sys.stderr)
+              raise SystemExit(1)
+
+
+          def git(*args):
+              try:
+                  return subprocess.run(
+                      ["git", *args],
+                      check=True,
+                      stdout=subprocess.PIPE,
+                      stderr=subprocess.PIPE,
+                  ).stdout
+              except subprocess.CalledProcessError as error:
+                  detail = error.stderr.decode("utf-8", errors="replace").strip()
+                  fail(f"Unable to calculate the trusted base/head diff: {detail}")
+
+
+          def exception_is_exact(document):
+              return (
+                  isinstance(document, dict)
+                  and set(document) == {"apiVersion", "kind", "metadata", "type"}
+                  and document["apiVersion"] == "v1"
+                  and document["kind"] == "Secret"
+                  and document["type"] == "kubernetes.io/service-account-token"
+                  and document["metadata"]
+                  == {
+                      "name": "copilot-agent-readonly-token",
+                      "namespace": "arc-runners",
+                      "annotations": {
+                          "kubernetes.io/service-account.name": "copilot-agent-readonly"
+                      },
+                  }
+              )
+
+
+          def find_secret_mappings(value, seen=None):
+              if seen is None:
+                  seen = set()
+              if isinstance(value, (dict, list)):
+                  if id(value) in seen:
+                      return []
+                  seen.add(id(value))
+              if isinstance(value, dict):
+                  matches = [value] if value.get("kind") == "Secret" else []
+                  for child in value.values():
+                      matches.extend(find_secret_mappings(child, seen))
+                  return matches
+              if isinstance(value, list):
+                  matches = []
+                  for child in value:
+                      matches.extend(find_secret_mappings(child, seen))
+                  return matches
+              return []
+
+
+          raw_diff = git(
+              "diff",
+              "--name-status",
+              "-z",
+              "--find-renames",
+              "--find-copies",
+              "--diff-filter=ACMR",
+              BASE_SHA,
+              HEAD_SHA,
+              "--",
+              *ROOTS,
+          )
+          fields = raw_diff.split(b"\0")
+          if fields and fields[-1] == b"":
+              fields.pop()
+
+          changed_paths = []
+          index = 0
+          while index < len(fields):
+              try:
+                  status = fields[index].decode("ascii")
+              except UnicodeDecodeError:
+                  fail("Trusted diff returned a non-ASCII status")
+              index += 1
+              if not status or status[0] not in "ACMR":
+                  fail(f"Trusted diff returned an unexpected status: {status!r}")
+              if status[0] in "RC":
+                  if index + 1 >= len(fields):
+                      fail("Trusted diff ended while reading a rename or copy")
+                  index += 1  # Old path; only the proposed destination is checked.
+              if index >= len(fields):
+                  fail("Trusted diff ended while reading a changed path")
+              try:
+                  path = fields[index].decode("utf-8")
+              except UnicodeDecodeError:
+                  fail("Trusted diff contains a non-UTF-8 path")
+              index += 1
+              candidate = PurePosixPath(path)
+              if candidate.is_absolute() or ".." in candidate.parts:
+                  fail(f"Trusted diff returned an unsafe path: {path}")
+              if not any(path == root or path.startswith(f"{root}/") for root in ROOTS):
+                  fail(f"Trusted diff returned a path outside the GitOps roots: {path}")
+              if path.lower().endswith((".yaml", ".yml")):
+                  changed_paths.append(path)
+
+          for path in changed_paths:
+              try:
+                  content = git("show", f"{HEAD_SHA}:{path}")
+                  documents = list(yaml.load_all(content, Loader=UniqueKeyLoader))
+              except (yaml.YAMLError, UnicodeDecodeError) as error:
+                  fail(f"Could not parse changed YAML document {path}: {error}")
+
+              secret_documents = [
+                  secret
+                  for document in documents
+                  for secret in find_secret_mappings(document)
+              ]
+              if not secret_documents:
+                  continue
+              if (
+                  path == EXCEPTION_PATH
+                  and len(documents) == 1
+                  and len(secret_documents) == 1
+                  and secret_documents[0] is documents[0]
+                  and exception_is_exact(documents[0])
+              ):
+                  continue
+              fail(
+                  f"Bare kind: Secret manifest in {path} is forbidden; use SealedSecret "
+                  "or a consumer-native Secret reference."
+              )
+          PY
 
       - name: Scan the proposed revision for leaked secrets
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
