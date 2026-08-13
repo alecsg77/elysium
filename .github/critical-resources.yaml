@@ -25,7 +25,7 @@ tier0_paths:
   - .github/actionlint.yaml
   - .github/critical-resources.yaml
   - .github/workflows/**
-  - scripts/ci/critical_change_guard.py
+  - scripts/ci/**
 # The root render contains these Flux Kustomizations. Dependencies must retain
 # this controller -> configuration -> workload ordering and remain acyclic.
 bootstrap_dependencies:

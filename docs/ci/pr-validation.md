@@ -5,28 +5,25 @@ See `AGENTS.md` for the full command reference used by these workflows.
 
 ## Current merge boundary
 
-The repository is moving to one always-present monorepo workflow:
-**`PR Gate / required`**. It detects the paths changed by a PR, runs baseline and
-applicable domain validators, and fails closed when a selected validator does not
-succeed. The ruleset requires this one context rather than path-filtered workflow
-contexts.
+The repository uses one always-present monorepo workflow: **PR Gate**. Its
+**`required`** job detects the paths changed by a PR, runs baseline and applicable
+domain validators, and fails closed when a selected validator does not succeed. The
+ruleset requires this one job context rather than path-filtered workflow contexts.
 
-The legacy path-filtered workflows remain temporarily for diagnostic continuity
-while the ruleset is migrated, but they are not merge requirements. Do not add
-their individual job names as additional required checks; once the GitHub ruleset
-requires `PR Gate / required`, they can be retired in a follow-up PR. See [Merge
-and auto-merge policy](merge-and-automerge-policy.md) for the agent flow and
-[Destructive GitOps changes](../runbooks/destructive-gitops-change.md) for the R2
-procedure.
+The legacy path-filtered workflows remain temporarily for diagnostic continuity,
+but they are not merge requirements. Do not add their individual job names as
+additional required checks. Retire them only in a follow-up PR after confirming the
+PR Gate continues to cover each legacy validation domain. See [Merge and auto-merge
+policy](merge-and-automerge-policy.md) for the agent flow and [Destructive GitOps
+changes](../runbooks/destructive-gitops-change.md) for the R2 procedure.
 
 ## `PR Gate` fan-in behavior
 
-The target ruleset configuration is intentionally enabled only after this workflow
-has reached the default branch and passed a test PR. Before configuring the
-server-side required context, maintainers must use a documentation-only PR to
-verify baseline and critical success plus intentional skips by the conditional
-validators. Until that server-side step is complete, the workflow is diagnostic and
-repository policy still requires agents to use PRs and native auto-merge voluntarily.
+The repository ruleset requires the `required` job from this workflow after the
+workflow reached the default branch and passed the documentation-only rollout PR
+#95. That rollout verified baseline and critical success, intentional skips by the
+conditional validators, and the final fail-closed fan-in. The legacy path-filtered
+workflows remain diagnostic only; they are not merge requirements.
 
 `pr-gate.yml` is loaded from the trusted default branch with
 `pull_request_target`. It checks out the proposed head SHA only as data, uses
@@ -47,6 +44,29 @@ prevents an enforcement-boundary change from being validated by only its own
 narrow job. The Coder validator consequently validates every current template when
 Tier 0 changes select that domain.
 
+### Trusted PR Gate helpers
+
+The security-sensitive logic that would otherwise make `pr-gate.yml` difficult to
+review lives under `scripts/ci/` with focused tests under `tests/ci/`. The
+`pull_request_target` PR Gate always invokes helpers from its trusted base checkout
+(`base/scripts/ci/...`); it never executes a helper from the proposed checkout.
+The non-privileged `PR Validate CI Helpers` workflow runs the proposed helper tests
+on PRs that change those files.
+
+Run the equivalent checks locally before opening such a PR:
+
+```bash
+python3 -m py_compile scripts/ci/*.py tests/ci/*.py
+python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard
+bash -n scripts/ci/*.sh
+shellcheck scripts/ci/*.sh
+```
+
+The helpers deliberately treat PR manifests, YAML, Terraform, rendered output, and
+Git diffs as data. In particular, the Secret and Gitleaks helpers operate on explicit
+verified SHA-to-SHA Git data; they do not load a PR-controlled `.gitleaks*` file or
+execute PR scripts.
+
 ## Level 1 — repository-wide checks (always run on every PR)
 
 ### YAML lint (`pr-lint-yaml.yml`)
@@ -66,8 +86,8 @@ Tier 0 changes select that domain.
 also included in the filter so changes to its logic are validated too). Note that this
 `paths:` filter is trigger-level only — it does not make this workflow safe to mark as a
 required status check in branch protection, since a PR that doesn't touch these paths
-would leave the check permanently "Pending" and block merge; see #67 for the fan-in
-"gate" job refactor needed before this workflow can be required.
+would leave the check permanently "Pending" and block merge. The always-present PR
+Gate supplies the merge requirement instead.
 
 Validates the vendored Helm charts (`charts/cron-job`, `charts/onechart`):
 
@@ -104,9 +124,8 @@ directory is an independent Terraform root module (no remote backend, no shared 
 
 > **Note:** the `paths:` filter above only controls when the workflow *triggers* — it does not make
 > this workflow safe to mark as a required status check in branch protection. A PR that touches
-> neither filtered path leaves the check permanently "Pending", which blocks merge. See
-> [#67](https://github.com/alecsg77/elysium/issues/67) for the proper fix (a fan-in "gate" job
-> pattern).
+> neither filtered path leaves the check permanently "Pending", which blocks merge. The
+> always-present PR Gate supplies the merge requirement instead.
 
 The workflow first computes which template directories were touched by the PR (diffing the PR's
 base and head refs, same approach as the `init` job in `publish-coder-templates.yaml` but adapted to
@@ -150,7 +169,8 @@ checkov -d . --framework terraform --soft-fail
 **Workflow:** `.github/workflows/pr-validate-flux.yml`
 **Trigger:** `pull_request` on changes under `clusters/**`, `infrastructure/**`, `apps/**`, or
 `monitoring/**`, as well as changes to this workflow file. Like the other path-filtered workflows,
-it must **not** be a required status check until #67 introduces an always-running fan-in gate.
+it must **not** be an individual required status check: the always-running PR Gate
+provides the merge requirement instead.
 
 The workflow validates the core GitOps directories with four jobs:
 
