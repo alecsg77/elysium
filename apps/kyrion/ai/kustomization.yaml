@@ -13,7 +13,7 @@ resources:
   - openclaw-sealed-secret.yaml
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml
-  - paperclip-db-secret-values-sealed-secret.yaml
+  - paperclip-db-auth-sealed-secret.yaml
   - paperclip-sealed-secret.yaml
 
 configMapGenerator:

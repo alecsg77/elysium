@@ -8,8 +8,8 @@ upstream `latest` Paperclip tag by immutable digest and owns only the generated
 
 The `ai` overlay supplies two namespace-bound SealedSecrets:
 
-- `paperclip-db-secret-values` provides the PostgreSQL application and administrator
-  passwords as Helm values.
+- `paperclip-db-auth` provides PostgreSQL's native `password` and
+  `postgres-password` keys.
 - `paperclip-secrets` provides Paperclip's database connection URL and runtime
   authentication secrets.
 

@@ -24,16 +24,13 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-  valuesFrom:
-    - kind: Secret
-      name: paperclip-db-secret-values
-      valuesKey: values.yaml
   values:
     architecture: standalone
     fullnameOverride: paperclip-db-postgresql
     auth:
       username: paperclip
       database: paperclip
+      existingSecret: paperclip-db-auth
     primary:
       persistence:
         enabled: true
