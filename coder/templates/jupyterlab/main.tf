@@ -346,7 +346,7 @@ resource "kubernetes_deployment" "main" {
 module "jupyterlab" {
   count     = data.coder_workspace.me.start_count
   source    = "registry.coder.com/coder/jupyterlab/coder"
-  version   = "1.2.3"
+  version   = "1.3.0"
   agent_id  = coder_agent.main.id
   subdomain = true
 }
