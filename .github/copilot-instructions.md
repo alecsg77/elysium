@@ -27,11 +27,12 @@ Use this file for Copilot-specific operating context and high-signal repository 
 coder templates push <name> ...
 coder template push <name> ...
 
-# ✅ CORRECT — edit files, commit, push to main:
+# ✅ CORRECT — edit files, commit to a feature branch, and open a PR:
 git add coder/templates/<name>/...
 git commit -m "..."
-git push origin main
-# → publish-coder-templates.yaml workflow triggers automatically
+git push origin <feature-branch>
+# → after explicit user approval and PR Gate success, squash auto-merge to main
+#    triggers publish-coder-templates.yaml automatically
 ```
 The `.github/workflows/publish-coder-templates.yaml` workflow handles ALL template publishing:
 - Triggers on push to `main` for any change under `coder/templates/**`

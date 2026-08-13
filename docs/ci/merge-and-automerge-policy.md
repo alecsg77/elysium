@@ -2,36 +2,50 @@
 
 ## Purpose
 
-Every normal repository change follows **branch → pull request → native GitHub
-squash auto-merge**. This is a safety boundary for the GitOps control plane: a
-commit must first receive the applicable automated validation before Flux can
-reconcile it.
+Every normal repository change follows **branch → pull request → explicit user
+approval → native GitHub squash auto-merge**. This is a safety boundary for the
+GitOps control plane: a commit must first receive both the applicable automated
+validation and user approval before Flux can reconcile it.
 
-The initial rollout deliberately uses the existing `@alecsg77` administrative
-identity for both the maintainer and coding agents. After the server-side ruleset
-migration, the ruleset—not identity separation—blocks direct updates to `main`.
-Until then, this remains an unmitigated repository-settings gap and agents must
-still follow the PR-only client policy. An administrator can alter repository
-settings only through a documented break-glass event.
+Opening a PR is allowed after the agent has completed applicable local validation,
+but it is a request for review—not authorization to merge. `PR Gate / required`
+proves automated policy compliance; it does not replace explicit user approval of
+the current proposed changes.
+
+The rollout deliberately uses the existing `@alecsg77` administrative identity
+for both the maintainer and coding agents. The server-side ruleset—not identity
+separation—blocks direct updates to `main`; agents must still follow this PR-only
+policy even when an administrative break-glass path exists. Repository settings
+may be altered only through a documented break-glass event.
 
 ## Required agent flow
 
 1. Create or update a non-`main` branch.
-2. Push only that branch.
-3. Open or update a PR targeting `main`.
-4. Enable native auto-merge with:
+2. Run the applicable local validation, commit, and push only that branch.
+3. Open or update a PR targeting `main`. If the user has not explicitly approved
+   the current diff, leave auto-merge disabled and mark approval as pending in the
+   PR template.
+4. Report the PR URL, head SHA, validated scope, and any remaining risk to the
+   user. Wait for an explicit approval that this **current head SHA** may merge.
+5. Only after that approval, record the approved head SHA in the PR template and
+   enable native squash auto-merge with:
 
    ```bash
    gh pr merge --auto --squash
    ```
 
-5. Never use `--admin`, force-push `main`, or merge through a direct Git push.
-6. Observe the PR until `PR Gate / required` is successful and auto-merge has
+6. If any new commit is pushed after approval, disable auto-merge if it was
+   already enabled, return to step 3, and obtain fresh approval. Do not treat
+   approval of an earlier head SHA as approval of a changed PR.
+7. Never use `--admin`, force-push `main`, manually merge, or merge through a
+   direct Git push.
+8. Observe the PR until `PR Gate / required` is successful and auto-merge has
    completed. If it fails, correct the PR; do not bypass the ruleset.
 
-`CODEOWNERS` assigns the repository to `@alecsg77` for ownership visibility. No
-review approval is required in this first phase; the fail-closed automated gate
-is the merge condition.
+`CODEOWNERS` assigns the repository to `@alecsg77` for ownership visibility.
+GitHub review approvals remain optional in this phase. The agent-facing explicit
+user approval above is a separate merge authorization and is required even when
+the ruleset requires zero GitHub approvals.
 
 ## Monorepo gate
 
@@ -48,9 +62,9 @@ ruleset is migrated. It always runs and:
   that domain as not applicable.
 
 Do not add a separate required check with a generic name such as `gate`:
-required status contexts must remain unambiguous. During bootstrap, older
-path-filtered workflows remain diagnostic-only; remove them in a later PR only
-after the ruleset requires this fan-in context.
+required status contexts must remain unambiguous. Older path-filtered workflows
+remain diagnostic-only; remove them in a later PR only after confirming the PR Gate
+continues to cover each validation domain.
 
 ## Bot update policy
 
