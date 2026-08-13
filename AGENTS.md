@@ -52,9 +52,12 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 - Keep documentation authoritative in `/docs`, not duplicated across agent files.
 
 ## Pull Request and Auto-Merge Safety
-- Never commit or push directly to `main`, including when authenticated as a repository administrator. Create a branch, open/update a PR, and enable native squash auto-merge with `gh pr merge --auto --squash`.
+- Never commit or push directly to `main`, including when authenticated as a repository administrator. Agents may commit to a feature branch and open/update a PR after running the applicable validation.
+- Opening a PR is **not** permission to merge it. An agent must not manually merge, enable auto-merge, or otherwise cause a PR to merge until the user explicitly approves the **current proposed changes**. A passing `PR Gate / required`, permission to open a PR, or an earlier approval of a different diff never substitutes for that approval.
+- Explicit approval means a clear user instruction to merge or enable auto-merge after the agent has reported the current PR URL and head SHA. Any pushed commit invalidates prior approval; if auto-merge was already enabled, disable it, report the new head SHA, and obtain fresh approval.
+- After explicit approval, enable native squash auto-merge with `gh pr merge --auto --squash`; do not manually merge. Record whether approval is pending or received, including the approved head SHA, in the PR template.
 - Never use `gh pr merge --admin`, a direct merge API bypass, or a force push as a routine workaround. The only break-glass path is documented in `docs/runbooks/github-break-glass.md`.
-- After the server-side ruleset migration, `PR Gate / required` is the single required monorepo status. It runs only the validation domains applicable to the PR and fails closed on a failed or unexpected skipped validator; until then, agents still follow this PR-only policy and never exploit legacy settings.
+- `PR Gate / required` is the single required monorepo status. It runs only the validation domains applicable to the PR and fails closed on a failed or unexpected skipped validator. Legacy path-filtered checks are diagnostic only and never replace the PR-only merge policy.
 - Treat changes to Flux bootstrap/ownership, Tailscale access resources, secrets, storage, and CI guardrail files as critical. Follow `docs/runbooks/destructive-gitops-change.md` for R2 removals; persistent-data changes additionally require the backup/restore contract in `docs/runbooks/backup-and-restore.md`.
 
 ## Essential Commands
