@@ -27,3 +27,5 @@ configMapGenerator:
       - values.yaml=paperclip-values.yaml
     options:
       disableNameSuffixHash: true
+      labels:
+        reconcile.fluxcd.io/watch: Enabled
