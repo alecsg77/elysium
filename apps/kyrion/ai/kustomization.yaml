@@ -8,14 +8,22 @@ resources:
   - ../../base/copilot-api
   - ../../base/local-ai
   - ../../base/openclaw
+  - ../../base/paperclip
   - copilot-api-sealed-secret.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml
+  - paperclip-db-auth-sealed-secret.yaml
+  - paperclip-sealed-secret.yaml
 
 configMapGenerator:
   - name: local-ai-helm-values
     files:
       - values.yaml=local-ai-values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: paperclip-helm-values
+    files:
+      - values.yaml=paperclip-values.yaml
     options:
       disableNameSuffixHash: true

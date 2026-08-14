@@ -25,6 +25,7 @@ resources:
   - openwebui
   - overseerr
   - pihole
+  - paperclip
   - plex
   - prowlarr
   - qbittorrent

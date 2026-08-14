@@ -1,0 +1,50 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperclip-db
+spec:
+  releaseName: paperclip-db
+  chart:
+    spec:
+      chart: postgresql
+      # Accept compatible Bitnami PostgreSQL chart updates; major upgrades require
+      # an explicit, backup-gated change.
+      version: 18.x
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+        namespace: flux-system
+  interval: 12h
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    architecture: standalone
+    fullnameOverride: paperclip-db-postgresql
+    auth:
+      username: paperclip
+      database: paperclip
+      existingSecret: paperclip-db-auth
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+        annotations:
+          helm.sh/resource-policy: keep
+      persistentVolumeClaimRetentionPolicy:
+        enabled: true
+        whenScaled: Retain
+        whenDeleted: Retain
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
