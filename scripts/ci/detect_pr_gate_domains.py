@@ -20,8 +20,16 @@ TIER0_FILES = {
     ".github/CODEOWNERS",
     ".github/actionlint.yaml",
     ".github/critical-resources.yaml",
+    ".yamllint.yaml",
 }
-TIER0_PREFIXES = (".github/workflows/", "scripts/ci/")
+TIER0_PREFIXES = (".github/schemas/", ".github/workflows/", "scripts/ci/")
+QUALITY_POLICY_FILES = {
+    ".github/critical-resources.yaml",
+    ".github/workflows/pr-gate.yml",
+    ".yamllint.yaml",
+}
+QUALITY_POLICY_PREFIXES = (".github/schemas/", "scripts/ci/")
+QUALITY_INPUT_PREFIXES = ("clusters/", "infrastructure/", "apps/", "monitoring/", "functions/")
 
 
 def parse_args() -> argparse.Namespace:
@@ -51,6 +59,17 @@ def classify_paths(paths: Iterable[str]) -> dict[str, bool]:
         if path in TIER0_FILES or path.startswith(TIER0_PREFIXES):
             return {name: True for name in DOMAIN_NAMES}
     return result
+
+
+def classify_quality_paths(paths: Iterable[str]) -> dict[str, bool]:
+    """Classify changes to the ratchet policy separately from scanned content."""
+    path_list = list(paths)
+    return {
+        "quality_policy_changed": any(
+            path in QUALITY_POLICY_FILES or path.startswith(QUALITY_POLICY_PREFIXES) for path in path_list
+        ),
+        "quality_inputs_changed": any(path.startswith(QUALITY_INPUT_PREFIXES) for path in path_list),
+    }
 
 
 def git(repo: Path, *arguments: str) -> bytes:
@@ -83,12 +102,14 @@ def main() -> int:
         changed = git(args.repo, "diff", "--name-only", "-z", args.base_sha, args.head_sha)
         paths = [path.decode("utf-8") for path in changed.split(b"\0") if path]
         domains = classify_paths(paths)
+        quality = classify_quality_paths(paths)
     except (RuntimeError, UnicodeDecodeError) as error:
         print(f"::error::Unable to classify PR Gate validation domains: {error}", file=sys.stderr)
         return 1
 
     lines = [f"base_sha={args.base_sha}", f"head_sha={args.head_sha}"]
     lines.extend(f"{domain}={'true' if domains[domain] else 'false'}" for domain in DOMAIN_NAMES)
+    lines.extend(f"{name}={'true' if value else 'false'}" for name, value in quality.items())
     args.github_output.parent.mkdir(parents=True, exist_ok=True)
     with args.github_output.open("a", encoding="utf-8") as output:
         output.write("\n".join(lines) + "\n")

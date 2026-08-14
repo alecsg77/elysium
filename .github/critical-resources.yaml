@@ -24,6 +24,8 @@ tier0_paths:
   - .github/CODEOWNERS
   - .github/actionlint.yaml
   - .github/critical-resources.yaml
+  - .yamllint.yaml
+  - .github/schemas/**
   - .github/workflows/**
   - scripts/ci/**
 # The root render contains these Flux Kustomizations. Dependencies must retain

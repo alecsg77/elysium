@@ -58,6 +58,7 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 - After explicit approval, enable native squash auto-merge with `gh pr merge --auto --squash`; do not manually merge. Record whether approval is pending or received, including the approved head SHA, in the PR template.
 - Never use `gh pr merge --admin`, a direct merge API bypass, or a force push as a routine workaround. The only break-glass path is documented in `docs/runbooks/github-break-glass.md`.
 - `PR Gate / required` is the single required monorepo status. It runs only the validation domains applicable to the PR and fails closed on a failed or unexpected skipped validator. Legacy path-filtered checks are diagnostic only and never replace the PR-only merge policy.
+- During the CI quality-ratchet transition, a green gate means the PR introduced no new yamllint, kubeconform, or Kubernetes Checkov debt relative to trusted `main`; it does not yet mean historical debt is zero. Do not add findings, warnings, schema skips, or broad suppressions. Split quality-policy changes from the manifests/functions evaluated by that policy; see `docs/ci/pr-validation.md`.
 - Treat changes to Flux bootstrap/ownership, Tailscale access resources, secrets, storage, and CI guardrail files as critical. Follow `docs/runbooks/destructive-gitops-change.md` for R2 removals; persistent-data changes additionally require the backup/restore contract in `docs/runbooks/backup-and-restore.md`.
 
 ## Essential Commands
@@ -67,7 +68,7 @@ This repo has no application build/test suite — "validation" means rendering m
 - **Render exactly what Flux will apply**: `flux build kustomization apps --path clusters/kyrion`
 - **Render a HelmRelease's chart** (when adding/upgrading one): `helm template <name> <chart> -f values.yaml`
 - **Lint YAML**: `yamllint .` (config in `.yamllint.yaml`; `.md` files and `clusters/*/flux-system/` are excluded)
-- **Test PR Gate helpers**: `python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard`; syntax/lint: `python3 -m py_compile scripts/ci/*.py tests/ci/*.py && bash -n scripts/ci/*.sh && shellcheck scripts/ci/*.sh`. Helpers used by `pull_request_target` must be invoked from the trusted base checkout, not from proposed PR content.
+- **Test PR Gate helpers**: `python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet`; syntax/lint: `python3 -m py_compile scripts/ci/*.py tests/ci/*.py && bash -n scripts/ci/*.sh && shellcheck scripts/ci/*.sh`. Helpers used by `pull_request_target` must be invoked from the trusted base checkout, not from proposed PR content.
 - **Validate `renovate.json`**: `renovate-config-validator` (Renovate CLI is preinstalled in the devcontainer via `ghcr.io/devcontainers-extra/features/renovate-cli:2`; outside the devcontainer, run `npx --yes --package renovate -- renovate-config-validator` instead)
 - **Dry-run Renovate locally** (see what updates it would open, without pushing anything): `LOG_LEVEL=debug RENOVATE_PLATFORM=local renovate` from the repo root
 - **Lint a local Helm chart** (`charts/cron-job`, `charts/onechart`): `ct lint --config ct.yaml --target-branch main` (or `helm lint <chart>` for a single chart without `ct`)

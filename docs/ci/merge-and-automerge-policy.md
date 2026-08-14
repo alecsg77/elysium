@@ -61,6 +61,14 @@ ruleset is migrated. It always runs and:
 - accepts an intentionally skipped validator only when the change detector marked
   that domain as not applicable.
 
+
+During the quality-ratchet transition, `required` additionally means the PR added no
+yamllint, kubeconform, or Kubernetes Checkov debt relative to the trusted PR base.
+It can still be green with explicitly reported historical debt while releases and
+debt-remediation PRs proceed in parallel. A new finding, warning, schema skip, or
+validator integrity failure blocks the gate. See [PR validation](pr-validation.md)
+for the transitional report states and change-separation rule.
+
 Do not add a separate required check with a generic name such as `gate`:
 required status contexts must remain unambiguous. Older path-filtered workflows
 remain diagnostic-only; remove them in a later PR only after confirming the PR Gate
