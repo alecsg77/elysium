@@ -46,6 +46,17 @@ The `.github/workflows/publish-coder-templates.yaml` workflow handles ALL templa
 ### Flux / Kubernetes — all changes via Git
 All cluster state changes must go through Git → Flux reconciliation. Never `kubectl apply` directly.
 
+### GitHub Actions workflow authoring
+
+Keep workflows declarative: a `run:` block may install a tool or invoke a helper,
+but complex shell functions, branching, scanner handling, render orchestration, and
+temporary-file lifecycle belong in versioned `scripts/ci/` helpers with tests. For
+workflow work, follow `.agents/skills/github-actions-workflow-authoring/SKILL.md`.
+
+For `pull_request_target`, execute only helpers from the trusted base checkout (for
+example `base/scripts/ci/...`); proposed PR content is data, never executable CI
+code.
+
 ## Essential Context
 
 ### Cluster Overview

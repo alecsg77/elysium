@@ -20,6 +20,7 @@ env:
   KUSTOMIZE_SHA256: 029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d
   KUBECONFORM_VERSION: v0.8.0
   KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
+  CRDS_CATALOG_COMMIT: 52b0261318acc7dd0b66e032759b1f218216b980
   ACTIONLINT_VERSION: 1.7.9
   ACTIONLINT_SHA256: 233b280d05e100837f4af1433c7b40a5dcb306e3aa68fb4f17f8a7f45a7df7b4
   GITLEAKS_VERSION: 8.30.1
@@ -37,6 +38,10 @@ jobs:
       coder: ${{ steps.changes.outputs.coder }}
       actions: ${{ steps.changes.outputs.actions }}
       functions: ${{ steps.changes.outputs.functions }}
+      quality_policy_changed: ${{ steps.changes.outputs.quality_policy_changed }}
+      quality_inputs_changed: ${{ steps.changes.outputs.quality_inputs_changed }}
+      yamllint_policy_changed: ${{ steps.changes.outputs.yamllint_policy_changed }}
+      checkov_policy_changed: ${{ steps.changes.outputs.checkov_policy_changed }}
     steps:
       - name: Check out trusted base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
@@ -78,16 +83,66 @@ jobs:
           path: base
           persist-credentials: false
 
+      - name: Keep quality-policy changes separate from scanned content
+        env:
+          QUALITY_POLICY_CHANGED: ${{ needs.detect.outputs.quality_policy_changed }}
+          QUALITY_INPUTS_CHANGED: ${{ needs.detect.outputs.quality_inputs_changed }}
+        run: |
+          set -euo pipefail
+          if [ "$QUALITY_POLICY_CHANGED" = true ] && [ "$QUALITY_INPUTS_CHANGED" = true ]; then
+            echo "::error::Split quality-policy changes from manifests or functions evaluated by that policy."
+            exit 1
+          fi
+
       - name: Install YAML parser and linter
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y python3-yaml yamllint
 
-      - name: Lint manifest YAML with trusted configuration
+      - name: Ratchet manifest YAML quality against the trusted base
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
         run: |
-          set -euo pipefail
-          yamllint -c base/.yamllint.yaml clusters infrastructure apps monitoring functions
+          bash base/scripts/ci/run_quality_ratchet.sh \
+            --tool yamllint \
+            --base-root "$GITHUB_WORKSPACE/base" \
+            --head-root "$GITHUB_WORKSPACE" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --report-dir "$RUNNER_TEMP/quality-ratchet" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Reject yamllint policy changes that alter current debt
+        if: needs.detect.outputs.yamllint_policy_changed == 'true'
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
+        run: |
+          bash base/scripts/ci/run_quality_ratchet.sh \
+            --tool yamllint \
+            --base-root "$GITHUB_WORKSPACE/base" \
+            --head-root "$GITHUB_WORKSPACE" \
+            --head-scan-root "$GITHUB_WORKSPACE/base" \
+            --base-config "$GITHUB_WORKSPACE/base/.yamllint.yaml" \
+            --head-config "$GITHUB_WORKSPACE/.yamllint.yaml" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --report-dir "$RUNNER_TEMP/quality-policy" \
+            --github-summary "$GITHUB_STEP_SUMMARY" \
+            --reject-removed
+
+      - name: Upload YAML quality-ratchet report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: quality-ratchet-yamllint-${{ github.event.pull_request.number }}
+          path: |
+            ${{ runner.temp }}/quality-ratchet/quality-yamllint.json
+            ${{ runner.temp }}/quality-policy/quality-yamllint.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Parse CI policy and function YAML
         run: |
@@ -202,43 +257,103 @@ jobs:
           sudo install -m 0755 kustomize /usr/local/bin/kustomize
           kustomize version
 
-      - name: Render Kustomize targets without plugins or networked functions
-        run: |
-          bash base/scripts/ci/render_kustomize_targets.sh \
-            --root "$GITHUB_WORKSPACE" \
-            --output rendered \
-            --temp-root "$RUNNER_TEMP"
-
       - name: Set up Flux CLI
         uses: fluxcd/flux2/action@889be9d6cc8afa8ed639e1e1ba4ab678e3b38d8c # v2.9.4
 
-      - name: Build Flux Kustomizations
-        run: bash base/scripts/ci/build_flux_kustomizations.sh --root "$GITHUB_WORKSPACE" --output rendered
+      - name: Render trusted base and proposed GitOps quality inputs
+        run: |
+          bash base/scripts/ci/render_quality_ratchet_targets.sh \
+            --base-root "$GITHUB_WORKSPACE/base" \
+            --head-root "$GITHUB_WORKSPACE" \
+            --output "$GITHUB_WORKSPACE/quality-ratchet" \
+            --temp-root "$RUNNER_TEMP"
 
-      - name: Install kubeconform
+      - name: Install kubeconform and YAML parser
         run: |
           set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y python3-yaml
           curl -fsSL -o kubeconform.tar.gz \
             "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
           echo "${KUBECONFORM_SHA256}  kubeconform.tar.gz" | sha256sum --check --strict
           tar -xzf kubeconform.tar.gz kubeconform
           sudo install -m 0755 kubeconform /usr/local/bin/kubeconform
 
-      - name: Validate rendered schemas (advisory pending issue #66)
-        continue-on-error: true
+      - name: Verify pinned CRD schema catalog availability
         run: |
-          kubeconform -strict -ignore-missing-schemas -summary \
-            -schema-location default \
-            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-            rendered/
+          set -euo pipefail
+          catalog="https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}"
+          curl --fail --silent --show-error --location --retry 3 --output /dev/null \
+            "$catalog/bitnami.com/sealedsecret_v1alpha1.json"
+          curl --fail --silent --show-error --location --retry 3 --output /dev/null \
+            "$catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json"
 
-      - name: Scan rendered Kubernetes configuration (advisory pending issue #66)
+      - name: Compare rendered schemas without increasing debt
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
+        run: |
+          bash base/scripts/ci/run_quality_ratchet.sh \
+            --tool kubeconform \
+            --base-root "$GITHUB_WORKSPACE/quality-ratchet/base-kubeconform-input" \
+            --head-root "$GITHUB_WORKSPACE/quality-ratchet/head-kubeconform-input" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --report-dir "$GITHUB_WORKSPACE/quality-ratchet" \
+            --schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Scan trusted base Kubernetes configuration for ratchet comparison
         uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
         with:
-          directory: rendered
+          directory: quality-ratchet/base-rendered
           framework: kubernetes
           quiet: true
+          skip_results_upload: true
+          output_format: json
+          output_file_path: quality-ratchet/base-checkov.json,
+          config_file: base/.github/checkov.yaml
           soft_fail: true
+
+      - name: Scan proposed Kubernetes configuration for ratchet comparison
+        uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
+        with:
+          directory: quality-ratchet/head-rendered
+          framework: kubernetes
+          quiet: true
+          skip_results_upload: true
+          output_format: json
+          output_file_path: quality-ratchet/head-checkov.json,
+          config_file: base/.github/checkov.yaml
+          soft_fail: true
+
+      - name: Compare Kubernetes security findings without increasing debt
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          workspace="$GITHUB_WORKSPACE/quality-ratchet"
+          python3 base/scripts/ci/quality_ratchet.py \
+            --tool checkov \
+            --base-report "$workspace/base-checkov.json" \
+            --head-report "$workspace/head-checkov.json" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --report "$workspace/quality-checkov.json" \
+            --github-summary "$GITHUB_STEP_SUMMARY" \
+            --github-annotations
+
+      - name: Upload GitOps quality-ratchet reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: quality-ratchet-gitops-${{ github.event.pull_request.number }}
+          path: |
+            quality-ratchet/quality-kubeconform.json
+            quality-ratchet/quality-checkov.json
+          if-no-files-found: warn
+          retention-days: 7
 
   helm:
     name: Helm chart validation

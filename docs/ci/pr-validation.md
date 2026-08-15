@@ -30,7 +30,7 @@ workflows remain diagnostic only; they are not merge requirements.
 read-only permissions, disables persistent checkout credentials, and does not use
 production secrets or mutate the cluster. Its jobs are:
 
-- **baseline** — trusted YAML configuration, YAML parsing, bare-Secret rejection,
+- **baseline** — trusted YAML quality ratchet, YAML parsing, bare-Secret rejection,
   and gitleaks;
 - **critical** — the trusted-base rendered-diff guard, including root-composition,
   dependency, remote-base, R1/R2, and intent checks;
@@ -57,7 +57,7 @@ Run the equivalent checks locally before opening such a PR:
 
 ```bash
 python3 -m py_compile scripts/ci/*.py tests/ci/*.py
-python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard
+python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell tests.ci.test_split_rendered_manifests
 bash -n scripts/ci/*.sh
 shellcheck scripts/ci/*.sh
 ```
@@ -67,10 +67,62 @@ Git diffs as data. In particular, the Secret and Gitleaks helpers operate on exp
 verified SHA-to-SHA Git data; they do not load a PR-controlled `.gitleaks*` file or
 execute PR scripts.
 
+## Transitional quality ratchet
+
+The GitOps validation backlog is being remediated while ordinary releases continue.
+During this transition, PR Gate compares trusted scans of the PR base revision and
+proposed head rather than treating historical debt as an implicit permanent allowlist.
+
+For **yamllint**, **kubeconform**, and Kubernetes **Checkov**:
+
+- a finding already present and unchanged on the trusted PR base is reported as
+  inherited debt and does not block an unrelated release;
+- a finding removed by the PR is reported as debt reduction;
+- any new finding, additional duplicate occurrence, missing-schema record, malformed
+  report, scan failure, or render failure blocks the applicable PR Gate job;
+- a finding may not be traded for a different finding in the same PR: comparison is
+  by normalized identity, not by a total count.
+
+The job summary and `quality-ratchet-*.json` artifacts report one of `PASS CLEAN`,
+`PASS WITH EXISTING DEBT`, `PASS WITH DEBT REDUCTION`, `FAIL: NEW DEBT`, or
+`FAIL: POLICY CHANGES FINDING SET` for each validator. The report stores normalized
+identities and hashes, not raw YAML lines or secret values.
+
+Consequently, a green `PR Gate / required` means **no new quality debt relative to
+its trusted base** during the transition; it does not claim that all historic findings
+are gone. When every baseline reaches zero (apart from documented resource-scoped
+exceptions), the ratchet will be simplified to strict validation and a green gate will
+again mean zero unsuppressed findings.
+
+### Trust and change-separation boundary
+
+The `pull_request_target` gate renders and scans both trees with helpers, tool
+versions, YAML configuration, and schema locations from the trusted base checkout.
+The proposed checkout is input data only. Quality-policy paths—PR Gate, ratchet and
+other CI helpers, `.yamllint.yaml`, trusted `.github/checkov.yaml`, critical-resource
+policy, and local schemas—are Tier 0. Checkov scans explicitly use the base checkout
+configuration, so a PR-root `.checkov.yaml` cannot change either scan. A PR that
+changes quality policy and manifests/functions evaluated by that policy is rejected;
+split it into a policy PR and a separately evaluated content PR.
+
+A `.yamllint.yaml` policy-only PR is additionally evaluated against the current
+trusted manifest tree with both the old and proposed configuration. It fails if the
+new policy suppresses inherited findings or exposes additional current findings, so a
+policy merge cannot silently rewrite the ratchet baseline.
+
+Kubeconform uses a checksum-pinned binary and a commit-pinned Datree CRD catalog
+reference for both sides of a comparison. Updating a schema source, tool version, or
+local schema is itself a quality-policy-only change and must publish its effect on the
+current trusted base before it can govern manifest changes.
+
+PRs may continue to merge while this work proceeds. A rebase or new commit simply
+reruns comparison against the newer trusted base, so a finding fixed by another PR
+cannot be reintroduced as inherited debt.
+
 ## Level 1 — repository-wide checks (always run on every PR)
 
 ### YAML lint (`pr-lint-yaml.yml`)
-- **What it checks:** Runs `yamllint -c .yamllint.yaml clusters/ infrastructure/ apps/ monitoring/` against every pull request, regardless of which paths changed. Unlike the non-blocking yamllint step in `copilot-setup-steps.yml`, this workflow fails the job (and blocks the PR) on any lint error.
+- **What it checks:** Runs `yamllint -c .yamllint.yaml clusters/ infrastructure/ apps/ monitoring/` against every pull request, regardless of which paths changed. It remains a diagnostic workflow; the required PR Gate baseline runs the trusted base/head quality ratchet and blocks new lint errors or warnings while allowing unchanged historical findings temporarily.
 - **Local equivalent:** `yamllint -c .yamllint.yaml clusters/ infrastructure/ apps/ monitoring/` (or `yamllint .` per `AGENTS.md`'s "Essential Commands" for a repo-wide pass).
 
 ### Secret scan (`pr-secret-scan.yml`)
@@ -181,8 +233,9 @@ The workflow validates the core GitOps directories with four jobs:
    `infra-configs`, `monitoring-controllers`, and `monitoring-configs`, using each resource's own
    `spec.path` and Kustomization manifest.
 3. **`validate-manifests`** — checks the rendered artifacts with kubeconform and Checkov.
-   Kubeconform remains non-blocking because strict CRD schemas can reject valid SealedSecrets;
-   Checkov remains non-blocking while the real pre-existing findings tracked in #66 are remediated.
+   This legacy workflow remains diagnostic-only. The required PR Gate now scans both trusted base and
+   proposed render output, blocks newly introduced kubeconform/Checkov debt, and reports unchanged
+   historical findings as transitional debt while the real backlog tracked in #66 is remediated.
 4. **`no-plaintext-secrets`** — rejects a literal `kind: Secret` added to changed YAML under
    `apps/**` or `clusters/**`; `SealedSecret` resources remain permitted.
 

@@ -49,6 +49,47 @@ class DomainDetectionTest(unittest.TestCase):
         )
 
 
+    def test_quality_policy_and_inputs_are_classified_separately(self) -> None:
+        self.assertEqual(
+            DOMAINS.classify_quality_paths(
+                ["scripts/ci/quality_ratchet.py", "apps/base/example/release.yaml"]
+            ),
+            {
+                "quality_policy_changed": True,
+                "quality_inputs_changed": True,
+                "yamllint_policy_changed": False,
+                "checkov_policy_changed": False,
+            },
+        )
+
+    def test_docs_only_change_does_not_select_quality_policy_or_inputs(self) -> None:
+        self.assertEqual(
+            DOMAINS.classify_quality_paths(["docs/ci/pr-validation.md"]),
+            {
+                "quality_policy_changed": False,
+                "quality_inputs_changed": False,
+                "yamllint_policy_changed": False,
+                "checkov_policy_changed": False,
+            },
+        )
+
+
+    def test_checkov_and_yamllint_configuration_are_tier_zero_policy(self) -> None:
+        self.assertEqual(
+            DOMAINS.classify_paths([".github/checkov.yaml"]),
+            {"gitops": True, "helm": True, "coder": True, "actions": True, "functions": True},
+        )
+        self.assertEqual(
+            DOMAINS.classify_quality_paths([".github/checkov.yaml", ".yamllint.yaml"]),
+            {
+                "quality_policy_changed": True,
+                "quality_inputs_changed": False,
+                "yamllint_policy_changed": True,
+                "checkov_policy_changed": True,
+            },
+        )
+
+
 class ChangedSecretsTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
