@@ -11,7 +11,13 @@ spec:
       rules:
         - alert: FluxBootstrapKustomizationNotReady
           expr: >-
-            gotk_resource_info{customresource_group="kustomize.toolkit.fluxcd.io",customresource_kind="Kustomization",exported_namespace="flux-system",name=~"apps|infra-controllers|infra-configs|monitoring-controllers|monitoring-configs",ready!="True"} == 1
+            gotk_resource_info{
+              customresource_group="kustomize.toolkit.fluxcd.io",
+              customresource_kind="Kustomization",
+              exported_namespace="flux-system",
+              name=~"apps|infra-controllers|infra-configs|monitoring-controllers|monitoring-configs",
+              ready!="True"
+            } == 1
           for: 10m
           labels:
             severity: critical
@@ -23,7 +29,12 @@ spec:
               mutate the cluster directly to clear the alert.
         - alert: FluxCriticalHelmReleaseNotReady
           expr: >-
-            gotk_resource_info{customresource_group="helm.toolkit.fluxcd.io",customresource_kind="HelmRelease",name=~"flux-operator|flux-instance|sealed-secrets|tailscale-operator|tsidp",ready!="True"} == 1
+            gotk_resource_info{
+              customresource_group="helm.toolkit.fluxcd.io",
+              customresource_kind="HelmRelease",
+              name=~"flux-operator|flux-instance|sealed-secrets|tailscale-operator|tsidp",
+              ready!="True"
+            } == 1
           for: 10m
           labels:
             severity: critical
@@ -35,7 +46,11 @@ spec:
               diagnose through Git and Flux status before any destructive action.
         - alert: TailscaleAccessPlaneResourceNotReady
           expr: >-
-            gotk_resource_info{customresource_group="tailscale.com",customresource_kind=~"Connector|DNSConfig|ProxyClass|ProxyGroup",ready!="True"} == 1
+            gotk_resource_info{
+              customresource_group="tailscale.com",
+              customresource_kind=~"Connector|DNSConfig|ProxyClass|ProxyGroup",
+              ready!="True"
+            } == 1
           for: 10m
           labels:
             severity: critical
@@ -47,7 +62,11 @@ spec:
               administrative connectivity is affected.
         - alert: TailscaleCriticalResourceInventoryReduced
           expr: >-
-            count(gotk_resource_info{customresource_group="tailscale.com",customresource_kind=~"Connector|DNSConfig|ProxyClass|ProxyGroup",name=~"connector|default|ts-dns|tsidp-egress"}) < 4
+            count(gotk_resource_info{
+              customresource_group="tailscale.com",
+              customresource_kind=~"Connector|DNSConfig|ProxyClass|ProxyGroup",
+              name=~"connector|default|ts-dns|tsidp-egress"
+            }) < 4
           for: 10m
           labels:
             severity: critical
