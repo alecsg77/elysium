@@ -283,11 +283,9 @@ def parse_checkov(report: Path, _root: Path | None) -> list[Finding]:
     if not isinstance(payload, dict) or not isinstance(payload.get("results"), dict):
         raise QualityRatchetError("Checkov JSON must be an object with a results object")
     results = payload["results"]
-    # Checkov 3.3.9 omits parsing_errors when the scan has none. Older releases
-    # emitted an explicit empty list, so accept both equivalent report shapes.
-    parsing_errors = results.get("parsing_errors", [])
-    if not isinstance(parsing_errors, list):
-        raise QualityRatchetError("Checkov report has invalid parsing_errors list")
+    if "parsing_errors" not in results or not isinstance(results["parsing_errors"], list):
+        raise QualityRatchetError("Checkov report is missing parsing_errors list")
+    parsing_errors = results["parsing_errors"]
     if parsing_errors:
         raise QualityRatchetError("Checkov reported parsing errors")
     if "failed_checks" not in results or not isinstance(results["failed_checks"], list):

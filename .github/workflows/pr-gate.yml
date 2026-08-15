@@ -329,24 +329,9 @@ jobs:
 
       - name: Normalize Checkov JSON reports for trusted comparison
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          for report in (
-              Path("quality-ratchet/base-checkov.json"),
-              Path("quality-ratchet/head-checkov.json"),
-          ):
-              payload = json.loads(report.read_text(encoding="utf-8"))
-              results = payload.get("results")
-              if not isinstance(results, dict):
-                  raise SystemExit(f"Checkov report has no results object: {report}")
-              parsing_errors = results.setdefault("parsing_errors", [])
-              if not isinstance(parsing_errors, list):
-                  raise SystemExit(f"Checkov report has invalid parsing_errors: {report}")
-              report.write_text(json.dumps(payload) + "\n", encoding="utf-8")
-          PY
+          python3 base/scripts/ci/normalize_checkov_reports.py \
+            --report "$GITHUB_WORKSPACE/quality-ratchet/base-checkov.json" \
+            --report "$GITHUB_WORKSPACE/quality-ratchet/head-checkov.json"
 
       - name: Compare Kubernetes security findings without increasing debt
         env:

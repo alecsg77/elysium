@@ -320,13 +320,9 @@ class QualityRatchetTest(unittest.TestCase):
         with self.assertRaisesRegex(QUALITY.QualityRatchetError, "missing failed_checks"):
             QUALITY.parse_checkov(report, None)
 
-    def test_checkov_report_missing_parsing_errors_is_treated_as_empty(self) -> None:
+    def test_checkov_report_missing_parsing_errors_fails_closed(self) -> None:
         report = self.report("checkov.json", json.dumps({"results": {"failed_checks": []}}))
-        self.assertEqual(QUALITY.parse_checkov(report, None), [])
-
-    def test_checkov_report_invalid_parsing_errors_fails_closed(self) -> None:
-        report = self.report("checkov.json", json.dumps({"results": {"failed_checks": [], "parsing_errors": {}}}))
-        with self.assertRaisesRegex(QUALITY.QualityRatchetError, "invalid parsing_errors"):
+        with self.assertRaisesRegex(QUALITY.QualityRatchetError, "missing parsing_errors"):
             QUALITY.parse_checkov(report, None)
 
     def test_reject_removed_marks_policy_suppression_as_failure(self) -> None:
