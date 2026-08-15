@@ -32,13 +32,10 @@ spec:
     # The chart's generated binding is cluster-admin; use the reviewed role above.
     rbac:
       create: false
+    # Temporarily disable the chart-generated policy while diagnosing whether
+    # Mux's MCP-manager runtime is blocked before it can list the server tools.
     networkPolicy:
-      create: true
-      ingress:
-        # Allow approved in-cluster MCP clients to reach the internal HTTP endpoint.
-        namespaces:
-          - coder
-          - ai
+      create: false
     ingress:
       enabled: false
     httpRoute:
