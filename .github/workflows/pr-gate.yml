@@ -103,57 +103,14 @@ jobs:
           BASE_SHA: ${{ needs.detect.outputs.base_sha }}
           HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
         run: |
-          set -euo pipefail
-          reports="$RUNNER_TEMP/quality-ratchet"
-          mkdir -p "$reports"
-
-          scan_yamllint() {
-            local tree="$1"
-            local report="$2"
-            local result_var="$3"
-            local exit_code
-            set +e
-            if [ "$tree" = "$GITHUB_WORKSPACE/base" ]; then
-              (
-                cd "$tree"
-                yamllint -c .yamllint.yaml -f parsable clusters infrastructure apps monitoring functions
-              ) >"$report" 2>"$report.stderr"
-            else
-              yamllint -c "$GITHUB_WORKSPACE/base/.yamllint.yaml" -f parsable \
-                clusters infrastructure apps monitoring functions >"$report" 2>"$report.stderr"
-            fi
-            exit_code=$?
-            set -e
-            if [ -s "$report.stderr" ]; then
-              cat "$report.stderr" >&2
-              echo "::error::yamllint emitted stderr instead of a trusted parsable report."
-              exit 1
-            fi
-            case "$exit_code" in
-              0|1) ;;
-              *)
-                echo "::error::yamllint exited unexpectedly with $exit_code."
-                exit "$exit_code"
-                ;;
-            esac
-            printf -v "$result_var" '%s' "$exit_code"
-          }
-
-          scan_yamllint "$GITHUB_WORKSPACE/base" "$reports/base-yamllint.txt" base_exit
-          scan_yamllint "$GITHUB_WORKSPACE" "$reports/head-yamllint.txt" head_exit
-          python3 base/scripts/ci/quality_ratchet.py \
+          bash base/scripts/ci/run_quality_ratchet.sh \
             --tool yamllint \
-            --base-report "$reports/base-yamllint.txt" \
-            --head-report "$reports/head-yamllint.txt" \
             --base-root "$GITHUB_WORKSPACE/base" \
             --head-root "$GITHUB_WORKSPACE" \
             --base-sha "$BASE_SHA" \
             --head-sha "$HEAD_SHA" \
-            --base-exit-code "$base_exit" \
-            --head-exit-code "$head_exit" \
-            --report "$reports/quality-yamllint.json" \
-            --github-summary "$GITHUB_STEP_SUMMARY" \
-            --github-annotations
+            --report-dir "$RUNNER_TEMP/quality-ratchet" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload YAML quality-ratchet report
         if: always()
@@ -277,33 +234,16 @@ jobs:
           sudo install -m 0755 kustomize /usr/local/bin/kustomize
           kustomize version
 
-      - name: Render trusted base and proposed Kustomize targets without plugins
-        run: |
-          set -euo pipefail
-          workspace="$GITHUB_WORKSPACE/quality-ratchet"
-          rm -rf -- "$workspace"
-          mkdir -p "$workspace/base-rendered" "$workspace/head-rendered"
-          bash base/scripts/ci/render_kustomize_targets.sh \
-            --root "$GITHUB_WORKSPACE/base" \
-            --output "$workspace/base-rendered" \
-            --temp-root "$RUNNER_TEMP"
-          bash base/scripts/ci/render_kustomize_targets.sh \
-            --root "$GITHUB_WORKSPACE" \
-            --output "$workspace/head-rendered" \
-            --temp-root "$RUNNER_TEMP"
-
       - name: Set up Flux CLI
         uses: fluxcd/flux2/action@889be9d6cc8afa8ed639e1e1ba4ab678e3b38d8c # v2.9.4
 
-      - name: Build trusted base and proposed Flux Kustomizations
+      - name: Render trusted base and proposed GitOps quality inputs
         run: |
-          set -euo pipefail
-          bash base/scripts/ci/build_flux_kustomizations.sh \
-            --root "$GITHUB_WORKSPACE/base" \
-            --output "$GITHUB_WORKSPACE/quality-ratchet/base-rendered"
-          bash base/scripts/ci/build_flux_kustomizations.sh \
-            --root "$GITHUB_WORKSPACE" \
-            --output "$GITHUB_WORKSPACE/quality-ratchet/head-rendered"
+          bash base/scripts/ci/render_quality_ratchet_targets.sh \
+            --base-root "$GITHUB_WORKSPACE/base" \
+            --head-root "$GITHUB_WORKSPACE" \
+            --output "$GITHUB_WORKSPACE/quality-ratchet" \
+            --temp-root "$RUNNER_TEMP"
 
       - name: Install kubeconform and YAML parser
         run: |
@@ -330,49 +270,15 @@ jobs:
           BASE_SHA: ${{ needs.detect.outputs.base_sha }}
           HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
         run: |
-          set -euo pipefail
-          workspace="$GITHUB_WORKSPACE/quality-ratchet"
-
-          scan_kubeconform() {
-            local rendered="$1"
-            local report="$2"
-            local result_var="$3"
-            local exit_code
-            set +e
-            kubeconform -strict -output json -summary \
-              -schema-location default \
-              -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
-              "$rendered" >"$report" 2>"$report.stderr"
-            exit_code=$?
-            set -e
-            if [ -s "$report.stderr" ]; then
-              cat "$report.stderr" >&2
-              echo "::error::kubeconform emitted stderr instead of a trusted JSON report."
-              exit 1
-            fi
-            case "$exit_code" in
-              0|1) ;;
-              *)
-                echo "::error::kubeconform exited unexpectedly with $exit_code."
-                exit "$exit_code"
-                ;;
-            esac
-            printf -v "$result_var" '%s' "$exit_code"
-          }
-
-          scan_kubeconform "$workspace/base-rendered" "$workspace/base-kubeconform.json" base_exit
-          scan_kubeconform "$workspace/head-rendered" "$workspace/head-kubeconform.json" head_exit
-          python3 base/scripts/ci/quality_ratchet.py \
+          bash base/scripts/ci/run_quality_ratchet.sh \
             --tool kubeconform \
-            --base-report "$workspace/base-kubeconform.json" \
-            --head-report "$workspace/head-kubeconform.json" \
+            --base-root "$GITHUB_WORKSPACE/quality-ratchet/base-rendered" \
+            --head-root "$GITHUB_WORKSPACE/quality-ratchet/head-rendered" \
             --base-sha "$BASE_SHA" \
             --head-sha "$HEAD_SHA" \
-            --base-exit-code "$base_exit" \
-            --head-exit-code "$head_exit" \
-            --report "$workspace/quality-kubeconform.json" \
-            --github-summary "$GITHUB_STEP_SUMMARY" \
-            --github-annotations
+            --report-dir "$GITHUB_WORKSPACE/quality-ratchet" \
+            --schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
 
       - name: Scan trusted base Kubernetes configuration for ratchet comparison
         uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0

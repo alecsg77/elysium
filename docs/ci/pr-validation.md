@@ -57,7 +57,7 @@ Run the equivalent checks locally before opening such a PR:
 
 ```bash
 python3 -m py_compile scripts/ci/*.py tests/ci/*.py
-python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet
+python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell
 bash -n scripts/ci/*.sh
 shellcheck scripts/ci/*.sh
 ```

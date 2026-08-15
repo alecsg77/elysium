@@ -68,7 +68,7 @@ This repo has no application build/test suite — "validation" means rendering m
 - **Render exactly what Flux will apply**: `flux build kustomization apps --path clusters/kyrion`
 - **Render a HelmRelease's chart** (when adding/upgrading one): `helm template <name> <chart> -f values.yaml`
 - **Lint YAML**: `yamllint .` (config in `.yamllint.yaml`; `.md` files and `clusters/*/flux-system/` are excluded)
-- **Test PR Gate helpers**: `python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet`; syntax/lint: `python3 -m py_compile scripts/ci/*.py tests/ci/*.py && bash -n scripts/ci/*.sh && shellcheck scripts/ci/*.sh`. Helpers used by `pull_request_target` must be invoked from the trusted base checkout, not from proposed PR content.
+- **Test PR Gate helpers**: `python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell`; syntax/lint: `python3 -m py_compile scripts/ci/*.py tests/ci/*.py && bash -n scripts/ci/*.sh && shellcheck scripts/ci/*.sh`. Helpers used by `pull_request_target` must be invoked from the trusted base checkout, not from proposed PR content.
 - **Validate `renovate.json`**: `renovate-config-validator` (Renovate CLI is preinstalled in the devcontainer via `ghcr.io/devcontainers-extra/features/renovate-cli:2`; outside the devcontainer, run `npx --yes --package renovate -- renovate-config-validator` instead)
 - **Dry-run Renovate locally** (see what updates it would open, without pushing anything): `LOG_LEVEL=debug RENOVATE_PLATFORM=local renovate` from the repo root
 - **Lint a local Helm chart** (`charts/cron-job`, `charts/onechart`): `ct lint --config ct.yaml --target-branch main` (or `helm lint <chart>` for a single chart without `ct`)
@@ -92,6 +92,7 @@ This repo has no application build/test suite — "validation" means rendering m
 - Plan GitOps work: `.agents/skills/gitops-implementation-planning/SKILL.md`
 - Search historical incidents: `.agents/skills/knowledge-base-search/SKILL.md`
 - Troubleshoot Flux and Kubernetes issues: `.agents/skills/troubleshoot-flux/SKILL.md`
+- Author GitHub Actions workflows: `.agents/skills/github-actions-workflow-authoring/SKILL.md`
 - Create/update Coder workspace templates: `.agents/skills/coder-templates/SKILL.md`
 
 ## PR Validation Workflow
@@ -99,6 +100,10 @@ This repo has no application build/test suite — "validation" means rendering m
 - The gate always runs baseline secret/YAML and trusted-base critical-resource checks; it runs GitOps, chart, Coder, Actions/scripts, and Fission-spec validators only when the detector marks them applicable.
 - Do not make path-filtered workflow jobs required. A skipped domain is accepted only when the gate's detector marked that domain not applicable.
 - See `docs/ci/pr-validation.md` for the validator matrix and `docs/ci/merge-and-automerge-policy.md` for the merge flow.
+
+## GitHub Actions Workflow Authoring
+- Workflows orchestrate; helpers implement. Keep `run:` blocks declarative and extract complex shell control flow, scanner handling, rendering, retries, or temporary-file logic into versioned `scripts/ci/` helpers with focused tests.
+- For any `.github/workflows/**` or `scripts/ci/**` change, load `.agents/skills/github-actions-workflow-authoring/SKILL.md`. In `pull_request_target`, invoke only helpers from the trusted base checkout (for example `base/scripts/ci/...`); PR content is data and must never become executable CI code.
 
 ## Copilot-Specific Workflows
 - Copilot is the primary hosted workflow for issue-page diagnostics, coding-agent handoff, and GitHub web-based resolution.
