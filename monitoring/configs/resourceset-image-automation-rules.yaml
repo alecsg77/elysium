@@ -16,7 +16,9 @@ spec:
             severity: warning
           annotations:
             summary: Flux Operator ResourceSet is not Ready
-            description: ResourceSet {{ $labels.exported_namespace }}/{{ $labels.name }} has been non-ready for ten minutes.
+            description: >-
+              ResourceSet {{ $labels.exported_namespace }}/{{ $labels.name }} has been
+              non-ready for ten minutes.
         - alert: FluxOperatorResourceSetInputProviderNotReady
           expr: flux_operator_input_provider_info{ready!="True"} == 1
           for: 10m
@@ -24,7 +26,9 @@ spec:
             severity: warning
           annotations:
             summary: Flux Operator image input provider is not Ready
-            description: ResourceSetInputProvider {{ $labels.exported_namespace }}/{{ $labels.name }} has been non-ready for ten minutes.
+            description: >-
+              ResourceSetInputProvider {{ $labels.exported_namespace }}/{{ $labels.name }} has
+              been non-ready for ten minutes.
         - alert: GitlessImageAutomationWorkloadUnavailable
           expr: kube_deployment_status_replicas_available{namespace=~"arkham|ai|default|registry|monitoring|n8n",deployment=~"bazarr|error-pages|flaresolverr|jellyfin|lidarr|msmtpd|openclaw|pihole|plex|prowlarr|qbittorrent|radarr|raiplaysoundrss|registry|sonarr|unmonitorr|grafana-mcp|n8n"} < kube_deployment_spec_replicas{namespace=~"arkham|ai|default|registry|monitoring|n8n",deployment=~"bazarr|error-pages|flaresolverr|jellyfin|lidarr|msmtpd|openclaw|pihole|plex|prowlarr|qbittorrent|radarr|raiplaysoundrss|registry|sonarr|unmonitorr|grafana-mcp|n8n"}
           for: 15m
@@ -32,7 +36,9 @@ spec:
             severity: warning
           annotations:
             summary: Gitless image automation workload is unavailable
-            description: Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has fewer available replicas than desired for fifteen minutes.
+            description: >-
+              Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has fewer
+              available replicas than desired for fifteen minutes.
         - alert: GitlessImageAutomationCronJobFailed
           expr: kube_job_status_failed{namespace="arkham",job_name=~"configarr-.*"} > 0
           for: 10m
@@ -40,4 +46,6 @@ spec:
             severity: warning
           annotations:
             summary: ConfigArr job failed after a Gitless image update
-            description: Job {{ $labels.namespace }}/{{ $labels.job_name }} has failed; freeze or pin ConfigArr before the next schedule.
+            description: >-
+              Job {{ $labels.namespace }}/{{ $labels.job_name }} has failed; freeze or pin
+              ConfigArr before the next schedule.
