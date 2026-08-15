@@ -33,10 +33,16 @@ spec:
       valuesKey: values.yaml
   values:
     replicas: 1
+    # Paperclip uses a single RWO data PVC; never allow two pod writers.
+    strategy: Recreate
     containerPort: 3100
     svcPort: 3100
     podSecurityContext:
       fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    podSpec:
+      automountServiceAccountToken: false
     # The upstream entrypoint supports direct non-root execution as uid/gid 1000.
     securityContext:
       allowPrivilegeEscalation: false

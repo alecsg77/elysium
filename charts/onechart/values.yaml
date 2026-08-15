@@ -18,7 +18,18 @@ image:
 # vars:
 #   MY_VAR: "value"
 
+# Optional init containers accept image, tag, and an optional immutable digest.
+# initContainers:
+#   - name: initialize-data
+#     image: example/init
+#     tag: v1.2.3
+#     digest: sha256:<64 hexadecimal characters>
+
 replicas: 1
+
+# Empty preserves the automatic Recreate strategy for a single replica with a volume.
+# Set to Recreate or RollingUpdate to override that default.
+strategy: ""
 
 nameOverride: ""
 fullnameOverride: ""
@@ -80,5 +91,11 @@ nodePortEnabled: false
 monitor:
   enabled: false
 
+# Merged into the generated main container. Use it for complete Kubernetes probe
+# objects (for example exec, HTTPS, custom HTTP headers, or startupProbe) when the
+# HTTP readiness/liveness shorthand above is not sufficient.
 container: {}
+
+# Merged into the generated PodSpec for Kubernetes fields not exposed directly by
+# OneChart, such as automountServiceAccountToken.
 podSpec: {}
