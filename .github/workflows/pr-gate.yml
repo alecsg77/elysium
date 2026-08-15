@@ -327,6 +327,12 @@ jobs:
           config_file: base/.github/checkov.yaml
           soft_fail: true
 
+      - name: Normalize Checkov JSON reports for trusted comparison
+        run: |
+          python3 base/scripts/ci/normalize_checkov_reports.py \
+            --report "$GITHUB_WORKSPACE/quality-ratchet/base-checkov.json" \
+            --report "$GITHUB_WORKSPACE/quality-ratchet/head-checkov.json"
+
       - name: Compare Kubernetes security findings without increasing debt
         env:
           BASE_SHA: ${{ needs.detect.outputs.base_sha }}
