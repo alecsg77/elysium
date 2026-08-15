@@ -311,7 +311,7 @@ jobs:
           quiet: true
           skip_results_upload: true
           output_format: json
-          output_file_path: quality-ratchet/base-checkov.json,
+          output_file_path: quality-ratchet/base-checkov.json
           config_file: base/.github/checkov.yaml
           soft_fail: true
 
@@ -323,7 +323,7 @@ jobs:
           quiet: true
           skip_results_upload: true
           output_format: json
-          output_file_path: quality-ratchet/head-checkov.json,
+          output_file_path: quality-ratchet/head-checkov.json
           config_file: base/.github/checkov.yaml
           soft_fail: true
 
