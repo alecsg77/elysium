@@ -20,6 +20,20 @@ tests:
         equal:
           path: spec.template.spec.initContainers[0].image
           value: "nginx:1.2.2"
+  - it: Should append an immutable digest to the init container image
+    set:
+      initContainers:
+        - name: pod1
+          image: nginx
+          tag: 1.2.2
+          digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    asserts:
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "nginx:1.2.2@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
   - it: Should set command  
     set:
       initContainers:

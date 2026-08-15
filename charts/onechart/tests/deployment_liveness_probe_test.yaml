@@ -49,3 +49,27 @@ tests:
             successThreshold: 1
             timeoutSeconds: 3
             failureThreshold: 3
+  - it: Should replace generated HTTP liveness with a TCP probe
+    set:
+      livenessProbe:
+        enabled: true
+      container:
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          failureThreshold: 6
+    asserts:
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 3
+            failureThreshold: 6
