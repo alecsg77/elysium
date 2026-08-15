@@ -125,6 +125,17 @@
                 "type": "string",
                 "title": "Tag"
               },
+              "digest": {
+                "type": "string",
+                "title": "Digest",
+                "description": "Optional SHA-256 OCI image digest appended to the init-container image tag.",
+                "default": "",
+                "pattern": "^(|sha256:[A-Fa-f0-9]{64})$",
+                "examples": [
+                  "",
+                  "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                ]
+              },
               "imagePullPolicy": {
                 "type": "string",
                 "title": "Command",
@@ -170,6 +181,18 @@
       "maximum": 16,
       "examples": [
         1
+      ]
+    },
+    "strategy": {
+      "$id": "#/properties/strategy",
+      "type": "string",
+      "title": "Deployment strategy",
+      "description": "Optional Deployment strategy type. Leave empty to retain OneChart's automatic Recreate strategy for a single replica with a volume.",
+      "default": "",
+      "examples": [
+        "",
+        "Recreate",
+        "RollingUpdate"
       ]
     },
     "podDisruptionBudgetEnabled": {
@@ -714,6 +737,22 @@
           }
         }
       }
+    },
+    "container": {
+      "$id": "#/properties/container",
+      "type": "object",
+      "title": "Main container overlay",
+      "description": "Merged into the generated main container. Use complete Kubernetes probe objects here for exec, HTTPS, custom HTTP headers, or startup probes.",
+      "default": {},
+      "additionalProperties": true
+    },
+    "podSpec": {
+      "$id": "#/properties/podSpec",
+      "type": "object",
+      "title": "PodSpec overlay",
+      "description": "Merged into the generated PodSpec for Kubernetes fields not exposed directly by OneChart.",
+      "default": {},
+      "additionalProperties": true
     },
     "secretName": {
       "$id": "#/properties/secretName",
