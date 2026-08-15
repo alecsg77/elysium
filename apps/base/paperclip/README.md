@@ -21,3 +21,15 @@ They are still backup-required: issue #90 tracks the required off-cluster backup
 restore contract. Before a destructive storage change or chart-major upgrade, verify
 a recorded restore drill and use a Git revert/new PR for rollback rather than deleting
 PVCs.
+
+The Paperclip Deployment is explicitly single-writer (`strategy: Recreate`) and
+runs with a non-root uid/gid, dropped Linux capabilities, `RuntimeDefault` seccomp,
+and no automatically mounted ServiceAccount token. In authenticated/private mode,
+the `ai` overlay preserves the canonical `Host` header on readiness and liveness
+requests because Paperclip rejects kubelet's Pod-IP host header.
+
+OneChart only rolls a pod automatically when its generated ConfigMap or image changes;
+SealedSecret-backed environment changes need an explicit controlled rollout. When
+rotating `paperclip-secrets`, update a non-sensitive `podAnnotations` revision in the
+Helm values in the same PR, verify a single successful replacement Pod, and retain the
+previous SealedSecret manifest as the Git rollback point.

@@ -13,7 +13,8 @@ serviceAccountName: {{ .Values.serviceAccount }}
 initContainers:
   {{- range .Values.initContainers }}  
   - name:  {{ .name }}
-    image: "{{ .image }}:{{ .tag }}"
+    {{- $image := printf "%s:%s" .image .tag }}
+    image: "{{ $image }}{{ with .digest }}@{{ . }}{{ end }}"
     imagePullPolicy: {{ .imagePullPolicy | default "IfNotPresent" }}
     {{- include "common.envFromRef.tpl" $ | nindent 4 }}
     {{- if .command }}
@@ -36,7 +37,21 @@ initContainers:
   {{- end }}      
 containers:
   {{- $containerTpl := include "common.container.tpl" . | fromYaml }}
-  {{- $container := mergeOverwrite $containerTpl .Values.container }}
+  {{- $containerOverrides := deepCopy .Values.container }}
+  {{- range $probeName := list "readinessProbe" "livenessProbe" }}
+  {{- if hasKey $containerOverrides $probeName }}
+  {{- $probeOverride := get $containerOverrides $probeName }}
+  {{- if kindIs "map" $probeOverride }}
+  {{- if or (hasKey $probeOverride "exec") (hasKey $probeOverride "tcpSocket") }}
+  {{- $generatedProbe := get $containerTpl $probeName }}
+  {{- if kindIs "map" $generatedProbe }}
+  {{- $_ := unset $generatedProbe "httpGet" }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- $container := mergeOverwrite $containerTpl $containerOverrides }}
   - {{ toYaml $container | nindent 4 }}
     {{- include "common.envFromRef.tpl" . | nindent 4 }}
     {{- include "common.volumeMountsRef.tpl" . | nindent 4 }}
