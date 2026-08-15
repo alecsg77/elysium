@@ -36,50 +36,57 @@ class NormalizeCheckovReportsTest(unittest.TestCase):
         self.tempdir.cleanup()
 
     def report(self, name: str, payload: object) -> Path:
-        path = self.root / name
+        path = self.root / "input" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload), encoding="utf-8")
         return path
 
-    def test_missing_parsing_errors_is_normalized_to_empty_list(self) -> None:
+    def output(self, name: str) -> Path:
+        return self.root / "runner-temp" / "normalized" / name
+
+    def test_missing_parsing_errors_is_normalized_to_separate_output(self) -> None:
         report = self.report("checkov.json", {"results": {"failed_checks": []}})
+        output = self.output("checkov.json")
 
-        NORMALIZER.normalize_report(report)
+        NORMALIZER.normalize_report(report, output)
 
+        self.assertEqual(json.loads(report.read_text(encoding="utf-8")), {"results": {"failed_checks": []}})
         self.assertEqual(
-            json.loads(report.read_text(encoding="utf-8")),
+            json.loads(output.read_text(encoding="utf-8")),
             {"results": {"failed_checks": [], "parsing_errors": []}},
         )
 
     def test_existing_empty_parsing_errors_is_preserved(self) -> None:
         report = self.report("checkov.json", {"results": {"failed_checks": [], "parsing_errors": []}})
+        output = self.output("checkov.json")
 
-        NORMALIZER.normalize_report(report)
+        NORMALIZER.normalize_report(report, output)
 
-        self.assertEqual(json.loads(report.read_text(encoding="utf-8"))["results"]["parsing_errors"], [])
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["results"]["parsing_errors"], [])
 
     def test_missing_results_object_fails_closed(self) -> None:
         report = self.report("checkov.json", {})
 
         with self.assertRaisesRegex(NORMALIZER.CheckovReportError, "no results object"):
-            NORMALIZER.normalize_report(report)
+            NORMALIZER.normalize_report(report, self.output("checkov.json"))
 
     def test_missing_failed_checks_list_fails_closed(self) -> None:
         report = self.report("checkov.json", {"results": {}})
 
         with self.assertRaisesRegex(NORMALIZER.CheckovReportError, "invalid failed_checks"):
-            NORMALIZER.normalize_report(report)
+            NORMALIZER.normalize_report(report, self.output("checkov.json"))
 
     def test_non_list_parsing_errors_fails_closed(self) -> None:
         report = self.report("checkov.json", {"results": {"failed_checks": [], "parsing_errors": {}}})
 
         with self.assertRaisesRegex(NORMALIZER.CheckovReportError, "invalid parsing_errors"):
-            NORMALIZER.normalize_report(report)
+            NORMALIZER.normalize_report(report, self.output("checkov.json"))
 
     def test_non_empty_parsing_errors_fails_closed(self) -> None:
         report = self.report("checkov.json", {"results": {"failed_checks": [], "parsing_errors": ["invalid manifest"]}})
 
         with self.assertRaisesRegex(NORMALIZER.CheckovReportError, "contains parsing errors"):
-            NORMALIZER.normalize_report(report)
+            NORMALIZER.normalize_report(report, self.output("checkov.json"))
 
 
 if __name__ == "__main__":

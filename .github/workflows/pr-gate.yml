@@ -330,8 +330,8 @@ jobs:
       - name: Normalize Checkov JSON reports for trusted comparison
         run: |
           python3 base/scripts/ci/normalize_checkov_reports.py \
-            --report "$GITHUB_WORKSPACE/quality-ratchet/base-checkov.json" \
-            --report "$GITHUB_WORKSPACE/quality-ratchet/head-checkov.json"
+            --report "$GITHUB_WORKSPACE/quality-ratchet/base-checkov.json" "$RUNNER_TEMP/quality-ratchet/base-checkov.json" \
+            --report "$GITHUB_WORKSPACE/quality-ratchet/head-checkov.json" "$RUNNER_TEMP/quality-ratchet/head-checkov.json"
 
       - name: Compare Kubernetes security findings without increasing debt
         env:
@@ -339,7 +339,7 @@ jobs:
           HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
         run: |
           set -euo pipefail
-          workspace="$GITHUB_WORKSPACE/quality-ratchet"
+          workspace="$RUNNER_TEMP/quality-ratchet"
           python3 base/scripts/ci/quality_ratchet.py \
             --tool checkov \
             --base-report "$workspace/base-checkov.json" \
@@ -357,7 +357,7 @@ jobs:
           name: quality-ratchet-gitops-${{ github.event.pull_request.number }}
           path: |
             quality-ratchet/quality-kubeconform.json
-            quality-ratchet/quality-checkov.json
+            ${{ runner.temp }}/quality-ratchet/quality-checkov.json
           if-no-files-found: warn
           retention-days: 7
 
