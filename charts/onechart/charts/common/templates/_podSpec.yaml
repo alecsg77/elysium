@@ -41,8 +41,13 @@ containers:
   {{- range $probeName := list "readinessProbe" "livenessProbe" }}
   {{- if hasKey $containerOverrides $probeName }}
   {{- $probeOverride := get $containerOverrides $probeName }}
-  {{- if and (kindIs "map" $probeOverride) (or (hasKey $probeOverride "exec") (hasKey $probeOverride "tcpSocket")) }}
-  {{- $_ := unset (get $containerTpl $probeName) "httpGet" }}
+  {{- if kindIs "map" $probeOverride }}
+  {{- if or (hasKey $probeOverride "exec") (hasKey $probeOverride "tcpSocket") }}
+  {{- $generatedProbe := get $containerTpl $probeName }}
+  {{- if kindIs "map" $generatedProbe }}
+  {{- $_ := unset $generatedProbe "httpGet" }}
+  {{- end }}
+  {{- end }}
   {{- end }}
   {{- end }}
   {{- end }}
