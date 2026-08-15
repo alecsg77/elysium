@@ -53,6 +53,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--github-summary", type=Path)
     parser.add_argument("--github-annotations", action="store_true")
+    parser.add_argument(
+        "--reject-removed",
+        action="store_true",
+        help="Fail when a policy comparison removes existing findings instead of remediating them.",
+    )
     parser.add_argument("--base-root", type=Path)
     parser.add_argument("--head-root", type=Path)
     parser.add_argument("--base-exit-code", type=int)
@@ -253,14 +258,11 @@ def parse_kubeconform(report: Path, _root: Path | None) -> list[Finding]:
         )
         candidates.append((primary, manifest_hash, f"{kind}/{namespace}/{name}", status))
 
-    variants = collections.defaultdict(set)
-    for primary, manifest_hash, _, _ in candidates:
-        variants[primary].add(manifest_hash)
     findings: dict[str, Finding] = {}
     for primary, manifest_hash, display, _ in candidates:
-        identity = primary
-        if len(variants[primary]) > 1:
-            identity = f"{primary}|render_variant={manifest_hash}"
+        # Keep the content discriminator on every record. Adding or removing a sibling
+        # render variant must not alter the identity of the inherited variant that remains.
+        identity = f"{primary}|render_variant={manifest_hash}"
         findings[identity] = Finding(identity=identity, display=display)
     return list(findings.values())
 
@@ -281,14 +283,14 @@ def parse_checkov(report: Path, _root: Path | None) -> list[Finding]:
     if not isinstance(payload, dict) or not isinstance(payload.get("results"), dict):
         raise QualityRatchetError("Checkov JSON must be an object with a results object")
     results = payload["results"]
-    parsing_errors = results.get("parsing_errors", [])
-    if not isinstance(parsing_errors, list):
-        raise QualityRatchetError("Checkov parsing_errors must be a list")
+    if "parsing_errors" not in results or not isinstance(results["parsing_errors"], list):
+        raise QualityRatchetError("Checkov report is missing parsing_errors list")
+    parsing_errors = results["parsing_errors"]
     if parsing_errors:
         raise QualityRatchetError("Checkov reported parsing errors")
-    failed_checks = results.get("failed_checks", [])
-    if not isinstance(failed_checks, list):
-        raise QualityRatchetError("Checkov failed_checks must be a list")
+    if "failed_checks" not in results or not isinstance(results["failed_checks"], list):
+        raise QualityRatchetError("Checkov report is missing failed_checks list")
+    failed_checks = results["failed_checks"]
 
     findings: dict[str, Finding] = {}
     for entry in failed_checks:
@@ -394,7 +396,9 @@ def write_summary(
         output.write(f"**{state}**\n\n")
         output.write("| Existing debt | New debt | Debt removed |\n| ---: | ---: | ---: |\n")
         output.write(f"| {count(unchanged)} | {count(added)} | {count(removed)} |\n\n")
-        if added:
+        if state == "FAIL: POLICY CHANGES FINDING SET":
+            output.write("A proposed policy removed existing findings on trusted content, so it is rejected rather than treated as debt reduction.\n\n")
+        elif added:
             output.write("New findings block this PR. Existing findings are retained only while they remain unchanged from the trusted PR base.\n\n")
         elif removed:
             output.write("This PR reduces inherited quality debt without adding new findings.\n\n")
@@ -426,6 +430,9 @@ def main() -> int:
         base_findings = parser(args.base_report, args.base_root)
         head_findings = parser(args.head_report, args.head_root)
         state, added, removed, unchanged, display = summarize(args.tool, base_findings, head_findings)
+        policy_suppression = args.reject_removed and bool(removed)
+        if policy_suppression and not added:
+            state = "FAIL: POLICY CHANGES FINDING SET"
         payload = {
             "version": 1,
             "tool": args.tool,
@@ -444,9 +451,11 @@ def main() -> int:
         }
         write_json(args.report, payload)
         write_summary(args.github_summary, args.tool, state, added, removed, unchanged)
-        if added:
+        if added or policy_suppression:
             if args.github_annotations:
                 emit_annotations(added, display)
+                if policy_suppression:
+                    print("::error title=Quality policy suppressed debt::A policy change removed existing findings.")
             return 1
         return 0
     except QualityRatchetError as error:

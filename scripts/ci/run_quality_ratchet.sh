@@ -9,9 +9,11 @@ Usage:
   run_quality_ratchet.sh --tool yamllint|kubeconform \
     --base-root DIRECTORY --head-root DIRECTORY \
     --base-sha SHA --head-sha SHA --report-dir DIRECTORY \
-    [--github-summary FILE] [--schema-location URL]
+    [--base-config FILE] [--head-config FILE] [--head-scan-root DIRECTORY] \
+    [--github-summary FILE] [--schema-location URL] [--reject-removed]
 
-Both scans use the helper and configuration from this script's trusted checkout.
+Both scans use this helper and the supplied trusted configuration paths. A policy
+comparison may scan trusted base content with a proposed configuration as inert data.
 EOF
 }
 
@@ -23,6 +25,10 @@ head_sha=""
 report_dir=""
 github_summary=""
 schema_location=""
+base_config=""
+head_config=""
+head_scan_root=""
+reject_removed=false
 
 while (($#)); do
   case "$1" in
@@ -49,6 +55,22 @@ while (($#)); do
     --report-dir)
       report_dir="$2"
       shift 2
+      ;;
+    --base-config)
+      base_config="$2"
+      shift 2
+      ;;
+    --head-config)
+      head_config="$2"
+      shift 2
+      ;;
+    --head-scan-root)
+      head_scan_root="$2"
+      shift 2
+      ;;
+    --reject-removed)
+      reject_removed=true
+      shift
       ;;
     --github-summary)
       github_summary="$2"
@@ -87,6 +109,10 @@ done
 
 test -d "$base_root"
 test -d "$head_root"
+if [ -z "$head_scan_root" ]; then
+  head_scan_root="$head_root"
+fi
+test -d "$head_scan_root"
 mkdir -p "$report_dir"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 comparator="$script_dir/quality_ratchet.py"
@@ -151,13 +177,20 @@ scan_kubeconform() {
 
 case "$tool" in
   yamllint)
-    test -f "$base_root/.yamllint.yaml"
-    base_exit="$(scan_yamllint "$base_root" "$base_root/.yamllint.yaml" "$report_dir/base-yamllint.txt")"
-    head_exit="$(scan_yamllint "$head_root" "$base_root/.yamllint.yaml" "$report_dir/head-yamllint.txt")"
+    if [ -z "$base_config" ]; then
+      base_config="$base_root/.yamllint.yaml"
+    fi
+    if [ -z "$head_config" ]; then
+      head_config="$base_config"
+    fi
+    test -f "$base_config"
+    test -f "$head_config"
+    base_exit="$(scan_yamllint "$base_root" "$base_config" "$report_dir/base-yamllint.txt")"
+    head_exit="$(scan_yamllint "$head_scan_root" "$head_config" "$report_dir/head-yamllint.txt")"
     base_report="$report_dir/base-yamllint.txt"
     head_report="$report_dir/head-yamllint.txt"
     output_report="$report_dir/quality-yamllint.json"
-    root_options=(--base-root "$base_root" --head-root "$head_root")
+    root_options=(--base-root "$base_root" --head-root "$head_scan_root")
     ;;
   kubeconform)
     test -n "$schema_location" || {
@@ -185,6 +218,9 @@ arguments=(
   --github-annotations
   "${root_options[@]}"
 )
+if [ "$reject_removed" = true ]; then
+  arguments+=(--reject-removed)
+fi
 if [ -n "$github_summary" ]; then
   arguments+=(--github-summary "$github_summary")
 fi

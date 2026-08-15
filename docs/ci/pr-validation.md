@@ -57,7 +57,7 @@ Run the equivalent checks locally before opening such a PR:
 
 ```bash
 python3 -m py_compile scripts/ci/*.py tests/ci/*.py
-python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell
+python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell tests.ci.test_split_rendered_manifests
 bash -n scripts/ci/*.sh
 shellcheck scripts/ci/*.sh
 ```
@@ -84,9 +84,9 @@ For **yamllint**, **kubeconform**, and Kubernetes **Checkov**:
   by normalized identity, not by a total count.
 
 The job summary and `quality-ratchet-*.json` artifacts report one of `PASS CLEAN`,
-`PASS WITH EXISTING DEBT`, `PASS WITH DEBT REDUCTION`, or `FAIL: NEW DEBT` for each
-validator. The report stores normalized identities and hashes, not raw YAML lines or
-secret values.
+`PASS WITH EXISTING DEBT`, `PASS WITH DEBT REDUCTION`, `FAIL: NEW DEBT`, or
+`FAIL: POLICY CHANGES FINDING SET` for each validator. The report stores normalized
+identities and hashes, not raw YAML lines or secret values.
 
 Consequently, a green `PR Gate / required` means **no new quality debt relative to
 its trusted base** during the transition; it does not claim that all historic findings
@@ -99,9 +99,16 @@ again mean zero unsuppressed findings.
 The `pull_request_target` gate renders and scans both trees with helpers, tool
 versions, YAML configuration, and schema locations from the trusted base checkout.
 The proposed checkout is input data only. Quality-policy paths—PR Gate, ratchet and
-other CI helpers, `.yamllint.yaml`, critical-resource policy, and local schemas—are
-Tier 0. A PR that changes quality policy and manifests/functions evaluated by that
-policy is rejected; split it into a policy PR and a separately evaluated content PR.
+other CI helpers, `.yamllint.yaml`, trusted `.github/checkov.yaml`, critical-resource
+policy, and local schemas—are Tier 0. Checkov scans explicitly use the base checkout
+configuration, so a PR-root `.checkov.yaml` cannot change either scan. A PR that
+changes quality policy and manifests/functions evaluated by that policy is rejected;
+split it into a policy PR and a separately evaluated content PR.
+
+A `.yamllint.yaml` policy-only PR is additionally evaluated against the current
+trusted manifest tree with both the old and proposed configuration. It fails if the
+new policy suppresses inherited findings or exposes additional current findings, so a
+policy merge cannot silently rewrite the ratchet baseline.
 
 Kubeconform uses a checksum-pinned binary and a commit-pinned Datree CRD catalog
 reference for both sides of a comparison. Updating a schema source, tool version, or

@@ -68,3 +68,9 @@ bash "$script_dir/build_flux_kustomizations.sh" \
 bash "$script_dir/build_flux_kustomizations.sh" \
   --root "$head_root" \
   --output "$output/head-rendered"
+python3 "$script_dir/split_rendered_manifests.py" \
+  --input "$output/base-rendered" \
+  --output "$output/base-kubeconform-input"
+python3 "$script_dir/split_rendered_manifests.py" \
+  --input "$output/head-rendered" \
+  --output "$output/head-kubeconform-input"

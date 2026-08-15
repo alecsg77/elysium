@@ -22,7 +22,10 @@ non_removable_files:
 # resource, so the same PR cannot weaken its own protection.
 tier0_paths:
   - .github/CODEOWNERS
+  - .checkov.yaml
+  - .checkov.yml
   - .github/actionlint.yaml
+  - .github/checkov.yaml
   - .github/critical-resources.yaml
   - .yamllint.yaml
   - .github/schemas/**

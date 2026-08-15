@@ -35,8 +35,8 @@ jobs:
 
       - name: Compile and test proposed Python helpers
         run: |
-          python3 -m py_compile scripts/ci/*.py tests/ci/test_pr_gate_helpers.py tests/ci/test_quality_ratchet.py tests/ci/test_quality_ratchet_shell.py
-          python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell
+          python3 -m py_compile scripts/ci/*.py tests/ci/test_pr_gate_helpers.py tests/ci/test_quality_ratchet.py tests/ci/test_quality_ratchet_shell.py tests/ci/test_split_rendered_manifests.py
+          python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell tests.ci.test_split_rendered_manifests
 
       - name: Parse and lint proposed shell helpers
         run: |

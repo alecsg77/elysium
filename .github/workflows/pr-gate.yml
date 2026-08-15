@@ -40,6 +40,8 @@ jobs:
       functions: ${{ steps.changes.outputs.functions }}
       quality_policy_changed: ${{ steps.changes.outputs.quality_policy_changed }}
       quality_inputs_changed: ${{ steps.changes.outputs.quality_inputs_changed }}
+      yamllint_policy_changed: ${{ steps.changes.outputs.yamllint_policy_changed }}
+      checkov_policy_changed: ${{ steps.changes.outputs.checkov_policy_changed }}
     steps:
       - name: Check out trusted base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
@@ -112,12 +114,33 @@ jobs:
             --report-dir "$RUNNER_TEMP/quality-ratchet" \
             --github-summary "$GITHUB_STEP_SUMMARY"
 
+      - name: Reject yamllint policy changes that alter current debt
+        if: needs.detect.outputs.yamllint_policy_changed == 'true'
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
+        run: |
+          bash base/scripts/ci/run_quality_ratchet.sh \
+            --tool yamllint \
+            --base-root "$GITHUB_WORKSPACE/base" \
+            --head-root "$GITHUB_WORKSPACE" \
+            --head-scan-root "$GITHUB_WORKSPACE/base" \
+            --base-config "$GITHUB_WORKSPACE/base/.yamllint.yaml" \
+            --head-config "$GITHUB_WORKSPACE/.yamllint.yaml" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --report-dir "$RUNNER_TEMP/quality-policy" \
+            --github-summary "$GITHUB_STEP_SUMMARY" \
+            --reject-removed
+
       - name: Upload YAML quality-ratchet report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
           name: quality-ratchet-yamllint-${{ github.event.pull_request.number }}
-          path: ${{ runner.temp }}/quality-ratchet/quality-yamllint.json
+          path: |
+            ${{ runner.temp }}/quality-ratchet/quality-yamllint.json
+            ${{ runner.temp }}/quality-policy/quality-yamllint.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -272,8 +295,8 @@ jobs:
         run: |
           bash base/scripts/ci/run_quality_ratchet.sh \
             --tool kubeconform \
-            --base-root "$GITHUB_WORKSPACE/quality-ratchet/base-rendered" \
-            --head-root "$GITHUB_WORKSPACE/quality-ratchet/head-rendered" \
+            --base-root "$GITHUB_WORKSPACE/quality-ratchet/base-kubeconform-input" \
+            --head-root "$GITHUB_WORKSPACE/quality-ratchet/head-kubeconform-input" \
             --base-sha "$BASE_SHA" \
             --head-sha "$HEAD_SHA" \
             --report-dir "$GITHUB_WORKSPACE/quality-ratchet" \
@@ -289,6 +312,7 @@ jobs:
           skip_results_upload: true
           output_format: json
           output_file_path: quality-ratchet/base-checkov.json,
+          config_file: base/.github/checkov.yaml
           soft_fail: true
 
       - name: Scan proposed Kubernetes configuration for ratchet comparison
@@ -300,6 +324,7 @@ jobs:
           skip_results_upload: true
           output_format: json
           output_file_path: quality-ratchet/head-checkov.json,
+          config_file: base/.github/checkov.yaml
           soft_fail: true
 
       - name: Compare Kubernetes security findings without increasing debt

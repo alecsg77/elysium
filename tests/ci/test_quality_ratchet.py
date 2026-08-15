@@ -173,6 +173,69 @@ class QualityRatchetTest(unittest.TestCase):
         self.assertEqual(len(findings), 2)
         self.assertTrue(all("render_variant=" in finding.identity for finding in findings))
 
+    def test_kubeconform_variant_identity_stays_stable_when_a_sibling_is_removed(self) -> None:
+        base_first = self.write(
+            self.base,
+            "first.yaml",
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: settings\n  namespace: demo\ndata:\n  value: retained\nextra: invalid\n",
+        )
+        base_second = self.write(
+            self.base,
+            "second.yaml",
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: settings\n  namespace: demo\ndata:\n  value: removed\nextra: invalid\n",
+        )
+        head_first = self.write(
+            self.head,
+            "first.yaml",
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: settings\n  namespace: demo\ndata:\n  value: retained\nextra: invalid\n",
+        )
+
+        def resource(path: Path) -> dict:
+            return {
+                "filename": str(path),
+                "version": "v1",
+                "kind": "ConfigMap",
+                "name": "settings",
+                "status": "statusInvalid",
+                "validationErrors": [{"path": "/extra", "msg": "additional property not allowed"}],
+            }
+
+        state, added, removed, unchanged, _ = QUALITY.summarize(
+            "kubeconform",
+            QUALITY.parse_kubeconform(self.kube_report("base-kube.json", [resource(base_first), resource(base_second)]), None),
+            QUALITY.parse_kubeconform(self.kube_report("head-kube.json", [resource(head_first)]), None),
+        )
+        self.assertEqual(state, "PASS WITH DEBT REDUCTION")
+        self.assertFalse(added)
+        self.assertEqual(sum(removed.values()), 1)
+        self.assertEqual(sum(unchanged.values()), 1)
+
+    def test_kubeconform_single_document_files_distinguish_reused_namespaces(self) -> None:
+        alpha = self.write(
+            self.base,
+            "alpha/0001.yaml",
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: settings\n  namespace: alpha\nextra: invalid\n",
+        )
+        beta = self.write(
+            self.base,
+            "beta/0001.yaml",
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: settings\n  namespace: beta\nextra: invalid\n",
+        )
+        resources = [
+            {
+                "filename": str(path),
+                "version": "v1",
+                "kind": "ConfigMap",
+                "name": "settings",
+                "status": "statusInvalid",
+                "validationErrors": [{"path": "/extra", "msg": "additional property not allowed"}],
+            }
+            for path in (alpha, beta)
+        ]
+        findings = QUALITY.parse_kubeconform(self.kube_report("kube.json", resources), None)
+        self.assertEqual(len(findings), 2)
+        self.assertEqual({finding.display for finding in findings}, {"ConfigMap/alpha/settings", "ConfigMap/beta/settings"})
+
     def test_kubeconform_missing_schema_is_ratchet_debt(self) -> None:
         rendered = self.write(
             self.base,
@@ -251,6 +314,53 @@ class QualityRatchetTest(unittest.TestCase):
         report = self.checkov_report("checkov.json", [], parsing_errors=["bad manifest"])
         with self.assertRaisesRegex(QUALITY.QualityRatchetError, "parsing errors"):
             QUALITY.parse_checkov(report, None)
+
+    def test_checkov_report_missing_failed_checks_fails_closed(self) -> None:
+        report = self.report("checkov.json", json.dumps({"results": {"parsing_errors": []}}))
+        with self.assertRaisesRegex(QUALITY.QualityRatchetError, "missing failed_checks"):
+            QUALITY.parse_checkov(report, None)
+
+    def test_checkov_report_missing_parsing_errors_fails_closed(self) -> None:
+        report = self.report("checkov.json", json.dumps({"results": {"failed_checks": []}}))
+        with self.assertRaisesRegex(QUALITY.QualityRatchetError, "missing parsing_errors"):
+            QUALITY.parse_checkov(report, None)
+
+    def test_reject_removed_marks_policy_suppression_as_failure(self) -> None:
+        base = self.report(
+            "base-yamllint.txt", "apps/example.yaml:1:1: [warning] line too long (130 > 120 characters) (line-length)\n"
+        )
+        head = self.report("head-yamllint.txt", "")
+        self.write(self.base, "apps/example.yaml", "value: inherited-long-value\n")
+        self.write(self.head, "apps/example.yaml", "value: inherited-long-value\n")
+        output = self.root / "policy.json"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--tool",
+                "yamllint",
+                "--base-report",
+                str(base),
+                "--head-report",
+                str(head),
+                "--base-root",
+                str(self.base),
+                "--head-root",
+                str(self.head),
+                "--base-sha",
+                "a" * 40,
+                "--head-sha",
+                "b" * 40,
+                "--report",
+                str(output),
+                "--reject-removed",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["state"], "FAIL: POLICY CHANGES FINDING SET")
 
     def test_cli_writes_redacted_report_and_fails_for_new_debt(self) -> None:
         self.write(self.base, "apps/example.yaml", "value: inherited-secret\n")

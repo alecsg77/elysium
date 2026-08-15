@@ -17,13 +17,19 @@ from typing import Iterable
 
 DOMAIN_NAMES = ("gitops", "helm", "coder", "actions", "functions")
 TIER0_FILES = {
+    ".checkov.yaml",
+    ".checkov.yml",
     ".github/CODEOWNERS",
     ".github/actionlint.yaml",
+    ".github/checkov.yaml",
     ".github/critical-resources.yaml",
     ".yamllint.yaml",
 }
 TIER0_PREFIXES = (".github/schemas/", ".github/workflows/", "scripts/ci/")
 QUALITY_POLICY_FILES = {
+    ".checkov.yaml",
+    ".checkov.yml",
+    ".github/checkov.yaml",
     ".github/critical-resources.yaml",
     ".github/workflows/pr-gate.yml",
     ".yamllint.yaml",
@@ -64,11 +70,16 @@ def classify_paths(paths: Iterable[str]) -> dict[str, bool]:
 def classify_quality_paths(paths: Iterable[str]) -> dict[str, bool]:
     """Classify changes to the ratchet policy separately from scanned content."""
     path_list = list(paths)
+    quality_policy_changed = any(
+        path in QUALITY_POLICY_FILES or path.startswith(QUALITY_POLICY_PREFIXES) for path in path_list
+    )
     return {
-        "quality_policy_changed": any(
-            path in QUALITY_POLICY_FILES or path.startswith(QUALITY_POLICY_PREFIXES) for path in path_list
-        ),
+        "quality_policy_changed": quality_policy_changed,
         "quality_inputs_changed": any(path.startswith(QUALITY_INPUT_PREFIXES) for path in path_list),
+        "yamllint_policy_changed": ".yamllint.yaml" in path_list,
+        "checkov_policy_changed": any(
+            path in {".checkov.yaml", ".checkov.yml", ".github/checkov.yaml"} for path in path_list
+        ),
     }
 
 

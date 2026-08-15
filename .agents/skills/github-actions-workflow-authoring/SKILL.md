@@ -69,7 +69,7 @@ Before committing a workflow change:
 
 ```bash
 python3 -m py_compile scripts/ci/*.py tests/ci/*.py
-python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell
+python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell tests.ci.test_split_rendered_manifests
 bash -n scripts/ci/*.sh
 shellcheck scripts/ci/*.sh
 actionlint .github/workflows/<changed-workflow>.yml

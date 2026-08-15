@@ -82,6 +82,41 @@ class QualityRatchetShellTest(unittest.TestCase):
         self.assertEqual(payload["state"], "FAIL: NEW DEBT")
         self.assertEqual(payload["counts"]["added"], 1)
 
+    def test_proposed_policy_cannot_suppress_existing_warning(self) -> None:
+        (self.head / ".yamllint.yaml").write_text("rules:\n  line-length: disable\n", encoding="utf-8")
+        result = subprocess.run(
+            [
+                "bash",
+                str(SCRIPT),
+                "--tool",
+                "yamllint",
+                "--base-root",
+                str(self.base),
+                "--head-root",
+                str(self.head),
+                "--head-scan-root",
+                str(self.base),
+                "--base-config",
+                str(self.base / ".yamllint.yaml"),
+                "--head-config",
+                str(self.head / ".yamllint.yaml"),
+                "--base-sha",
+                "a" * 40,
+                "--head-sha",
+                "b" * 40,
+                "--report-dir",
+                str(self.reports),
+                "--reject-removed",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        payload = json.loads((self.reports / "quality-yamllint.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["state"], "FAIL: POLICY CHANGES FINDING SET")
+        self.assertEqual(payload["counts"]["removed"], 1)
+
     def test_missing_required_option_returns_usage_error(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT), "--tool", "yamllint"],
