@@ -125,6 +125,16 @@ proposed workflow and schema files only as inert data. The comparison publishes 
 resulting finding reduction or regression before that policy can govern later
 manifest PRs; proposed workflow or helper code is never executed by this step.
 
+
+The local native `CustomResourceDefinition` schema is derived from the Kubernetes
+`v1.36.3` OpenAPI v3 artifact and has provenance plus an artifact checksum in
+`.github/schemas/`. The PR Gate verifies that trusted bundle before the ordinary
+comparison. A candidate local-schema PR also has to reject a trusted, synthetic CRD
+with an unknown top-level field; this prevents a schema refresh from making the
+native CRD envelope silently permissive. The schema resolves only
+`apiextensions.k8s.io/v1/CustomResourceDefinition`; the Datree catalog continues to
+validate other custom-resource kinds.
+
 PRs may continue to merge while this work proceeds. A rebase or new commit simply
 reruns comparison against the newer trusted base, so a finding fixed by another PR
 cannot be reintroduced as inherited debt.
