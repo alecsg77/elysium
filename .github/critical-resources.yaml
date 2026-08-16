@@ -63,6 +63,7 @@ render_targets:
   tailscale: infrastructure/configs/tailscale
   networking: infrastructure/configs/networking
   arkham: apps/kyrion/arkham
+  copilot_api: apps/kyrion/ai
 # Single-document resources outside a local Kustomization target are parsed as
 # inert YAML. This avoids traversing the controller catalog's legacy remote CRD
 # base while still protecting the credentials that recover the access plane.
@@ -334,6 +335,53 @@ resources:
       - spec
     r2_fields:
       - metadata.annotations
+  # Copilot API is being decommissioned as a single R2 operation. Protect every
+  # rendered resource so a future removal cannot omit the PVC, access route, or
+  # credential object from the intent/rollback review.
+  - id: storage/copilot-api-pvc
+    target: copilot_api
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    namespace: ai
+    name: copilot-api-data
+    r2_fields:
+      - spec.accessModes
+      - spec.resources.requests.storage
+      - spec.storageClassName
+      - spec.volumeName
+  - id: workload/copilot-api-deployment
+    target: copilot_api
+    apiVersion: apps/v1
+    kind: Deployment
+    namespace: ai
+    name: copilot-api
+    r2_fields:
+      - spec
+  - id: access/copilot-api-service
+    target: copilot_api
+    apiVersion: v1
+    kind: Service
+    namespace: ai
+    name: copilot-api
+    r2_fields:
+      - spec
+  - id: access/copilot-api-ingress
+    target: copilot_api
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    namespace: ai
+    name: copilot-api
+    r2_fields:
+      - spec
+  - id: credentials/copilot-api
+    target: copilot_api
+    apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    namespace: ai
+    name: copilot-api-secret
+    r2_fields:
+      - metadata.annotations
+
   - id: storage/arkham-pvc-storage
     target: arkham
     apiVersion: v1
