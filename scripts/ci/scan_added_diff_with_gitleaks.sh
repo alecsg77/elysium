@@ -11,6 +11,7 @@ set -euo pipefail
 : "${RUNNER_TEMP:?RUNNER_TEMP is required}"
 
 repo="${1:-.}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 scanner_dir="$RUNNER_TEMP/gitleaks"
 archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
 
@@ -28,14 +29,17 @@ git -C "$repo" fetch --no-tags --depth=1 origin "pull/${PR_NUMBER}/head:refs/rem
 test "$(git -C "$repo" rev-parse "$BASE_SHA")" = "$BASE_SHA"
 test "$(git -C "$repo" rev-parse refs/remotes/origin/pr-head)" = "$HEAD_SHA"
 
-# The --no-git file scan runs from scanner_dir, with config environment variables
-# unset and its ignore-file lookup confined there. That forces built-in Gitleaks
-# rules instead of PR-controlled .gitleaks.toml or .gitleaksignore content.
-git -C "$repo" diff --no-ext-diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- \
-  | awk '
-      /^@@ / { in_hunk = 1; next }
-      in_hunk && /^\+/ { sub(/^\+/, ""); print }
-    ' > "$scanner_dir/proposed.diff"
+# The policy helper retains every added line except direct scalar ciphertext in
+# an exact SealedSecret.spec.encryptedData location. It consumes trusted Git
+# objects as data and writes no source content to workflow output. The --no-git
+# file scan runs from scanner_dir, with config environment variables unset and
+# its ignore-file lookup confined there. That forces built-in Gitleaks rules
+# instead of PR-controlled .gitleaks.toml or .gitleaksignore content.
+python3 "$script_dir/sealed_secret_ciphertext_policy.py" filter-added-diff \
+  --repo "$repo" \
+  --base-sha "$BASE_SHA" \
+  --head-sha "$HEAD_SHA" \
+  --output "$scanner_dir/proposed.diff"
 (
   cd "$scanner_dir"
   env -u GITLEAKS_CONFIG -u GITLEAKS_CONFIG_TOML ./gitleaks detect \
