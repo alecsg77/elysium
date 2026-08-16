@@ -10,10 +10,14 @@ Usage:
     --base-root DIRECTORY --head-root DIRECTORY \
     --base-sha SHA --head-sha SHA --report-dir DIRECTORY \
     [--base-config FILE] [--head-config FILE] [--head-scan-root DIRECTORY] \
-    [--github-summary FILE] [--schema-location URL] [--reject-removed]
+    [--github-summary FILE] [--schema-location LOCATION]... \
+    [--base-schema-location LOCATION]... [--head-schema-location LOCATION]... \
+    [--reject-removed]
 
-Both scans use this helper and the supplied trusted configuration paths. A policy
-comparison may scan trusted base content with a proposed configuration as inert data.
+Both scans use this helper and the supplied trusted configuration paths. Repeated
+--schema-location options apply to both kubeconform scans in the given order. A
+policy comparison may instead supply distinct base/head schema locations while
+scanning trusted base content with proposed policy data as inert input.
 EOF
 }
 
@@ -24,7 +28,9 @@ base_sha=""
 head_sha=""
 report_dir=""
 github_summary=""
-schema_location=""
+schema_locations=()
+base_schema_locations=()
+head_schema_locations=()
 base_config=""
 head_config=""
 head_scan_root=""
@@ -77,7 +83,15 @@ while (($#)); do
       shift 2
       ;;
     --schema-location)
-      schema_location="$2"
+      schema_locations+=("$2")
+      shift 2
+      ;;
+    --base-schema-location)
+      base_schema_locations+=("$2")
+      shift 2
+      ;;
+    --head-schema-location)
+      head_schema_locations+=("$2")
       shift 2
       ;;
     --help|-h)
@@ -150,13 +164,28 @@ scan_yamllint() {
 scan_kubeconform() {
   local rendered="$1"
   local report="$2"
+  shift 2
+  local -a locations=("$@")
+  local -a command=(
+    kubeconform
+    -strict
+    -output json
+    -summary
+    -schema-location default
+  )
+  local location
   local exit_code
 
+  for location in "${locations[@]}"; do
+    test -n "$location" || {
+      echo "kubeconform schema locations must not be empty." >&2
+      exit 2
+    }
+    command+=(-schema-location "$location")
+  done
+
   set +e
-  kubeconform -strict -output json -summary \
-    -schema-location default \
-    -schema-location "$schema_location" \
-    "$rendered" >"$report" 2>"$report.stderr"
+  "${command[@]}" "$rendered" >"$report" 2>"$report.stderr"
   exit_code=$?
   set -e
 
@@ -193,12 +222,20 @@ case "$tool" in
     root_options=(--base-root "$base_root" --head-root "$head_scan_root")
     ;;
   kubeconform)
-    test -n "$schema_location" || {
-      echo "--schema-location is required for kubeconform." >&2
+    if ((${#schema_locations[@]})); then
+      if ((${#base_schema_locations[@]} || ${#head_schema_locations[@]})); then
+        echo "Use either --schema-location or both --base-schema-location and --head-schema-location." >&2
+        exit 2
+      fi
+      base_schema_locations=("${schema_locations[@]}")
+      head_schema_locations=("${schema_locations[@]}")
+    fi
+    if ((${#base_schema_locations[@]} == 0 || ${#head_schema_locations[@]} == 0)); then
+      echo "kubeconform requires --schema-location or both base/head schema locations." >&2
       exit 2
-    }
-    base_exit="$(scan_kubeconform "$base_root" "$report_dir/base-kubeconform.json")"
-    head_exit="$(scan_kubeconform "$head_root" "$report_dir/head-kubeconform.json")"
+    fi
+    base_exit="$(scan_kubeconform "$base_root" "$report_dir/base-kubeconform.json" "${base_schema_locations[@]}")"
+    head_exit="$(scan_kubeconform "$head_root" "$report_dir/head-kubeconform.json" "${head_schema_locations[@]}")"
     base_report="$report_dir/base-kubeconform.json"
     head_report="$report_dir/head-kubeconform.json"
     output_report="$report_dir/quality-kubeconform.json"

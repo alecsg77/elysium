@@ -42,6 +42,7 @@ jobs:
       quality_inputs_changed: ${{ steps.changes.outputs.quality_inputs_changed }}
       yamllint_policy_changed: ${{ steps.changes.outputs.yamllint_policy_changed }}
       checkov_policy_changed: ${{ steps.changes.outputs.checkov_policy_changed }}
+      kubeconform_policy_changed: ${{ steps.changes.outputs.kubeconform_policy_changed }}
     steps:
       - name: Check out trusted base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
@@ -303,6 +304,23 @@ jobs:
             --schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
             --github-summary "$GITHUB_STEP_SUMMARY"
 
+      - name: Publish the effect of candidate kubeconform schema policy
+        if: needs.detect.outputs.kubeconform_policy_changed == 'true'
+        env:
+          BASE_SHA: ${{ needs.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.detect.outputs.head_sha }}
+        run: |
+          bash base/scripts/ci/run_kubeconform_policy_effect.sh \
+            --rendered-root "$GITHUB_WORKSPACE/quality-ratchet/base-kubeconform-input" \
+            --base-schemas-root "$GITHUB_WORKSPACE/base/.github/schemas" \
+            --base-catalog-commit "${CRDS_CATALOG_COMMIT}" \
+            --candidate-workflow "$GITHUB_WORKSPACE/.github/workflows/pr-gate.yml" \
+            --candidate-schemas-root "$GITHUB_WORKSPACE/.github/schemas" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --report-dir "$RUNNER_TEMP/quality-policy" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
       - name: Scan trusted base Kubernetes configuration for ratchet comparison
         uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
         with:
@@ -357,6 +375,7 @@ jobs:
           name: quality-ratchet-gitops-${{ github.event.pull_request.number }}
           path: |
             quality-ratchet/quality-kubeconform.json
+            ${{ runner.temp }}/quality-policy/quality-kubeconform.json
             ${{ runner.temp }}/quality-ratchet/quality-checkov.json
           if-no-files-found: warn
           retention-days: 7
