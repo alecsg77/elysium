@@ -12,7 +12,7 @@ The Gitless adapter is active for these workloads:
 
 - `arkham`: bazarr, configarr, flaresolverr, jellyfin, lidarr, msmtpd, pihole, plex, prowlarr, qbittorrent, radarr, sonarr, unmonitorr.
 - `ai`: openclaw.
-- `default`: error-pages.
+- `error-pages`: error-pages.
 - `n8n`: n8n.
 - `registry`: registry.
 - `monitoring`: grafana-mcp.

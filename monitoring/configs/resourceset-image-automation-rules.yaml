@@ -30,7 +30,7 @@ spec:
               ResourceSetInputProvider {{ $labels.exported_namespace }}/{{ $labels.name }} has
               been non-ready for ten minutes.
         - alert: GitlessImageAutomationWorkloadUnavailable
-          expr: kube_deployment_status_replicas_available{namespace=~"arkham|ai|default|registry|monitoring|n8n",deployment=~"bazarr|error-pages|flaresolverr|jellyfin|lidarr|msmtpd|openclaw|pihole|plex|prowlarr|qbittorrent|radarr|raiplaysoundrss|registry|sonarr|unmonitorr|grafana-mcp|n8n"} < kube_deployment_spec_replicas{namespace=~"arkham|ai|default|registry|monitoring|n8n",deployment=~"bazarr|error-pages|flaresolverr|jellyfin|lidarr|msmtpd|openclaw|pihole|plex|prowlarr|qbittorrent|radarr|raiplaysoundrss|registry|sonarr|unmonitorr|grafana-mcp|n8n"}
+          expr: kube_deployment_status_replicas_available{namespace=~"arkham|ai|error-pages|registry|monitoring|n8n",deployment=~"bazarr|error-pages|flaresolverr|jellyfin|lidarr|msmtpd|openclaw|pihole|plex|prowlarr|qbittorrent|radarr|raiplaysoundrss|registry|sonarr|unmonitorr|grafana-mcp|n8n"} < kube_deployment_spec_replicas{namespace=~"arkham|ai|error-pages|registry|monitoring|n8n",deployment=~"bazarr|error-pages|flaresolverr|jellyfin|lidarr|msmtpd|openclaw|pihole|plex|prowlarr|qbittorrent|radarr|raiplaysoundrss|registry|sonarr|unmonitorr|grafana-mcp|n8n"} # yamllint disable-line rule:line-length
           for: 15m
           labels:
             severity: warning
