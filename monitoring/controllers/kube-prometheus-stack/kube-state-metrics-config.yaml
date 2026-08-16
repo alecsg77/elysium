@@ -34,6 +34,11 @@ kube-state-metrics:
           - resourcesets
           - resourcesetinputproviders
         verbs: ["list", "watch"]
+      - apiGroups:
+          - volsync.backube
+        resources:
+          - replicationsources
+        verbs: ["list", "watch"]
   customResourceState:
     enabled: true
     config:
@@ -58,6 +63,45 @@ kube-state-metrics:
                   suspended: [spec, suspend]
                   revision: [status, lastAppliedRevision]
                   source_name: [spec, sourceRef, name]
+          - groupVersionKind:
+              group: volsync.backube
+              version: v1alpha1
+              kind: ReplicationSource
+            metricNamePrefix: volsync
+            labelsFromPath:
+              exported_namespace: [metadata, namespace]
+              name: [metadata, name]
+            metrics:
+              - name: "replication_source_info"
+                help: "Information about a VolSync ReplicationSource."
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      paused: [spec, paused]
+                      source_pvc: [spec, sourcePVC]
+              - name: "replication_source_created_time_seconds"
+                help: "Unix creation time of a VolSync ReplicationSource."
+                each:
+                  type: Gauge
+                  gauge:
+                    path: [metadata, creationTimestamp]
+              - name: "replication_source_last_sync_time_seconds"
+                help: "Unix time of the last successful VolSync source synchronization."
+                each:
+                  type: Gauge
+                  gauge:
+                    path: [status, lastSyncTime]
+              - name: "replication_source_latest_mover_result"
+                help: "Result reported by the latest VolSync source mover."
+                each:
+                  type: StateSet
+                  stateSet:
+                    labelName: result
+                    path: [status, latestMoverStatus, result]
+                    list:
+                      - Successful
+                      - Failed
           - groupVersionKind:
               group: helm.toolkit.fluxcd.io
               version: v2

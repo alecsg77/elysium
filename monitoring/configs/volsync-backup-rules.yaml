@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: volsync-backups
+  labels:
+    app.kubernetes.io/name: volsync
+    app.kubernetes.io/component: monitoring
+spec:
+  groups:
+    - name: volsync-backups
+      rules:
+        - alert: VolSyncBackupNeverSucceeded
+          expr: |-
+            (time() - volsync_replication_source_created_time_seconds > 7200)
+              unless on (exported_namespace, name)
+            volsync_replication_source_last_sync_time_seconds
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: VolSync backup has never succeeded
+            description: >-
+              ReplicationSource {{ $labels.exported_namespace }}/{{ $labels.name }}
+              has no successful backup two hours after creation.
+        - alert: VolSyncBackupLatestMoverFailed
+          expr: volsync_replication_source_latest_mover_result{result="Failed"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Latest VolSync backup mover failed
+            description: >-
+              The latest mover for ReplicationSource
+              {{ $labels.exported_namespace }}/{{ $labels.name }} reported failure.
+        - alert: VolSyncBackupRPOBreached
+          expr: time() - volsync_replication_source_last_sync_time_seconds > 86400
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: VolSync backup exceeded the baseline RPO
+            description: >-
+              ReplicationSource {{ $labels.exported_namespace }}/{{ $labels.name }}
+              has no successful backup in the last 24 hours.

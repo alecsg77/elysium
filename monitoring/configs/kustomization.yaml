@@ -5,6 +5,7 @@ resources:
   - podmonitor.yaml
   - grafana-mcp-monitor.yaml
   - resourceset-image-automation-rules.yaml
+  - volsync-backup-rules.yaml
 
 configMapGenerator:
   - name: flux-grafana-dashboards

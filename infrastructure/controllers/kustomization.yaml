@@ -13,3 +13,4 @@ resources:
   - arc
   - flux-operator
   - flux-operator-mcp
+  - volsync

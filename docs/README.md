@@ -14,6 +14,7 @@ For AI coding agents, `AGENTS.md` at the repository root is the portable entry p
   - **[Adding Applications](runbooks/add-application.md)** - Complete workflow for deploying apps
   - **[Adding Infrastructure Components](runbooks/add-infrastructure-component.md)** - Platform controller/config workflow
   - **[Resource Optimization](runbooks/resource-optimization.md)** - Optimizing cluster resources
+  - **[Backup and Restore](runbooks/backup-and-restore.md)** - Encrypted PVC backups and restore drills
   - **[Flux Web UI with tsidp OIDC](runbooks/flux-web-ui.md)** - Private-domain authenticated Flux dashboard and read-only RBAC
   - **[Flux Operator Migration](runbooks/flux-operator-migration.md)** - Staged migration from the generated Flux bootstrap
   - **[Gitless ResourceSet Image Automation](runbooks/resourceset-image-automation.md)** - Gitless workload image updates and rollback controls

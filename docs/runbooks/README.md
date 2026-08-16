@@ -17,6 +17,7 @@ This directory contains step-by-step procedures for routine operational tasks. E
 - **[Gitless ResourceSet Image Automation](resourceset-image-automation.md)** - Gitless workload image updates, safety gates, and rollback pins
 
 ### Cluster Operations
+- **[Backup and Restore](backup-and-restore.md)** - Reusable encrypted PVC backup contract and restore drills
 - **[Flux Web UI with tsidp OIDC](flux-web-ui.md)** - Private-domain Flux dashboard, OIDC client sealing, read-only RBAC, and rollback
 - **[Migrating Flux to Flux Operator](flux-operator-migration.md)** - Staged, zero-downtime migration and optional internal MCP rollout
 
