@@ -1,8 +1,137 @@
 # Backup, restore, and out-of-band recovery contract
 
 > **Status: design and verification work is tracked in issue #90.** This runbook
-> intentionally does not claim that a local PVC named `pvc-backups` is an
-> off-cluster backup or that any restore drill has completed.
+> does not claim that a configured Schedule is a recoverable backup. That claim
+> requires a successful backup, repository check, and restore drill.
+
+## K8up and Restic baseline
+
+K8up is the cluster backup operator and Restic is the repository format and
+encryption engine used by the Jobs it creates. Restic does not require a
+separate controller or installation. The baseline intentionally avoids object
+storage, storage plugins, custom backup images, and repository wrapper scripts.
+
+Each protected namespace receives:
+
+- one dedicated directory below the private host backup root;
+- one static local `PersistentVolume` with reclaim policy `Retain`;
+- one namespace-scoped repository PVC;
+- one unique Restic password delivered as a SealedSecret;
+- one or more K8up Schedules selecting only the intended workload PVCs.
+
+The public repository uses placeholders for node names and host paths. Keep the
+real mount path, filesystem UUID, node identity, capacity evidence, and preflight
+results in the private operational log. A typical private layout is:
+
+```text
+<backup-root>/<namespace>
+```
+
+Do not share a repository directory or password between namespaces. Store a
+recovery copy of every Restic password in an external password manager; the
+SealedSecret alone is tied to the cluster sealing key and is not sufficient for
+disaster recovery.
+
+The local external disk protects against loss of a workload PVC or its primary
+disk. It does not protect against theft, fire, or a root compromise of the host.
+This residual risk is acceptable for this homelab, but a local repository must
+not be described as an off-site backup.
+
+## Recovery objectives and retention
+
+The shared baseline is:
+
+| Objective | Baseline |
+|---|---|
+| Backup schedule | Every 6 hours |
+| Maximum accepted backup age | 24 hours |
+| Restore target | Within 2 hours |
+| Retention | 4 hourly, 7 daily, 5 weekly, 12 monthly |
+| Repository check | Weekly |
+| Prune | Weekly, separated from the check window |
+
+K8up's official ServiceMonitor and chart-managed rules cover failed Jobs, the
+latest scheduled backup failing, and namespaces with an active Schedule but no
+Job in the last 24 hours. They use only operator and kube-state-metrics data.
+Detailed per-backup Restic metrics require a Pushgateway and are intentionally
+not part of this baseline. A missing alert is not proof of recoverability;
+verify the repository and perform restore drills.
+
+## Trusted-host preflight
+
+Before adding a local repository PV, verify from the host that the private
+backup root is the intended filesystem, is mounted read-write, and has adequate
+free space. Create only the namespace child directory with the reviewed owner,
+group, and setgid permissions. Confirm with a disposable file that the UID and
+supplemental GID used by K8up Jobs can create and remove repository data.
+
+Record the filesystem UUID and test result privately. Do not change the parent
+directory, publish infrastructure identifiers, or merge the PV until this
+preflight succeeds.
+
+## Onboard a PVC
+
+Keep K8up `Schedule` resources, repository PVCs, and SealedSecrets in the owning
+application overlay. A Schedule must:
+
+- select only the intended PVC label;
+- mount the namespace repository PVC at the backend's local mount path;
+- reference the Secret key `password` for Restic encryption;
+- apply the shared retention, deadline, history, and resource limits;
+- run backup, check, and prune in distinct reviewed windows.
+
+Do not modify an application's existing PVC merely to onboard backup. After
+reconciliation, verify that the repository PV and PVC are `Bound`, the Schedule
+is ready, the backup Job succeeded, the expected PVC path has a snapshot, the
+check completed, and the repository directory contains Restic data.
+
+Live filesystem backup does not guarantee application consistency. Databases
+and stateful applications must pass native integrity checks after restore. If a
+restore exposes SQLite, configuration, permission, or startup errors, switch to
+an application-aware or stopped backup; do not weaken the drill criteria.
+
+## Restore drill
+
+Never restore over the production PVC during a drill. Create the scratch PVC,
+K8up `Restore`, deny-all NetworkPolicy, read-only verification Job, and offline
+application pod temporarily through GitOps. Select the tested snapshot
+timestamp privately and publish no snapshot identifier or restored content.
+
+Validate file count and aggregate size, a deterministic aggregate checksum,
+ownership and modes, configuration parsing, native database integrity, and an
+offline application startup. Record only timestamps, duration, aggregate
+counts, results, and RPO/RTO compliance. Remove all drill-only resources in a
+follow-up GitOps change while preserving the Schedule, repository PV/PVC,
+password, and Restic data.
+
+## Operator-independent Restic recovery
+
+The repository remains usable without K8up. On a trusted Linux host, mount the
+external disk, retrieve the password from the external password manager, and
+use the standard Restic CLI against the namespace repository:
+
+```bash
+export RESTIC_PASSWORD_FILE=<protected-password-file>
+restic --repo <repository-path> snapshots
+restic --repo <repository-path> check
+restic --repo <repository-path> restore latest --target <temporary-restore-directory>
+```
+
+Run restore into a new temporary directory and apply the same integrity checks
+as a Kubernetes drill. Do not put the password on the command line or run
+`forget`, `prune`, `unlock`, or repository deletion as part of fallback
+validation.
+
+## Rollback K8up
+
+Remove Schedules first and wait for active Jobs to finish. Preserve repository
+PVs, PVCs, SealedSecrets, external password-manager entries, and all Restic
+data. The PV reclaim policy must remain `Retain`.
+
+Remove every K8up custom resource before uninstalling the operator. Verify the
+repository with the Restic CLI before completing the rollback. Never automate
+`restic forget`, manual prune, repository initialization, or directory deletion
+during rollback.
 
 ## Required contract before an R2 data change
 
@@ -55,16 +184,6 @@ Changes](destructive-gitops-change.md) or [GitHub Merge-Control
 Break-Glass](github-break-glass.md) as appropriate. These controls cannot prove
 an out-of-band channel exists: the channel's test date, operator, and result must
 remain in the private operational log.
-
-## Restore drill
-
-A restore drill must be carried out before any destructive storage migration:
-
-1. Restore a representative backup into an isolated target or approved recovery
-   window.
-2. Validate application integrity and access without exposing secrets in logs.
-3. Measure actual recovery time and compare it with the workload RTO.
-4. Record gaps, rotate exposed credentials if applicable, and update the contract.
 
 ## Related documentation
 
