@@ -116,6 +116,63 @@ class QualityRatchetTest(unittest.TestCase):
         self.assertEqual(state, "FAIL: NEW DEBT")
         self.assertEqual(sum(added.values()), 1)
 
+    def test_yamllint_sealed_secret_ciphertext_rotation_retains_line_length_debt(self) -> None:
+        base_content = """apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+spec:
+  encryptedData:
+    SERVICE_TOKEN: ciphertext-before-marker-that-is-deliberately-long-for-the-line-length-ratchet
+"""
+        head_content = """apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+spec:
+  encryptedData:
+    SERVICE_TOKEN: ciphertext-after-marker-that-is-deliberately-long-for-the-line-length-ratchet
+"""
+        self.write(self.base, "apps/example.yaml", base_content)
+        self.write(self.head, "apps/example.yaml", head_content)
+        base_report = self.report(
+            "base-yamllint.txt", "apps/example.yaml:5:1: [warning] line too long (130 > 120 characters) (line-length)\n"
+        )
+        head_report = self.report(
+            "head-yamllint.txt", "apps/example.yaml:5:1: [warning] line too long (130 > 120 characters) (line-length)\n"
+        )
+        state, added, removed, _, _ = QUALITY.summarize(
+            "yamllint",
+            QUALITY.parse_yamllint(base_report, self.base),
+            QUALITY.parse_yamllint(head_report, self.head),
+        )
+        self.assertEqual(state, "PASS WITH EXISTING DEBT")
+        self.assertFalse(added)
+        self.assertFalse(removed)
+
+    def test_yamllint_sealed_secret_encrypted_data_key_change_is_new_debt(self) -> None:
+        base_content = """kind: SealedSecret
+spec:
+  encryptedData:
+    SERVICE_TOKEN: ciphertext-marker-that-is-deliberately-long-for-the-line-length-ratchet
+"""
+        head_content = """kind: SealedSecret
+spec:
+  encryptedData:
+    RENAMED_TOKEN: ciphertext-marker-that-is-deliberately-long-for-the-line-length-ratchet
+"""
+        self.write(self.base, "apps/example.yaml", base_content)
+        self.write(self.head, "apps/example.yaml", head_content)
+        base_report = self.report(
+            "base-yamllint.txt", "apps/example.yaml:4:1: [warning] line too long (130 > 120 characters) (line-length)\n"
+        )
+        head_report = self.report(
+            "head-yamllint.txt", "apps/example.yaml:4:1: [warning] line too long (130 > 120 characters) (line-length)\n"
+        )
+        state, added, _, _, _ = QUALITY.summarize(
+            "yamllint",
+            QUALITY.parse_yamllint(base_report, self.base),
+            QUALITY.parse_yamllint(head_report, self.head),
+        )
+        self.assertEqual(state, "FAIL: NEW DEBT")
+        self.assertEqual(sum(added.values()), 1)
+
     def test_yamllint_duplicate_occurrence_is_new_debt(self) -> None:
         finding = QUALITY.Finding("same", "same")
         state, added, _, _, _ = QUALITY.summarize("yamllint", [finding], [finding, finding])
