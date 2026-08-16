@@ -20,7 +20,7 @@ env:
   KUSTOMIZE_SHA256: 029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d
   KUBECONFORM_VERSION: v0.8.0
   KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
-  CRDS_CATALOG_COMMIT: 52b0261318acc7dd0b66e032759b1f218216b980
+  CRDS_CATALOG_COMMIT: 59abc9f9403c92e3d8f8873e250ca10dcd5b2c0d
   ACTIONLINT_VERSION: 1.7.9
   ACTIONLINT_SHA256: 233b280d05e100837f4af1433c7b40a5dcb306e3aa68fb4f17f8a7f45a7df7b4
   GITLEAKS_VERSION: 8.30.1
@@ -289,6 +289,14 @@ jobs:
           curl --fail --silent --show-error --location --retry 3 --output /dev/null \
             "$catalog/helm.toolkit.fluxcd.io/helmrelease_v2.json"
 
+      - name: Verify trusted local kubeconform schema bundle
+        run: |
+          set -euo pipefail
+          (
+            cd "$GITHUB_WORKSPACE/base/.github/schemas"
+            sha256sum --check --strict SHA256SUMS
+          )
+
       - name: Compare rendered schemas without increasing debt
         env:
           BASE_SHA: ${{ needs.detect.outputs.base_sha }}
@@ -301,6 +309,7 @@ jobs:
             --base-sha "$BASE_SHA" \
             --head-sha "$HEAD_SHA" \
             --report-dir "$GITHUB_WORKSPACE/quality-ratchet" \
+            --schema-location "$GITHUB_WORKSPACE/base/.github/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
             --schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
             --github-summary "$GITHUB_STEP_SUMMARY"
 
