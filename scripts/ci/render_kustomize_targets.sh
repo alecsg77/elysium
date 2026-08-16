@@ -44,7 +44,7 @@ targets=(
   apps/kyrion/airflow
   apps/kyrion/arkham
   apps/kyrion/coder
-  apps/kyrion/default
+  apps/kyrion/error-pages
   apps/kyrion/fission
   apps/kyrion/n8n
   apps/kyrion/raiplaysoundrss

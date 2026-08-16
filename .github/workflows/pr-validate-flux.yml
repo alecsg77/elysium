@@ -55,7 +55,7 @@ jobs:
           - apps/kyrion/airflow
           - apps/kyrion/arkham
           - apps/kyrion/coder
-          - apps/kyrion/default
+          - apps/kyrion/error-pages
           - apps/kyrion/fission
           - apps/kyrion/n8n
           - apps/kyrion/raiplaysoundrss
@@ -200,9 +200,9 @@ jobs:
             rendered/
 
       # checkov: real pre-existing findings exist against this repo's rendered
-      # manifests (14 unique after dedup), concentrated in the
-      # apps/kyrion/ai/copilot-api Deployment's pod-hardening posture plus a
-      # namespace-naming nit on the apps/kyrion/default overlay. None are
+      # manifests (13 unique after dedup), concentrated in the
+      # apps/kyrion/ai/copilot-api Deployment's pod-hardening posture plus two
+      # default-namespace findings on the legacy error-pages overlay. None are
       # functional bugs. This step is intentionally non-blocking (`soft_fail`)
       # pending remediation, tracked in issue #66. Once that issue is resolved,
       # `soft_fail` should be removed to make this step blocking again.
