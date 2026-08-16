@@ -94,6 +94,26 @@ class CriticalChangeGuardTest(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertIn("permitted by a prior", completed.stdout)
 
+    def test_copilot_api_removal_requires_intents_for_every_rendered_resource(self) -> None:
+        kustomization = self.head / "apps/kyrion/ai/kustomization.yaml"
+        kustomization.write_text(
+            kustomization.read_text(encoding="utf-8")
+            .replace("  - ../../base/copilot-api\n", "")
+            .replace("  - copilot-api-sealed-secret.yaml\n", ""),
+            encoding="utf-8",
+        )
+        completed = self.run_guard()
+        self.assertNotEqual(completed.returncode, 0)
+        for resource_id in (
+            "storage/copilot-api-pvc",
+            "workload/copilot-api-deployment",
+            "access/copilot-api-service",
+            "access/copilot-api-ingress",
+            "credentials/copilot-api",
+        ):
+            self.assertIn(f"{resource_id} remove", completed.stdout)
+            self.assertIn("missing prior intent", completed.stdout)
+
     def test_bootstrap_dependency_change_fails_without_intent(self) -> None:
         manifest = self.head / "clusters/kyrion/apps.yaml"
         manifest.write_text(

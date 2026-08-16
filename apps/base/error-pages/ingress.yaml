@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   name: default
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: default-error-pages@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: error-pages-error-pages@kubernetescrd
 spec:
   defaultBackend:
     service:

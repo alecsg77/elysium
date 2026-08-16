@@ -24,6 +24,12 @@ try:
 except ImportError as error:  # pragma: no cover - exercised by CI dependency setup
     raise SystemExit(f"PyYAML is required by quality_ratchet.py: {error}")
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from sealed_secret_ciphertext_policy import ciphertext_ranges, redact_line
+
 
 class QualityRatchetError(RuntimeError):
     """Raised when a validator report is malformed or cannot be trusted."""
@@ -113,6 +119,7 @@ def parse_yamllint(report: Path, root: Path | None) -> list[Finding]:
         raise QualityRatchetError(f"Validator report is missing: {report}") from error
 
     findings: list[Finding] = []
+    source_cache: dict[Path, tuple[list[str], list[Any]]] = {}
     for raw in lines:
         if not raw.strip():
             continue
@@ -121,16 +128,24 @@ def parse_yamllint(report: Path, root: Path | None) -> list[Finding]:
             raise QualityRatchetError(f"Unrecognized yamllint parsable output: {raw!r}")
         relative = safe_relative_path(match.group("path"))
         source = root / relative
-        try:
-            source_lines = source.read_text(encoding="utf-8").splitlines()
-        except FileNotFoundError as error:
-            raise QualityRatchetError(f"yamllint finding references missing source file {relative}") from error
+        if source not in source_cache:
+            try:
+                source_content = source.read_text(encoding="utf-8")
+            except FileNotFoundError as error:
+                raise QualityRatchetError(f"yamllint finding references missing source file {relative}") from error
+            # Only a parsed, exact SealedSecret ciphertext scalar is normalized.
+            # Malformed or ambiguous YAML returns no ranges and retains the full
+            # source-line hash, so policy uncertainty cannot hide new debt.
+            source_cache[source] = (source_content.splitlines(), ciphertext_ranges(source_content))
+        source_lines, scalar_ranges = source_cache[source]
         line_number = int(match.group("line"))
         if not 1 <= line_number <= len(source_lines):
             raise QualityRatchetError(
                 f"yamllint finding references unavailable line {line_number} in {relative}"
             )
         offending_line = unicodedata.normalize("NFC", source_lines[line_number - 1])
+        if normalized_text(match.group("rule")) == "line-length":
+            offending_line = redact_line(offending_line, line_number, scalar_ranges)
         message_class = normalized_text(re.sub(r"\b[0-9]+\b", "<n>", match.group("message")))
         identity = "|".join(
             (
