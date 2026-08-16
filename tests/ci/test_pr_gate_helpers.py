@@ -27,6 +27,7 @@ def load_module(filename: str):
 
 DOMAINS = load_module("detect_pr_gate_domains.py")
 SECRETS = load_module("check_changed_secrets.py")
+SCHEMA_LOCATIONS = load_module("resolve_kubeconform_schema_locations.py")
 
 
 class DomainDetectionTest(unittest.TestCase):
@@ -59,6 +60,7 @@ class DomainDetectionTest(unittest.TestCase):
                 "quality_inputs_changed": True,
                 "yamllint_policy_changed": False,
                 "checkov_policy_changed": False,
+                "kubeconform_policy_changed": False,
             },
         )
 
@@ -70,6 +72,7 @@ class DomainDetectionTest(unittest.TestCase):
                 "quality_inputs_changed": False,
                 "yamllint_policy_changed": False,
                 "checkov_policy_changed": False,
+                "kubeconform_policy_changed": False,
             },
         )
 
@@ -86,8 +89,51 @@ class DomainDetectionTest(unittest.TestCase):
                 "quality_inputs_changed": False,
                 "yamllint_policy_changed": True,
                 "checkov_policy_changed": True,
+                "kubeconform_policy_changed": False,
             },
         )
+
+
+    def test_kubeconform_policy_paths_are_detected(self) -> None:
+        self.assertEqual(
+            DOMAINS.classify_quality_paths(
+                [
+                    ".github/schemas/apiextensions.k8s.io/customresourcedefinition_v1.json",
+                    ".github/workflows/pr-gate.yml",
+                ]
+            )["kubeconform_policy_changed"],
+            True,
+        )
+
+
+class KubeconformSchemaLocationsTest(unittest.TestCase):
+    def test_candidate_policy_uses_local_schema_before_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workflow = root / "pr-gate.yml"
+            schemas = root / "schemas"
+            schemas.mkdir()
+            workflow.write_text(
+                "env:\n  CRDS_CATALOG_COMMIT: 59abc9f9403c92e3d8f8873e250ca10dcd5b2c0d\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                SCHEMA_LOCATIONS.schema_locations(workflow, schemas),
+                [
+                    str(schemas / SCHEMA_LOCATIONS.SCHEMA_TEMPLATE),
+                    "https://raw.githubusercontent.com/datreeio/CRDs-catalog/"
+                    "59abc9f9403c92e3d8f8873e250ca10dcd5b2c0d/"
+                    "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json",
+                ],
+            )
+
+    def test_candidate_policy_rejects_an_unpinned_catalog_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workflow = root / "pr-gate.yml"
+            workflow.write_text("env:\n  CRDS_CATALOG_COMMIT: main\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "40-character lowercase SHA"):
+                SCHEMA_LOCATIONS.schema_locations(workflow, root / "missing")
 
 
 class ChangedSecretsTest(unittest.TestCase):

@@ -35,6 +35,13 @@ QUALITY_POLICY_FILES = {
     ".yamllint.yaml",
 }
 QUALITY_POLICY_PREFIXES = (".github/schemas/", "scripts/ci/")
+KUBECONFORM_POLICY_FILES = {".github/workflows/pr-gate.yml"}
+KUBECONFORM_POLICY_PREFIXES = (
+    ".github/schemas/",
+    "scripts/ci/run_quality_ratchet.sh",
+    "scripts/ci/run_kubeconform_policy_effect.sh",
+    "scripts/ci/resolve_kubeconform_schema_locations.py",
+)
 QUALITY_INPUT_PREFIXES = ("clusters/", "infrastructure/", "apps/", "monitoring/", "functions/")
 
 
@@ -79,6 +86,10 @@ def classify_quality_paths(paths: Iterable[str]) -> dict[str, bool]:
         "yamllint_policy_changed": ".yamllint.yaml" in path_list,
         "checkov_policy_changed": any(
             path in {".checkov.yaml", ".checkov.yml", ".github/checkov.yaml"} for path in path_list
+        ),
+        "kubeconform_policy_changed": any(
+            path in KUBECONFORM_POLICY_FILES or path.startswith(KUBECONFORM_POLICY_PREFIXES)
+            for path in path_list
         ),
     }
 

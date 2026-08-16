@@ -115,6 +115,16 @@ reference for both sides of a comparison. Updating a schema source, tool version
 local schema is itself a quality-policy-only change and must publish its effect on the
 current trusted base before it can govern manifest changes.
 
+
+Kubeconform accepts ordered schema locations. The trusted scan consults Kubernetes'
+default schemas first, then repository-local schemas when present, and finally the
+commit-pinned Datree catalog. A PR that changes the PR Gate catalog pin or local
+schema files is scanned a second time against the same trusted rendered base: the
+base policy uses trusted locations while the candidate policy is parsed from the
+proposed workflow and schema files only as inert data. The comparison publishes any
+resulting finding reduction or regression before that policy can govern later
+manifest PRs; proposed workflow or helper code is never executed by this step.
+
 PRs may continue to merge while this work proceeds. A rebase or new commit simply
 reruns comparison against the newer trusted base, so a finding fixed by another PR
 cannot be reintroduced as inherited debt.
