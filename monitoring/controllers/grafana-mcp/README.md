@@ -77,6 +77,7 @@ git push
 |---------|-------|-------------|
 | **Grafana URL** | `https://grafana.${PRIVATE_DOMAIN}` | Native-HTTPS Grafana endpoint configured in the HelmRelease |
 | **MCP endpoint** | `http://grafana-mcp.monitoring.svc:8000/mcp` | Cluster-internal HTTP Service endpoint for MCP clients |
+| **Allowed HTTP Host** | `grafana-mcp.monitoring.svc:8000` | Exact Host header accepted by the server; no wildcard or external hostname is configured |
 | **Exposure** | None | No ExternalDNS Service and no Tailscale Ingress are created for Grafana MCP |
 
 ### Resources
@@ -282,14 +283,14 @@ NAME                           READY   STATUS    RESTARTS   AGE
 grafana-mcp-<hash>-<hash>      1/1     Running   0          2m
 ```
 
-### 3. Test the cluster Service endpoint
+### 3. Test the cluster Service endpoint and Host allowlist
 
 ```bash
 kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
-  curl -N http://grafana-mcp.monitoring.svc:8000/mcp
+  curl -fsS http://grafana-mcp.monitoring.svc:8000/healthz
 ```
 
-Expected: SSE event stream (connection stays open)
+Expected: a successful health response, not `403 forbidden: host not allowed`. The request must use the exact Service hostname above; do not override the Host header or use an external hostname.
 
 ### 4. Check Logs
 
@@ -314,12 +315,18 @@ Expected: Log lines showing successful Grafana API calls
 
 ### Token Rotation
 
-Rotate the service account token periodically (quarterly recommended):
+Rotate the service account token periodically (quarterly recommended) through GitOps only:
 
-1. Generate new token in Grafana UI (Service Accounts → grafana-mcp-server → Tokens)
-2. Create new sealed secret with updated token
-3. Apply the updated sealed secret
-4. Restart the pod: `kubectl rollout restart deployment -n monitoring grafana-mcp`
+1. Generate a new token in Grafana UI (Service Accounts → grafana-mcp-server → Tokens).
+2. Regenerate `grafana-mcp-credentials-sealed-secret.yaml` with the new token; do not commit a plaintext Secret.
+3. Calculate the non-secret SHA-256 of the sealed manifest, encode it as eight hyphen-separated hexadecimal groups prefixed by `sha256`, and update `podAnnotations.checksum/grafana-mcp-credentials` in `release.yaml` to that value:
+   ```bash
+   sha256sum monitoring/controllers/grafana-mcp/grafana-mcp-credentials-sealed-secret.yaml | \
+     awk '{printf "sha256"; for (i = 1; i <= length($1); i += 8) printf "-%s", substr($1, i, 8); print ""}'
+   ```
+4. Commit and push both files. Flux applies the Secret update and the changed pod-template annotation creates a new Grafana MCP pod, which reads the token through `envFrom` at startup.
+
+Do not use `kubectl rollout restart`, patch the Deployment, or reconcile resources directly for this GitOps-managed workload. To roll back a token rotation, revert both the SealedSecret and its checksum annotation in Git.
 
 ### View Logs
 
@@ -340,13 +347,9 @@ To update the Grafana URL or other settings:
 
 1. Edit `monitoring/controllers/grafana-mcp/release.yaml`
 2. Commit and push
-3. Flux will reconcile within 1 hour (or force: `flux reconcile hr grafana-mcp -n monitoring`)
+3. Let Flux reconcile on its configured interval; do not reconcile the HelmRelease directly.
 
-To update the service account token:
-
-1. Regenerate sealed secret with new token
-2. Commit and push
-3. Flux will reconcile automatically
+To update the service account token, follow **Token Rotation** above so the sealed manifest and pod-template checksum change together.
 
 ## Troubleshooting
 
@@ -355,9 +358,9 @@ To update the service account token:
 **Symptom**: Pod in `CrashLoopBackOff` or `Error` state
 
 **Common Causes**:
-1. **Missing/invalid token**: Check sealed secret decrypted correctly
+1. **Missing/invalid token**: Confirm that the generated Secret exists without displaying its data
    ```bash
-   kubectl get secret grafana-mcp-credentials -n monitoring -o yaml
+   kubectl describe secret grafana-mcp-credentials -n monitoring
    ```
 2. **Grafana not ready**: Check kube-prometheus-stack status
    ```bash
@@ -410,7 +413,8 @@ To update the service account token:
 **Causes**:
 1. The Grafana MCP pod is not ready.
 2. The chart-managed Service has no ready endpoints.
-3. The client is outside the cluster network or cannot resolve cluster DNS.
+3. The request Host does not exactly match `grafana-mcp.monitoring.svc:8000`.
+4. The client is outside the cluster network or cannot resolve cluster DNS.
 
 **Resolution**:
 1. Check the Service and its endpoints:
