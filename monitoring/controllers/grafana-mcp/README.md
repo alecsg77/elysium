@@ -319,9 +319,10 @@ Rotate the service account token periodically (quarterly recommended) through Gi
 
 1. Generate a new token in Grafana UI (Service Accounts → grafana-mcp-server → Tokens).
 2. Regenerate `grafana-mcp-credentials-sealed-secret.yaml` with the new token; do not commit a plaintext Secret.
-3. Calculate the non-secret SHA-256 of the sealed manifest and update `podAnnotations.checksum/grafana-mcp-credentials` in `release.yaml` to that value:
+3. Calculate the non-secret SHA-256 of the sealed manifest, encode it as eight hyphen-separated hexadecimal groups prefixed by `sha256`, and update `podAnnotations.checksum/grafana-mcp-credentials` in `release.yaml` to that value:
    ```bash
-   sha256sum monitoring/controllers/grafana-mcp/grafana-mcp-credentials-sealed-secret.yaml | awk '{print $1}'
+   sha256sum monitoring/controllers/grafana-mcp/grafana-mcp-credentials-sealed-secret.yaml | \
+     awk '{printf "sha256"; for (i = 1; i <= length($1); i += 8) printf "-%s", substr($1, i, 8); print ""}'
    ```
 4. Commit and push both files. Flux applies the Secret update and the changed pod-template annotation creates a new Grafana MCP pod, which reads the token through `envFrom` at startup.
 

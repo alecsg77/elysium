@@ -42,7 +42,7 @@ spec:
     # this non-secret SHA-256 when the SealedSecret changes so envFrom is read
     # by a newly rolled-out pod.
     podAnnotations:
-      checksum/grafana-mcp-credentials: "e0b685fc47b79532182d4272215fef72b6d651fc1899a990fc3f412341c12a78"
+      checksum/grafana-mcp-credentials: "sha256-e0b685fc-47b79532-182d4272-215fef72-b6d651fc-1899a990-fc3f4123-41c12a78"
 
     # Resource configuration
     resources:
