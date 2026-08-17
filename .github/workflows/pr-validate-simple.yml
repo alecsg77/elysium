@@ -94,10 +94,10 @@ jobs:
           grep -qx '  namespace: arc-runners' "$exception"
           grep -qx '    kubernetes.io/service-account.name: copilot-agent-readonly' "$exception"
           grep -qx 'type: kubernetes.io/service-account-token' "$exception"
-          grep -qE '^[[:space:]]*(data|stringData):' "$exception" && {
+          if grep -qE '^[[:space:]]*(data|stringData):' "$exception"; then
             echo "::error file=$exception::The service-account-token Secret scaffold must not define data."
-            exit 1;
-          }
+            exit 1
+          fi
 
       - name: Set up Flux CLI
         if: steps.changes.outputs.gitops == 'true'
