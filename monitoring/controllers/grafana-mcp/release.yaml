@@ -38,6 +38,12 @@ spec:
       - secretRef:
           name: grafana-mcp-credentials
 
+    # The chart renders podAnnotations on the Deployment pod template. Update
+    # this non-secret SHA-256 when the SealedSecret changes so envFrom is read
+    # by a newly rolled-out pod.
+    podAnnotations:
+      checksum/grafana-mcp-credentials: "sha256-e0b685fc-47b79532-182d4272-215fef72-b6d651fc-1899a990-fc3f4123-41c12a78"
+
     # Resource configuration
     resources:
       requests:
@@ -53,6 +59,9 @@ spec:
     extraArgs:
       - "-t"
       - "streamable-http"
+      # Permit only the Host header sent for the internally configured Service.
+      - "--allowed-hosts"
+      - "grafana-mcp.monitoring.svc:8000"
 
     ingress:
       enabled: false
