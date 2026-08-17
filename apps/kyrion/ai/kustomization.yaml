@@ -10,6 +10,10 @@ resources:
   - ../../base/openclaw
   - ../../base/paperclip
   - copilot-api-sealed-secret.yaml
+  - openclaw-backup-repository-pv.yaml
+  - openclaw-backup-repository-pvc.yaml
+  - openclaw-backup-repository-sealed-secret.yaml
+  - openclaw-backup-schedule.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml

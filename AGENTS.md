@@ -6,6 +6,7 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 
 ## Project Overview
 - **Elysium** is a GitOps-managed Kubernetes homelab (cluster name `kyrion`, a k3s cluster) reconciled entirely by [Flux](https://fluxcd.io/).
+- Its primary purpose is learning and experimentation. Production patterns may be implemented to study them, but production-grade availability, durability, and hardening are not default requirements. Prefer the simplest upstream-supported solution whose maintenance cost is proportionate to the homelab risk; distinguish component requirements from optional hardening and record accepted tradeoffs explicitly.
 - There is no application source code to compile here — the repo is a monorepo of Kubernetes manifests, Helm values, Kustomize overlays, and small Helm charts. "Building" means rendering manifests locally to catch errors before they reach the cluster.
 - Technology stack: **Flux** (Kustomization/HelmRelease CRDs), **Kustomize** (base/overlay composition), **Helm** (third-party charts + two local charts under `charts/`), **Bitnami Sealed Secrets** (encrypted secrets in Git), **Terraform** (Coder workspace templates under `coder/templates/`), YAML/yamllint for formatting.
 - Goals: single source of truth in Git, safe-by-default (no plaintext secrets, no direct `kubectl apply`), and a clean base/overlay separation so apps are reusable across environments.

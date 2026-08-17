@@ -7,7 +7,7 @@ Complete guide for managing secrets in the Elysium Kubernetes cluster using Bitn
 - **NEVER** commit plain text secrets to the repository
 - **ALWAYS** use Sealed Secrets for sensitive data
 - **VERIFY** secrets are encrypted before committing
-- **ROTATE** secrets regularly (quarterly recommended)
+- **ROTATE** secrets after compromise or when their operational lifecycle requires it
 - **AUDIT** secret access in application logs
 
 ## Secret Types
@@ -194,14 +194,15 @@ spec:
 ### Key Location
 
 - **Public Key**: `etc/certs/pub-sealed-secrets.pem` (safe to commit to Git)
-- **Private Key**: Stored only in cluster Secret (never commit to Git)
+- **Private Keys**: Stored in controller-managed cluster Secrets; retain an off-cluster recovery bundle and never commit it to Git
 
-### Backup Procedure (Quarterly Recommended)
+### Backup Procedure
 
-Export only to a controlled temporary directory, encrypt before any persistent
-write, and remove the plaintext export immediately after verifying the encrypted
-artifact. Keep the output path and recipient/key reference in private operational
-documentation, not in Git.
+Back up every active sealing-key Secret, not only the newest key. Export only to
+a controlled temporary directory and move the resulting bundle to protected
+off-cluster storage. Encrypt it when that storage is not already encrypted, and
+remove the temporary plaintext after verifying the retained artifact. Never put
+the bundle, its location, or access details in Git.
 
 ```bash
 set -euo pipefail
@@ -210,45 +211,60 @@ tmpdir="$(mktemp -d)"
 trap 'rm -rf -- "$tmpdir"' EXIT
 
 # The plaintext exists only inside the mode-0700 temporary directory.
-kubectl get secret -n sealed-secrets-system sealed-secrets-key -o yaml \
-  > "$tmpdir/sealed-secrets-key.yaml"
+kubectl get secret -n flux-system \
+  -l sealedsecrets.bitnami.com/sealed-secrets-key \
+  -o yaml > "$tmpdir/sealed-secrets-keys.yaml"
 
 # Example: use the approved off-cluster encryption recipient from the private
 # operations record. Do not commit either artifact or recipient details.
 age --encrypt --recipient "<approved-recipient>" \
-  --output "$tmpdir/sealed-secrets-key.yaml.age" \
-  "$tmpdir/sealed-secrets-key.yaml"
+  --output "$tmpdir/sealed-secrets-keys.yaml.age" \
+  "$tmpdir/sealed-secrets-keys.yaml"
 
 # Verify decryptability with an authorized custodian before storing the encrypted
 # artifact in the approved off-cluster location.
 age --decrypt --identity "<authorized-identity>" \
-  "$tmpdir/sealed-secrets-key.yaml.age" >/dev/null
+  "$tmpdir/sealed-secrets-keys.yaml.age" >/dev/null
 ```
 
-**CRITICAL**: The sealed-secrets private key is required to decrypt all SealedSecret resources. Loss of this key means **permanent loss of all encrypted secrets**.
+The `age` commands are an example for unencrypted destination storage. They are
+unnecessary when the retained artifact is placed directly on adequately
+protected encrypted media.
+
+**CRITICAL**: The sealing-key set is required to decrypt the corresponding
+SealedSecret resources. Loss of every applicable key means permanent loss of
+those encrypted secret values.
 
 ### Recovery Procedure (Disaster Recovery)
 
 ```bash
-# Restore sealed-secrets key in new cluster
-kubectl apply -f sealed-secrets-backup.yaml
+# Restore the complete sealing-key set before starting the controller
+kubectl apply -f sealed-secrets-keys.yaml
 
 # Restart sealed-secrets controller to load key
-kubectl rollout restart deployment -n sealed-secrets-system sealed-secrets-controller
+kubectl rollout restart deployment -n flux-system sealed-secrets-controller
 
 # Verify unsealing works
 kubectl get sealedsecrets -A
 kubectl get secrets -A | grep sealed
 ```
 
-### Key Rotation (Annual Recommended)
+### Sealing Key Renewal
+
+The controller renews sealing keys automatically and retains older active keys
+so existing SealedSecrets remain decryptable. Recreate the off-cluster key
+backup after adopting a newly issued public certificate or re-encrypting
+SealedSecrets. Periodic renewal does not rotate the underlying application
+passwords.
+
+Manual renewal is an advanced operation and is not part of the homelab baseline:
 
 ```bash
 # Generate new key pair
 kubectl create secret tls sealed-secrets-new-key \
   --cert=new-cert.pem \
   --key=new-key.pem \
-  -n sealed-secrets-system
+  -n flux-system
 
 # Sealed-secrets controller automatically picks up new key
 # Old key remains for decrypting existing secrets
@@ -258,8 +274,8 @@ kubectl create secret tls sealed-secrets-new-key \
 ### Security Considerations
 
 - **NEVER** commit unsealed secrets or the private key to Git
-- **Store backups encrypted** with strong encryption (GPG, age, etc.)
-- **Test recovery procedure** annually to ensure backups are valid
+- **Store backups on protected offline media**, encrypting them when the media is not already encrypted
+- **Test recovery** after creating or replacing the retained key backup
 - **Document key custodians** who have access to backups
 - **Use separate keys per cluster** in multi-cluster environments
 
@@ -272,7 +288,7 @@ kubectl create secret tls sealed-secrets-new-key \
 **Resolution**:
 1. Check sealed-secrets controller logs:
    ```bash
-   kubectl logs -n sealed-secrets-system deploy/sealed-secrets-controller
+   kubectl logs -n flux-system deploy/sealed-secrets-controller
    ```
 2. Verify SealedSecret status:
    ```bash
@@ -322,15 +338,15 @@ kubectl create secret tls sealed-secrets-new-key \
 
 ❌ **Don't**:
 - Commit plain text secrets
-- Reuse same secret across multiple namespaces
+- Reuse credentials across namespaces without an explicitly accepted tradeoff
 - Store private keys in Git
 - Share SealedSecret files between clusters
 
 ### Operations
 
 ✅ **Do**:
-- Backup sealed-secrets key quarterly
-- Rotate secrets annually
+- Refresh the sealing-key backup after adopting a new certificate
+- Rotate application secrets after compromise or when their lifecycle requires it
 - Monitor sealed-secrets controller health
 - Document secret ownership and rotation schedule
 - Audit secret access in application logs
@@ -339,15 +355,15 @@ kubectl create secret tls sealed-secrets-new-key \
 - Skip backups (key loss = permanent secret loss)
 - Use same encryption key across clusters
 - Delay rotation after suspected compromise
-- Store backups unencrypted
+- Store key backups on unprotected media
 
 ### Security
 
 ✅ **Do**:
-- Encrypt backups with GPG or age
-- Use strong passwords for backup encryption
+- Use protected offline storage for key backups
+- Encrypt key backups when the destination is not already encrypted
 - Limit access to private key backups
-- Test recovery procedure annually
+- Test recovery after replacing the retained key backup
 - Rotate after team member changes
 
 ❌ **Don't**:

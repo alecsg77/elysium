@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-backup-repository
+  namespace: ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: local-storage
+  volumeMode: Filesystem
+  volumeName: openclaw-backup-repository
