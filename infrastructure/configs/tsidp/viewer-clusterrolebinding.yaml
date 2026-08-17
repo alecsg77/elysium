@@ -2,6 +2,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: tsidp-viewer
+  annotations:
+    # Keep the recovery access binding if an upstream inventory is damaged.
+    kustomize.toolkit.fluxcd.io/prune: disabled
   labels:
     app.kubernetes.io/name: tsidp
     app.kubernetes.io/component: rbac

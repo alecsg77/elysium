@@ -1,0 +1,13 @@
+title = "Elysium Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+# Bitnami SealedSecret ciphertext is intentionally committed. Gitleaks sees
+# lines rather than YAML structure, so this accepts only a complete
+# ciphertext-shaped scalar line; other plaintext in the same manifest remains
+# scanned by the default rules.
+[[allowlists]]
+description = "Bitnami SealedSecret ciphertext"
+regexTarget = "line"
+regexes = ['''^\s*[A-Za-z0-9_.-]+:\s+Ag[A-Za-z0-9+/=]+(?:\s+#.*)?$''']

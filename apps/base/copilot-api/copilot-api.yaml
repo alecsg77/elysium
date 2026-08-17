@@ -3,6 +3,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: copilot-api-data
+  annotations:
+    # Keep application state if the workload is removed from a Flux inventory.
+    kustomize.toolkit.fluxcd.io/prune: disabled
   labels:
     app.kubernetes.io/name: copilot-api
     app.kubernetes.io/instance: copilot-api
