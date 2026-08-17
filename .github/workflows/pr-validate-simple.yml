@@ -208,17 +208,12 @@ jobs:
         env:
           TF_IN_AUTOMATION: "true"
         run: |
-          printf '%s\n' \
-            jupyterlab \
-            kubernetes \
-            kubernetes-devcontainer \
-            kubernetes-envbox \
-            mux \
-            mux-cache-canary \
-            ubuntu-desktop > "$RUNNER_TEMP/coder-templates"
-          bash scripts/ci/validate_coder_templates.sh \
-            --root "$GITHUB_WORKSPACE" \
-            --template-file "$RUNNER_TEMP/coder-templates"
+          set -euo pipefail
+          while IFS= read -r -d '' directory; do
+            terraform -chdir="$directory" fmt -check -recursive
+            terraform -chdir="$directory" init -backend=false -input=false
+            terraform -chdir="$directory" validate -no-color
+          done < <(find coder/templates -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 | sort -z)
 
       - name: Install actionlint
         if: steps.changes.outputs.actions-scripts == 'true'
