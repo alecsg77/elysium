@@ -1,0 +1,76 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8up
+  namespace: k8up-system
+spec:
+  interval: 1h
+  timeout: 10m
+  chart:
+    spec:
+      chart: k8up
+      version: "4.10.0"
+      sourceRef:
+        kind: HelmRepository
+        name: k8up
+        namespace: k8up-system
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  values:
+    metrics:
+      serviceMonitor:
+        enabled: true
+        scrapeInterval: 60s
+      prometheusRule:
+        enabled: true
+        createDefaultRules: false
+        additionalLabels:
+          release: kube-prometheus-stack
+        additionalRules:
+          - alert: K8upJobFailed
+            expr: >-
+              (sum(kube_job_status_failed) by (job_name, namespace)
+              * on (job_name, namespace) group_right()
+              kube_job_labels{label_k8up_io_type=~"archive|backup|check|prune|restore"}) > 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: >-
+                K8up {{ $labels.label_k8up_io_type }} Job failed in
+                {{ $labels.namespace }}
+          - alert: K8upBackupLastRunFailed
+            expr: k8up_schedule_last_job_succeeded{jobType="backup"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: >-
+                Latest scheduled backup {{ $labels.schedule }} failed in
+                {{ $labels.exported_namespace }}
+          - alert: K8upBackupNotRunning
+            expr: >-
+              (k8up_schedules_gauge > 0)
+              unless on (exported_namespace)
+              (sum by (exported_namespace) (increase(k8up_jobs_total[24h])) > 0)
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: >-
+                No K8up Job ran in {{ $labels.exported_namespace }} during the
+                last 24 hours despite an active Schedule
+    resources:
+      requests:
+        cpu: 20m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
