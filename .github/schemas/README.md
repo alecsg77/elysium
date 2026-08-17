@@ -41,3 +41,47 @@ python3 scripts/ci/generate_native_crd_schema.py \
 Do not use `openapi2jsonschema.py` for this artifact. That converter starts with a
 CRD and derives the schema of **custom-resource instances**; this file validates the
 Kubernetes `CustomResourceDefinition` object itself.
+
+## K8up `Schedule`
+
+`k8up.io/schedule_v1.json` validates `k8up.io/v1` `Schedule` resources against
+the CRD shipped by the installed K8up version. The local schema takes precedence
+over the older commit-pinned Datree catalog entry, which does not include the
+`backup.labelSelectors` field added upstream.
+
+- K8up source: `k8up-4.10.0` tag, commit
+  `162266842bf4ce20d5b6296d14701cf46c2de8bb` from `k8up-io/k8up`.
+- CRD source: `charts/k8up/crds/k8up.io_schedules.yaml`.
+- Downloaded CRD SHA-256:
+  `4821bf5c432d40baebec890e3c5c7fae899bb203089c4604492ac008a31d918e`.
+- Derived schema SHA-256:
+  `fac8496b174a184ef1096deff82197d87e887006c73b736db06e1c8abb132e9a`.
+
+The artifact is the canonical, key-sorted JSON representation of
+`.spec.versions[name == "v1"].schema.openAPIV3Schema` from that CRD. Reproduce it
+without committing the downloaded YAML input:
+
+```bash
+curl --fail --silent --show-error --location \
+  https://raw.githubusercontent.com/k8up-io/k8up/162266842bf4ce20d5b6296d14701cf46c2de8bb/charts/k8up/crds/k8up.io_schedules.yaml \
+  --output /tmp/k8up.io_schedules.yaml
+sha256sum /tmp/k8up.io_schedules.yaml
+python3 - <<'PY'
+import json
+
+import yaml
+
+with open("/tmp/k8up.io_schedules.yaml", encoding="utf-8") as source:
+    crd = yaml.safe_load(source)
+
+schema = next(
+    version["schema"]["openAPIV3Schema"]
+    for version in crd["spec"]["versions"]
+    if version["name"] == "v1"
+)
+with open(".github/schemas/k8up.io/schedule_v1.json", "w", encoding="utf-8") as output:
+    json.dump(schema, output, indent=2, sort_keys=True, ensure_ascii=False)
+    output.write("\n")
+PY
+(cd .github/schemas && sha256sum --check --strict SHA256SUMS)
+```
