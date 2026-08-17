@@ -8,7 +8,7 @@ spec:
   capacity:
     storage: 100Gi
   local:
-    path: ${OPENCLAW_BACKUP_HOST_PATH}
+    path: ${BACKUP_HOST_PATH}/ai
   nodeAffinity:
     required:
       nodeSelectorTerms:
