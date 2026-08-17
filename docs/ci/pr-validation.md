@@ -16,7 +16,9 @@ The shadow workflow always runs yamllint, Gitleaks, and a source-level guard for
 new or changed `kind: Secret` documents. It validates the Flux root and five
 actual Flux apply surfaces with strict kubeconform only for GitOps changes, and
 runs local-chart, Coder Terraform, or Actions/script checks only for their
-respective paths through the maintained `dorny/paths-filter` action. It has no
+respective paths. A short `actions/github-script` step queries the PR file list:
+it replaces an external path-filter Action that is not permitted by the repository
+Actions policy, without reintroducing a repository helper. The workflow has no
 base/head quality ratchet, Checkov, custom report parser, critical-resource diff
 engine, or fan-in state machine.
 
