@@ -11,7 +11,8 @@ metadata:
     k3s-upgrade: server
 spec:
   concurrency: 1 # Batch size (roughly maps to maximum number of unschedulable nodes)
-  channel: https://update.k3s.io/v1-release/channels/latest
+  # renovate: k3s
+  version: "v1.36.3+k3s1"
   nodeSelector:
     matchExpressions:
       - {key: k3s-upgrade, operator: Exists}
@@ -43,7 +44,8 @@ metadata:
     k3s-upgrade: agent
 spec:
   concurrency: 2 # Batch size (roughly maps to maximum number of unschedulable nodes)
-  channel: https://update.k3s.io/v1-release/channels/latest
+  # renovate: k3s
+  version: "v1.36.3+k3s1"
   nodeSelector:
     matchExpressions:
       - {key: k3s-upgrade, operator: Exists}
@@ -66,3 +68,4 @@ spec:
     startTime: "02:00"
     endTime: "04:00"
     timeZone: "Europe/Rome"
+  jobActiveDeadlineSecs: 1800  # 30 minuti
