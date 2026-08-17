@@ -62,6 +62,8 @@ code.
 ### Cluster Overview
 
 - **Type**: GitOps-driven Kubernetes homelab using Flux CD
+- **Purpose**: Learning and experimentation; production practices are optional study targets, not blanket service-level requirements
+- **Design bias**: Prefer simple, maintainable, upstream-supported solutions; justify optional hardening against homelab risk and operational cost
 - **Network**: Private network, not cloud-accessible
 - **Access**: Self-hosted runners inside cluster (ARC)
 - **Repository**: Monorepo with strict dependency ordering

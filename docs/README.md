@@ -2,6 +2,14 @@
 
 Centralized documentation for the Elysium GitOps-managed Kubernetes homelab. Use the topic indexes below.
 
+Elysium is primarily a learning and experimentation lab. Production practices
+are welcome when they help exercise a technology, but production-grade
+availability, durability, and security are not blanket requirements. Prefer
+simple, maintainable, upstream-supported solutions and make optional hardening
+proportional to the homelab risk and operational cost. Component requirements,
+public-repository secret safety, and explicitly accepted project constraints
+remain mandatory.
+
 For AI coding agents, `AGENTS.md` at the repository root is the portable entry point. GitHub Copilot additionally uses `/.github/copilot-instructions.md`, while Claude Code can bootstrap from `/CLAUDE.md`.
 
 ## Topics

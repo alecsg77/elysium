@@ -16,7 +16,7 @@ Each protected namespace receives:
 - one dedicated directory below the private host backup root;
 - one static local `PersistentVolume` with reclaim policy `Retain`;
 - one namespace-scoped repository PVC;
-- one unique Restic password delivered as a SealedSecret;
+- one namespace-scoped SealedSecret containing the Restic password;
 - one or more K8up Schedules selecting only the intended workload PVCs.
 
 The public repository uses placeholders for node names and host paths. Keep the
@@ -27,10 +27,16 @@ results in the private operational log. A typical private layout is:
 <backup-root>/<namespace>
 ```
 
-Do not share a repository directory or password between namespaces. Store a
-recovery copy of every Restic password in an external password manager; the
-SealedSecret alone is tied to the cluster sealing key and is not sufficient for
-disaster recovery.
+Do not share a repository directory between namespaces. For this single-admin
+homelab, namespace repositories may reuse one cluster backup password to reduce
+credential management. Seal the value independently into each namespace-scoped
+Secret required by K8up.
+
+The SealedSecret stored in Git is the recovery copy of the Restic password. This
+accepted simplification depends on keeping an off-cluster backup of the complete
+active Sealed Secrets key set. Refresh and retest that backup whenever a new
+sealing certificate is adopted. A separate password-manager copy of the Restic
+password is optional, not required by this recovery model.
 
 The local external disk protects against loss of a workload PVC or its primary
 disk. It does not protect against theft, fire, or a root compromise of the host.
@@ -107,8 +113,11 @@ password, and Restic data.
 ## Operator-independent Restic recovery
 
 The repository remains usable without K8up. On a trusted Linux host, mount the
-external disk, retrieve the password from the external password manager, and
-use the standard Restic CLI against the namespace repository:
+external disk and recover the password from the Git-tracked SealedSecret with
+the off-cluster sealing-key backup. Use `kubeseal --recovery-unseal` and write
+the recovered value only to a mode-0600 temporary file; alternatively, restore
+the key set into a replacement Sealed Secrets controller. Then use the standard
+Restic CLI against the namespace repository:
 
 ```bash
 export RESTIC_PASSWORD_FILE=<protected-password-file>
