@@ -4,6 +4,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: pvc-storage
   namespace: arkham
+  annotations:
+    # Preserve Arkham data if a source inventory entry is removed accidentally.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce
@@ -18,6 +21,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: pvc-downloads
   namespace: arkham
+  annotations:
+    # Preserve Arkham data if a source inventory entry is removed accidentally.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce
@@ -32,6 +38,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: pvc-watch
   namespace: arkham
+  annotations:
+    # Preserve Arkham data if a source inventory entry is removed accidentally.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce
@@ -46,6 +55,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: pvc-library
   namespace: arkham
+  annotations:
+    # Preserve Arkham data if a source inventory entry is removed accidentally.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce
@@ -60,6 +72,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: pvc-backups
   namespace: arkham
+  annotations:
+    # Preserve Arkham data if a source inventory entry is removed accidentally.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce
@@ -73,6 +88,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: pvc-plex-logs
   namespace: arkham
+  annotations:
+    # Preserve Arkham data if a source inventory entry is removed accidentally.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce

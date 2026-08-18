@@ -3,6 +3,9 @@ kind: Schedule
 metadata:
   name: openclaw-backup
   namespace: ai
+  annotations:
+    # Keep scheduled backup, check, and retention jobs after a source-inventory error.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   backend:
     local:

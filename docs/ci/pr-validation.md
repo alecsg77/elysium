@@ -3,6 +3,38 @@
 This document describes the GitHub Actions workflows that validate pull requests before merge.
 See `AGENTS.md` for the full command reference used by these workflows.
 
+## Simple-gate shadow rollout
+
+`PR Validate Simple / validate` is the non-required shadow gate for the
+simplification rollout. It runs from `pull_request` with a read-only token, no
+repository or environment secrets, and no cluster access. The workflow treats a
+PR as reviewable homelab configuration rather than hostile code; the existing
+trusted-base **PR Gate** remains the required merge boundary until the shadow
+workflow passes the canary matrix and the ruleset is migrated.
+
+The shadow workflow always runs yamllint, Gitleaks, and a source-level guard for
+new or changed `kind: Secret` documents. It validates the Flux root and five
+actual Flux apply surfaces with strict kubeconform only for GitOps changes, and
+runs local-chart, Coder Terraform, or Actions/script checks only for their
+respective paths. A short `actions/github-script` step queries the PR file list:
+it replaces an external path-filter Action that is not permitted by the repository
+Actions policy, without reintroducing a repository helper. The workflow has no
+base/head quality ratchet, Checkov, custom report parser, critical-resource diff
+engine, or fan-in state machine.
+
+`.gitleaks.toml` permits only a complete Bitnami SealedSecret ciphertext-shaped
+scalar line; normal plaintext in the same YAML file remains scanned. Because
+Gitleaks evaluates line syntax rather than YAML structure, a deliberately added
+plaintext value matching that ciphertext shape is an accepted, narrow residual
+risk. The tracked `apps/base/coder/secret.yaml` is historical plaintext-Secret
+debt and is not allowed to change. It requires a separate credential rotation
+and SealedSecret/native-reference migration before the simplified source-level
+guard can be made whole-tree strict.
+
+Do not make `PR Validate Simple / validate` required or remove `PR Gate /
+required` until a fresh canary PR validates documentation-only, GitOps,
+SealedSecret rotation, chart, Coder, and Actions/script changes.
+
 ## Current merge boundary
 
 The repository uses one always-present monorepo workflow: **PR Gate**. Its

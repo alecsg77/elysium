@@ -3,6 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: openclaw-backup-repository
   namespace: ai
+  annotations:
+    # Retain the backup repository claim until deliberate GitOps cleanup.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce

@@ -1,0 +1,236 @@
+name: PR Validate Simple
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-validate-simple-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  KUSTOMIZE_VERSION: v5.8.1
+  KUSTOMIZE_SHA256: 029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d
+  KUBECONFORM_VERSION: v0.8.0
+  KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
+  CRDS_CATALOG_COMMIT: 59abc9f9403c92e3d8f8873e250ca10dcd5b2c0d
+  GITLEAKS_VERSION: 8.30.1
+  ACTIONLINT_VERSION: 1.7.9
+  ACTIONLINT_SHA256: 233b280d05e100837f4af1433c7b40a5dcb306e3aa68fb4f17f8a7f45a7df7b4
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect optional validation domains
+        id: changes
+        # The repository permits GitHub-owned and verified Actions, but not the
+        # external paths-filter Action. Keep the classifier small and visible.
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            const hasPrefix = (...prefixes) => files.some(({ filename }) =>
+              prefixes.some((prefix) => filename.startsWith(prefix)));
+            core.setOutput('gitops', hasPrefix(
+              'apps/', 'clusters/', 'infrastructure/', 'monitoring/', '.github/schemas/'));
+            core.setOutput('charts', hasPrefix('charts/'));
+            core.setOutput('coder', hasPrefix('coder/templates/'));
+            core.setOutput('actions-scripts', hasPrefix('.github/workflows/', 'scripts/'));
+
+      - name: Install YAML linter
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y yamllint
+
+      - name: Lint YAML
+        run: yamllint .
+
+      - name: Scan pull request changes for leaked secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_VERSION: ${{ env.GITLEAKS_VERSION }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+      - name: Reject changed plaintext Secret manifests
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          exception='infrastructure/configs/ci/copilot-agent-rbac/secret.yaml'
+          changed_yaml="$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- \
+            apps clusters functions infrastructure monitoring | grep -E '\.ya?ml$' || true)"
+          unexpected="$(printf '%s\n' "$changed_yaml" | xargs -r grep -lE \
+            '^[[:space:]]*kind:[[:space:]]*Secret[[:space:]]*$' 2>/dev/null | \
+            grep -vFx "$exception" || true)"
+          test -z "$unexpected" || {
+            echo "::error::Bare kind: Secret manifests are not allowed: $unexpected"
+            exit 1;
+          }
+          test -f "$exception"
+          grep -qx 'apiVersion: v1' "$exception"
+          grep -qx 'kind: Secret' "$exception"
+          grep -qx '  name: copilot-agent-readonly-token' "$exception"
+          grep -qx '  namespace: arc-runners' "$exception"
+          grep -qx '    kubernetes.io/service-account.name: copilot-agent-readonly' "$exception"
+          grep -qx 'type: kubernetes.io/service-account-token' "$exception"
+          if grep -qE '^[[:space:]]*(data|stringData):' "$exception"; then
+            echo "::error file=$exception::The service-account-token Secret scaffold must not define data."
+            exit 1
+          fi
+
+      - name: Set up Flux CLI
+        if: steps.changes.outputs.gitops == 'true'
+        uses: fluxcd/flux2/action@889be9d6cc8afa8ed639e1e1ba4ab678e3b38d8c # v2.9.4
+
+      - name: Install kustomize and kubeconform
+        if: steps.changes.outputs.gitops == 'true'
+        run: |
+          set -euo pipefail
+          curl -fsSL -o kustomize.tar.gz \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          echo "${KUSTOMIZE_SHA256}  kustomize.tar.gz" | sha256sum --check --strict
+          tar -xzf kustomize.tar.gz
+          sudo install -m 0755 kustomize /usr/local/bin/kustomize
+          curl -fsSL -o kubeconform.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  kubeconform.tar.gz" | sha256sum --check --strict
+          tar -xzf kubeconform.tar.gz kubeconform
+          sudo install -m 0755 kubeconform /usr/local/bin/kubeconform
+
+      - name: Verify local kubeconform schemas
+        if: steps.changes.outputs.gitops == 'true'
+        working-directory: .github/schemas
+        run: sha256sum --check --strict SHA256SUMS
+
+      - name: Render Flux root composition
+        if: steps.changes.outputs.gitops == 'true'
+        run: kustomize build clusters/kyrion/ > /dev/null
+
+      - name: Validate apps render
+        if: steps.changes.outputs.gitops == 'true'
+        run: |
+          flux build kustomization apps --path ./apps/kyrion \
+            --kustomization-file clusters/kyrion/apps.yaml --dry-run |
+            kubeconform -strict -summary \
+              -schema-location default \
+              -schema-location '.github/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+              -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+      - name: Validate infrastructure controllers render
+        if: steps.changes.outputs.gitops == 'true'
+        run: |
+          flux build kustomization infra-controllers --path ./clusters/kyrion/infrastructure/controllers \
+            --kustomization-file clusters/kyrion/infrastructure.yaml --dry-run |
+            kubeconform -strict -summary \
+              -schema-location default \
+              -schema-location '.github/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+              -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+      - name: Validate infrastructure configuration render
+        if: steps.changes.outputs.gitops == 'true'
+        run: |
+          flux build kustomization infra-configs --path ./clusters/kyrion/infrastructure/configs \
+            --kustomization-file clusters/kyrion/infrastructure.yaml --dry-run |
+            kubeconform -strict -summary \
+              -schema-location default \
+              -schema-location '.github/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+              -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+      - name: Validate monitoring controllers render
+        if: steps.changes.outputs.gitops == 'true'
+        run: |
+          flux build kustomization monitoring-controllers --path ./clusters/kyrion/monitoring/controllers \
+            --kustomization-file clusters/kyrion/monitoring.yaml --dry-run |
+            kubeconform -strict -summary \
+              -schema-location default \
+              -schema-location '.github/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+              -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+      - name: Validate monitoring configuration render
+        if: steps.changes.outputs.gitops == 'true'
+        run: |
+          flux build kustomization monitoring-configs --path ./monitoring/configs \
+            --kustomization-file clusters/kyrion/monitoring.yaml --dry-run |
+            kubeconform -strict -summary \
+              -schema-location default \
+              -schema-location '.github/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+              -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+      - name: Set up Helm
+        if: steps.changes.outputs.charts == 'true'
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Lint local charts
+        if: steps.changes.outputs.charts == 'true'
+        run: |
+          helm lint charts/cron-job
+          helm lint charts/onechart
+
+      - name: Install helm-unittest
+        if: steps.changes.outputs.charts == 'true'
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.2 --verify=false
+
+      - name: Test local charts
+        if: steps.changes.outputs.charts == 'true'
+        run: |
+          helm unittest charts/cron-job
+          helm unittest charts/onechart
+
+      - name: Set up Terraform
+        if: steps.changes.outputs.coder == 'true'
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_wrapper: false
+
+      - name: Validate Coder templates
+        if: steps.changes.outputs.coder == 'true'
+        env:
+          TF_IN_AUTOMATION: "true"
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' directory; do
+            terraform -chdir="$directory" fmt -check -recursive
+            terraform -chdir="$directory" init -backend=false -input=false
+            terraform -chdir="$directory" validate -no-color
+          done < <(find coder/templates -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 | sort -z)
+
+      - name: Install actionlint
+        if: steps.changes.outputs.actions-scripts == 'true'
+        run: |
+          set -euo pipefail
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "$archive" actionlint
+          sudo install -m 0755 actionlint /usr/local/bin/actionlint
+
+      - name: Lint GitHub Actions workflows
+        if: steps.changes.outputs.actions-scripts == 'true'
+        run: actionlint .github/workflows/*.yml .github/workflows/*.yaml
+
+      - name: Check shell syntax
+        if: steps.changes.outputs.actions-scripts == 'true'
+        run: |
+          bash -n scripts/ci/*.sh scripts/collect-monitoring-baseline.sh
+          sh -n scripts/bootstrap_flux.sh scripts/rotate-oidc-sealed-secrets.sh
