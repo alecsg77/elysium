@@ -35,6 +35,31 @@ Do not make `PR Validate Simple / validate` required or remove `PR Gate /
 required` until a fresh canary PR validates documentation-only, GitOps,
 SealedSecret rotation, chart, Coder, and Actions/script changes.
 
+## Flux bootstrap guard rollout
+
+`Flux Bootstrap Guard / guard` is a deliberately narrow, trusted-base
+`pull_request_target` workflow for the Flux reconciliation trust root. It reads only
+the GitHub pull-request file list with a read-only token; it does not check out or
+execute proposed content.
+
+The guard rejects any normal PR that changes one of these immutable paths:
+
+- `.github/workflows/flux-bootstrap-guard.yml`;
+- `clusters/kyrion/kustomization.yaml`, `apps.yaml`, `infrastructure.yaml`, or
+  `monitoring.yaml`;
+- `infrastructure/configs/flux-instance/kustomization.yaml`, `repository.yaml`, or
+  `release.yaml`.
+
+Those files define the Flux root composition, child reconciliation paths, and the
+FluxInstance chart and `instance.sync` source. Freezing whole files keeps this guard
+small and avoids recreating the retired critical-resource diff engine, report parsers,
+or policy ratchet. A legitimate bootstrap recovery or source change uses the
+break-glass procedure; ordinary application and infrastructure changes are unaffected.
+
+The workflow is introduced before it becomes a required check. After a harmless
+canary proves it runs from `main`, the ruleset will require both this `guard` job and
+`PR Validate Simple / validate`.
+
 ## Current merge boundary
 
 The repository uses one always-present monorepo workflow: **PR Gate**. Its
