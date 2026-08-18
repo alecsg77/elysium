@@ -232,5 +232,5 @@ jobs:
       - name: Check shell syntax
         if: steps.changes.outputs.actions-scripts == 'true'
         run: |
-          bash -n scripts/ci/*.sh scripts/collect-monitoring-baseline.sh
+          bash -n scripts/collect-monitoring-baseline.sh
           sh -n scripts/bootstrap_flux.sh scripts/rotate-oidc-sealed-secrets.sh

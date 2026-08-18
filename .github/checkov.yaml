@@ -1,3 +1,0 @@
-# PR Gate passes this file explicitly from the trusted base checkout. Keep Checkov
-# filtering and skip policy out of untrusted PR-root auto-discovery.
-{}

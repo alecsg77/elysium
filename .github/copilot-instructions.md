@@ -31,7 +31,7 @@ coder template push <name> ...
 git add coder/templates/<name>/...
 git commit -m "..."
 git push origin <feature-branch>
-# → after explicit user approval and PR Gate success, squash auto-merge to main
+# → after explicit user approval and PR Validate Simple success, squash auto-merge to main
 #    triggers publish-coder-templates.yaml automatically
 ```
 The `.github/workflows/publish-coder-templates.yaml` workflow handles ALL template publishing:
@@ -48,10 +48,11 @@ All cluster state changes must go through Git → Flux reconciliation. Never `ku
 
 ### GitHub Actions workflow authoring
 
-Keep workflows declarative: a `run:` block may install a tool or invoke a helper,
-but complex shell functions, branching, scanner handling, render orchestration, and
-temporary-file lifecycle belong in versioned `scripts/ci/` helpers with tests. For
-workflow work, follow `.agents/skills/github-actions-workflow-authoring/SKILL.md`.
+Prefer maintained upstream Actions/CLIs and declarative configuration. A short,
+straight-line `run:` block may install a tool or invoke standard validation commands;
+add a versioned `scripts/ci/` helper only for a durable repository-specific invariant
+that needs focused tests. For workflow work, follow
+`.agents/skills/github-actions-workflow-authoring/SKILL.md`.
 
 For `pull_request_target`, execute only helpers from the trusted base checkout (for
 example `base/scripts/ci/...`); proposed PR content is data, never executable CI

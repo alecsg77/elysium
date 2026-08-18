@@ -57,13 +57,13 @@
   ],
   "packageRules": [
     {
-      "description": "Pause custom-regex auto-merge until PR Gate / required is enforced and R0 rules are proven",
+      "description": "Pause custom-regex auto-merge until PR Validate Simple / validate is enforced and R0 rules are proven",
       "matchManagers": ["custom.regex"],
       "automerge": false,
       "commitMessagePrefix": "chore(deps): "
     },
     {
-      "description": "Pause Terraform minor/patch auto-merge until PR Gate / required is enforced and R0 rules are proven",
+      "description": "Pause Terraform minor/patch auto-merge until PR Validate Simple / validate is enforced and R0 rules are proven",
       "matchManagers": ["terraform"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": false,

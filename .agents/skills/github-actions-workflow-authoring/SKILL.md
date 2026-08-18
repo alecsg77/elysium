@@ -10,21 +10,19 @@ description: Create or change GitHub Actions workflows in this repository with r
 Use this skill whenever creating or changing files under `.github/workflows/`,
 workflow-local shell logic, Action dependencies, or helpers under `scripts/ci/`.
 
-## Core Rule: Workflows Orchestrate; Helpers Implement
+## Core rule: upstream tools first
 
-Keep workflow YAML declarative and reviewable. A `run:` block may install a tool,
-set one or two environment variables, or invoke a helper. Move shell control flow
-into a named, versioned helper under `scripts/ci/` when it has any of the following:
+Keep workflow YAML declarative and reviewable. Prefer a maintained upstream Action or
+CLI plus declarative configuration before adding repository code. A short,
+straight-line `run:` block may install a checksum-pinned tool, set environment
+variables, or invoke standard validation commands directly; do not create a wrapper
+that only reinterprets a standard tool's output.
 
-- functions, loops, branches, retries, traps, or non-trivial error handling;
-- multiple commands whose output or exit status must be interpreted;
-- input/argument parsing or temporary-file lifecycle management;
-- security-sensitive diff, rendering, scanner, or credential-adjacent logic;
-- logic that needs behavior tests beyond `bash -n` and ShellCheck.
-
-Do **not** solve this by hiding a large inline script in a YAML folded scalar. The
-workflow should show *which* trusted helper is called and *which inputs* it receives;
-the helper should contain *how* the operation works.
+Add a named helper under `scripts/ci/` only for a durable repository-specific
+invariant that cannot be expressed directly and needs independent tests. Do not hide
+large policy engines, scanner parsers, base/head ratchets, or retry state in inline
+shell or helpers. If a helper is genuinely needed, keep proposed data inert and make
+the boundary explicit.
 
 ## Helper Requirements
 
@@ -68,13 +66,11 @@ trace state across more than a few straight-line commands, extract a helper.
 Before committing a workflow change:
 
 ```bash
-python3 -m py_compile scripts/ci/*.py tests/ci/*.py
-python3 -m unittest tests.ci.test_pr_gate_helpers tests.ci.test_critical_change_guard tests.ci.test_quality_ratchet tests.ci.test_quality_ratchet_shell tests.ci.test_split_rendered_manifests
-bash -n scripts/ci/*.sh
-shellcheck scripts/ci/*.sh
 actionlint .github/workflows/<changed-workflow>.yml
 yamllint .github/workflows/<changed-workflow>.yml
+bash -n scripts/*.sh
 ```
 
-Run the smallest meaningful end-to-end helper invocation with fixture or rendered
-input as well. Describe the helper boundary and validation in the PR body.
+When the change adds a real repository helper, run its focused tests and the smallest
+meaningful end-to-end fixture or rendered input. Describe that helper boundary and
+validation in the PR body.
