@@ -1,3 +1,4 @@
+# Temporary PR canary: exercises Coder Terraform validation routing.
 terraform {
   required_providers {
     coder = {

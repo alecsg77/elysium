@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Temporary PR canary: exercises Actions and shell-syntax validation routing.
 set -euo pipefail
 out=diagnostics/monitoring-baseline
 mkdir -p "$out"
