@@ -54,11 +54,11 @@ Vendor-neutral operating guide for AI coding agents working in this repository.
 
 ## Pull Request and Auto-Merge Safety
 - Never commit or push directly to `main`, including when authenticated as a repository administrator. Agents may commit to a feature branch and open/update a PR after running the applicable validation.
-- Opening a PR is **not** permission to merge it. An agent must not manually merge, enable auto-merge, or otherwise cause a PR to merge until the user explicitly approves the **current proposed changes**. A passing `PR Validate Simple / validate`, permission to open a PR, or an earlier approval of a different diff never substitutes for that approval.
+- Opening a PR is **not** permission to merge it. An agent must not manually merge, enable auto-merge, or otherwise cause a PR to merge until the user explicitly approves the **current proposed changes**. Passing required checks, permission to open a PR, or an earlier approval of a different diff never substitutes for that approval.
 - Explicit approval means a clear user instruction to merge or enable auto-merge after the agent has reported the current PR URL and head SHA. Any pushed commit invalidates prior approval; if auto-merge was already enabled, disable it, report the new head SHA, and obtain fresh approval.
 - After explicit approval, enable native squash auto-merge with `gh pr merge --auto --squash`; do not manually merge. Record whether approval is pending or received, including the approved head SHA, in the PR template.
 - Never use `gh pr merge --admin`, a direct merge API bypass, or a force push as a routine workaround. The only break-glass path is documented in `docs/runbooks/github-break-glass.md`.
-- `PR Validate Simple / validate` is the single required monorepo status. It always runs YAML lint, Gitleaks, and the plaintext-Secret guard; it adds GitOps rendering, local-chart, Coder Terraform, or Actions/script validation only for relevant paths. A green check proves repository configuration is syntactically valid and rendered GitOps resources meet the pinned schemas; it does not certify production-grade hardening or remote Helm chart rendering.
+- `PR Validate Simple / validate` and `Flux Bootstrap Guard / guard` are required. The simple check always runs YAML lint, Gitleaks, and the plaintext-Secret guard; it adds GitOps rendering, local-chart, Coder Terraform, or Actions/script validation only for relevant paths. The bootstrap guard runs from trusted `main` and freezes the Flux source/root-composition files. Together they do not certify production-grade hardening or remote Helm chart rendering.
 - Treat changes to Flux bootstrap/ownership, Tailscale access resources, secrets, storage, and CI guardrail files as critical. For data or recovery-access resources protected by a Flux/Kubernetes/Helm retention annotation, follow `docs/runbooks/destructive-gitops-change.md`; persistent-data changes additionally require the backup/restore contract in `docs/runbooks/backup-and-restore.md`.
 
 ## Essential Commands
@@ -95,9 +95,10 @@ This repo has no application build/test suite — "validation" means rendering m
 - Create/update Coder workspace templates: `.agents/skills/coder-templates/SKILL.md`
 
 ## PR Validation Workflow
-- `.github/workflows/pr-validate-simple.yml` publishes the only required context: `PR Validate Simple / validate`.
-- It always runs YAML lint, Gitleaks, and the plaintext-Secret guard. It runs Flux/Kustomize rendering with strict kubeconform for GitOps paths, Helm lint/unit tests for local-chart paths, Terraform validation for Coder-template paths, and actionlint plus shell syntax checks for workflow/script paths.
-- Keep this workflow small and direct: use maintained upstream tools and declarative configuration before adding a repository helper.
+- `.github/workflows/pr-validate-simple.yml` publishes the general required context: `PR Validate Simple / validate`.
+- `.github/workflows/flux-bootstrap-guard.yml` publishes `Flux Bootstrap Guard / guard`, a trusted-base required context that freezes the Flux root/source files and its own workflow.
+- The simple workflow always runs YAML lint, Gitleaks, and the plaintext-Secret guard. It runs Flux/Kustomize rendering with strict kubeconform for GitOps paths, Helm lint/unit tests for local-chart paths, Terraform validation for Coder-template paths, and actionlint plus shell syntax checks for workflow/script paths.
+- Keep both workflows small and direct: use maintained upstream tools and declarative configuration before adding a repository helper. A bootstrap recovery uses the documented break-glass path rather than weakening the ordinary PR gate.
 - See `docs/ci/pr-validation.md` for the validator matrix and `docs/ci/merge-and-automerge-policy.md` for the merge flow.
 
 ## GitHub Actions Workflow Authoring

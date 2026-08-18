@@ -5,10 +5,11 @@
 - [ ] User approval is pending; this PR intentionally has auto-merge disabled.
 - [ ] The user explicitly approved head SHA `<sha>` for merge; I then enabled native auto-merge with `gh pr merge --auto --squash`.
 
-## Destructive changes
+## Destructive or bootstrap changes
 
 - [ ] Not applicable.
 - [ ] This change removes or alters a runtime-protected data or recovery-access resource. I followed `docs/runbooks/destructive-gitops-change.md`, including the two-PR sequence and real backup/rollback evidence where applicable.
+- [ ] This approved recovery changes a file frozen by `Flux Bootstrap Guard / guard`; I followed `docs/runbooks/github-break-glass.md` and recorded the rollback revision below.
 
 ## Validation evidence
 

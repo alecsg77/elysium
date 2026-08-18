@@ -1,16 +1,21 @@
 # Pull-request validation
 
-`PR Validate Simple / validate` is the repository's single required pull-request
-check. It is a small `pull_request` workflow: the token is read-only, checkout
+The repository has two required pull-request checks:
+
+- **`PR Validate Simple / validate`** validates ordinary repository configuration
+  with direct, maintained tools.
+- **`Flux Bootstrap Guard / guard`** freezes the small set of files that defines the
+  Flux reconciliation trust root.
+
+`PR Validate Simple` is a `pull_request` workflow: its token is read-only, checkout
 credentials do not persist, and it receives no repository or environment secrets,
-kubeconfig, or cluster access.
+kubeconfig, or cluster access. The workflow deliberately treats a pull request as
+reviewable homelab configuration rather than hostile code. A contributor can change
+the workflow in the same PR; that risk is accepted in exchange for a simple,
+maintained validation path and is bounded by the read-only token, no privileged
+credentials, the separate bootstrap guard, and human approval of the current diff.
 
-The workflow deliberately treats a pull request as reviewable homelab configuration,
-not hostile code. A contributor can change the workflow in the same PR; that risk is
-accepted in exchange for a simple, maintained validation path, and is bounded by the
-read-only token, no privileged credentials, and human approval of the current diff.
-
-## What the check runs
+## `PR Validate Simple / validate`
 
 These checks run on every pull request:
 
@@ -37,6 +42,31 @@ assigns namespaces.
 Fission specifications receive the always-on YAML and Secret checks. There is no
 separate policy engine or cluster-backed Fission validation in the required check.
 
+## `Flux Bootstrap Guard / guard`
+
+The bootstrap guard is a deliberately narrow, trusted-base `pull_request_target`
+workflow. It uses a read-only token and GitHub's pull-request file-list API only; it
+does not check out or execute proposed content.
+
+It rejects normal pull requests that change any of these immutable paths:
+
+- `.github/workflows/flux-bootstrap-guard.yml`;
+- `clusters/kyrion/kustomization.yaml`, `apps.yaml`, `infrastructure.yaml`, or
+  `monitoring.yaml`;
+- `infrastructure/configs/flux-instance/kustomization.yaml`, `repository.yaml`, or
+  `release.yaml`.
+
+Those files define the Flux root composition, child reconciliation paths, FluxInstance
+chart, and `instance.sync` source. Freezing whole files keeps this guard small and
+prevents a syntactically valid PR from moving future Flux reconciliation to an
+unreviewed source. It deliberately does not restore the retired critical-resource
+diff engine, quality ratchet, Checkov scans, report parsers, or R1/R2 intent protocol.
+
+A legitimate bootstrap recovery or source change uses
+[GitHub break-glass](../runbooks/github-break-glass.md), keeping `validate` required
+while temporarily removing only `guard`. Ordinary application and infrastructure
+changes are unaffected.
+
 ## Secret handling
 
 Plain Kubernetes `Secret` manifests are not permitted in GitOps or Fission source.
@@ -55,20 +85,21 @@ reference.
 
 ## Runtime protection for destructive changes
 
-The CI check is not a resource-diff policy engine. High-impact data, namespace, and
-recovery-access resources instead use Flux/Kubernetes/Helm retention annotations.
-Those annotations can leave intentionally removed resources orphaned; this is a
-conscious tradeoff against automatic loss of data or access.
+The CI checks are not a general resource-diff policy engine. High-impact data,
+namespace, and recovery-access resources instead use Flux/Kubernetes/Helm retention
+annotations. Those annotations can leave intentionally removed resources orphaned;
+this is a conscious tradeoff against automatic loss of data or access.
 
 Follow [Destructive GitOps changes](../runbooks/destructive-gitops-change.md): first
 remove the applicable runtime protection in one healthy PR and allow Flux to
 reconcile, then make the removal or destructive change in a later PR. Backup and
 restore evidence remains an operational requirement for persistent data.
 
-## What a green check means—and does not mean
+## What green checks mean—and do not mean
 
-A green check means the selected source validation, Flux/Kustomize rendering, and
-Kubernetes schema validation completed successfully. It does **not** certify:
+Green required checks mean the selected source validation, Flux/Kustomize rendering,
+Kubernetes schema validation, and immutable bootstrap-path guard completed
+successfully. They do **not** certify:
 
 - production-grade hardening or a generic Kubernetes security posture;
 - remote Helm chart rendering or runtime behavior of a HelmRelease;
@@ -96,6 +127,7 @@ helm lint charts/onechart
 helm unittest charts/cron-job
 helm unittest charts/onechart
 actionlint .github/workflows/pr-validate-simple.yml
+actionlint .github/workflows/flux-bootstrap-guard.yml
 ```
 
 For a changed Coder template, run `terraform fmt -check -recursive`,

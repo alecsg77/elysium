@@ -1,0 +1,49 @@
+name: Flux Bootstrap Guard
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+concurrency:
+  group: flux-bootstrap-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject changes to immutable Flux bootstrap files
+        # `pull_request_target` executes this GitHub-owned Action from the trusted
+        # default branch. It queries PR metadata only and never checks out or runs
+        # proposed content.
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const protectedPaths = new Set([
+              '.github/workflows/flux-bootstrap-guard.yml',
+              'clusters/kyrion/kustomization.yaml',
+              'clusters/kyrion/apps.yaml',
+              'clusters/kyrion/infrastructure.yaml',
+              'clusters/kyrion/monitoring.yaml',
+              'infrastructure/configs/flux-instance/kustomization.yaml',
+              'infrastructure/configs/flux-instance/repository.yaml',
+              'infrastructure/configs/flux-instance/release.yaml',
+            ]);
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            const changed = files.filter(({ filename, previous_filename }) =>
+              protectedPaths.has(filename) || protectedPaths.has(previous_filename));
+            if (changed.length > 0) {
+              core.setFailed(
+                'Flux bootstrap files are immutable in normal PR flow: ' +
+                changed.map(({ filename, previous_filename }) =>
+                  previous_filename ? `${previous_filename} -> ${filename}` : filename).join(', ') +
+                '. Use docs/runbooks/github-break-glass.md for an approved recovery change.');
+            }
