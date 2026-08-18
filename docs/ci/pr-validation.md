@@ -56,6 +56,9 @@ small and avoids recreating the retired critical-resource diff engine, report pa
 or policy ratchet. A legitimate bootstrap recovery or source change uses the
 break-glass procedure; ordinary application and infrastructure changes are unaffected.
 
+This canary is intentionally docs-only: the guard still runs because its workflow is
+always present, while no protected bootstrap file is changed.
+
 The workflow is introduced before it becomes a required check. After a harmless
 canary proves it runs from `main`, the ruleset will require both this `guard` job and
 `PR Validate Simple / validate`.
