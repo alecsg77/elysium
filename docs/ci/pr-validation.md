@@ -37,8 +37,8 @@ SealedSecret rotation, chart, Coder, and Actions/script changes.
 
 ## Current merge boundary
 
-The repository uses one always-present monorepo workflow: **PR Gate**. Its
-**`required`** job detects the paths changed by a PR, runs baseline and applicable
+The repository's current required merge boundary is **`PR Gate / required`**.
+Its **`required`** job detects the paths changed by a PR, runs baseline and applicable
 domain validators, and fails closed when a selected validator does not succeed. The
 ruleset requires this one job context rather than path-filtered workflow contexts.
 
