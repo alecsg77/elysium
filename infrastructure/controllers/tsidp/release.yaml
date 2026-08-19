@@ -73,6 +73,8 @@ spec:
       - name: tsidp-data
         path: /data
         size: 1Gi
+        pvcAnnotations:
+          helm.sh/resource-policy: keep
     resources:
       requests:
         cpu: 50m
