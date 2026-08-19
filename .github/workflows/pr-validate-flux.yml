@@ -207,7 +207,7 @@ jobs:
       # pending remediation, tracked in issue #66. Once that issue is resolved,
       # `soft_fail` should be removed to make this step blocking again.
       - name: Scan for misconfigurations with Checkov (non-blocking)
-        uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
+        uses: bridgecrewio/checkov-action@1246d92f57abae29d5db5f9aeeed2a9813e52d7d # v12.3117.0
         with:
           directory: rendered
           framework: kubernetes

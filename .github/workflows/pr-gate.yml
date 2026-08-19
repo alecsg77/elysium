@@ -331,7 +331,7 @@ jobs:
             --github-summary "$GITHUB_STEP_SUMMARY"
 
       - name: Scan trusted base Kubernetes configuration for ratchet comparison
-        uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
+        uses: bridgecrewio/checkov-action@1246d92f57abae29d5db5f9aeeed2a9813e52d7d # v12.3117.0
         with:
           directory: quality-ratchet/base-rendered
           framework: kubernetes
@@ -343,7 +343,7 @@ jobs:
           soft_fail: true
 
       - name: Scan proposed Kubernetes configuration for ratchet comparison
-        uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
+        uses: bridgecrewio/checkov-action@1246d92f57abae29d5db5f9aeeed2a9813e52d7d # v12.3117.0
         with:
           directory: quality-ratchet/head-rendered
           framework: kubernetes
@@ -466,7 +466,7 @@ jobs:
             --template-file "$RUNNER_TEMP/changed-coder-templates"
 
       - name: Scan changed templates (advisory pending issue #65)
-        uses: bridgecrewio/checkov-action@9b70310bcd306d11740313070b940167d6b23085 # v12.3115.0
+        uses: bridgecrewio/checkov-action@1246d92f57abae29d5db5f9aeeed2a9813e52d7d # v12.3117.0
         with:
           directory: coder/templates
           framework: terraform
