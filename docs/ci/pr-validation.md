@@ -136,3 +136,5 @@ For a changed Coder template, run `terraform fmt -check -recursive`,
 `terraform init -backend=false`, and `terraform validate -no-color` in the template
 directory. The workflow verifies the local schema checksum before kubeconform and
 fails when a rendered resource has no schema; do not add `-ignore-missing-schemas`.
+
+<!-- Temporary PR canary: verifies the restored trusted-base Flux Bootstrap Guard after the `actions/github-script` v9 update. This docs-only branch will be closed without merge. -->
