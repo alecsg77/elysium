@@ -48,10 +48,12 @@ The guard rejects any normal PR that changes one of these immutable paths:
 - `clusters/kyrion/kustomization.yaml`, `apps.yaml`, `infrastructure.yaml`, or
   `monitoring.yaml`;
 - `infrastructure/configs/flux-instance/kustomization.yaml`, `repository.yaml`, or
-  `release.yaml`.
+  `release.yaml`;
+- `infrastructure/controllers/system-upgrade/controller.yaml`.
 
-Those files define the Flux root composition, child reconciliation paths, and the
-FluxInstance chart and `instance.sync` source. Freezing whole files keeps this guard
+Those files define the Flux root composition, child reconciliation paths, FluxInstance
+chart and `instance.sync` source, and the System Upgrade controller's independent
+GitRepository/Kustomization source boundary. Freezing whole files keeps this guard
 small and avoids recreating the retired critical-resource diff engine, report parsers,
 or policy ratchet. A legitimate bootstrap recovery or source change uses the
 break-glass procedure; ordinary application and infrastructure changes are unaffected.
