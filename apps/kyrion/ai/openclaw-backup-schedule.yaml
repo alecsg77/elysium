@@ -16,7 +16,6 @@ spec:
     volumeMounts:
       - mountPath: /repository
         name: repository
-  failedJobsHistoryLimit: 2
   podSecurityContext:
     fsGroup: 34
     fsGroupChangePolicy: OnRootMismatch
@@ -29,32 +28,37 @@ spec:
     requests:
       cpu: 100m
       memory: 128Mi
-  successfulJobsHistoryLimit: 2
   backup:
     activeDeadlineSeconds: 7200
+    failedJobsHistoryLimit: 2
     labelSelectors:
       - matchLabels:
           app: openclaw
     schedule: '0 */6 * * *'
+    successfulJobsHistoryLimit: 2
     volumes:
       - name: repository
         persistentVolumeClaim:
           claimName: openclaw-backup-repository
   check:
     activeDeadlineSeconds: 7200
+    failedJobsHistoryLimit: 2
     schedule: '0 2 * * 0'
+    successfulJobsHistoryLimit: 2
     volumes:
       - name: repository
         persistentVolumeClaim:
           claimName: openclaw-backup-repository
   prune:
     activeDeadlineSeconds: 7200
+    failedJobsHistoryLimit: 2
     retention:
       keepDaily: 7
       keepHourly: 4
       keepMonthly: 12
       keepWeekly: 5
     schedule: '0 4 * * 0'
+    successfulJobsHistoryLimit: 2
     volumes:
       - name: repository
         persistentVolumeClaim:
