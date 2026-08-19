@@ -8,9 +8,29 @@ GitOps control plane: a commit must first receive both the applicable automated
 validation and user approval before Flux can reconcile it.
 
 Opening a PR is allowed after the agent has completed applicable local validation,
-but it is a request for review—not authorization to merge. `PR Gate / required`
-proves automated policy compliance; it does not replace explicit user approval of
-the current proposed changes.
+but it is a request for review—not authorization to merge by itself. `PR Gate /
+required` proves automated policy compliance; it does not replace the applicable
+user authorization described below.
+
+## Authorization scope
+
+User authorization has three deliberately narrow scopes:
+
+1. **Approved plan.** Approval of an implementation plan automatically authorizes
+   native squash auto-merge for a PR whose final changes wholly implement that
+   plan. Record the plan reference and covered scope in the PR. No redundant
+   per-PR or per-SHA approval is required.
+2. **Approved PR.** Explicit approval of a PR authorizes that PR and every
+   descendant head SHA created solely by a rebase onto, or a merge from, `main`.
+   Mechanical branch synchronization does not require disabling auto-merge or
+   requesting approval again.
+3. **All other changes.** A substantive change outside an approved plan, or a
+   substantive change added after PR approval, is not automatically authorized.
+   The PR is the user's final opportunity to review that change: keep or return
+   auto-merge to disabled until the user explicitly approves the updated PR.
+
+These scopes do not authorize direct updates to `main`, manual merges, force
+pushes, or `--admin` merge bypasses.
 
 The rollout deliberately uses the existing `@alecsg77` administrative identity
 for both the maintainer and coding agents. The server-side ruleset—not identity
@@ -22,21 +42,23 @@ may be altered only through a documented break-glass event.
 
 1. Create or update a non-`main` branch.
 2. Run the applicable local validation, commit, and push only that branch.
-3. Open or update a PR targeting `main`. If the user has not explicitly approved
-   the current diff, leave auto-merge disabled and mark approval as pending in the
-   PR template.
-4. Report the PR URL, head SHA, validated scope, and any remaining risk to the
-   user. Wait for an explicit approval that this **current head SHA** may merge.
-5. Only after that approval, record the approved head SHA in the PR template and
-   enable native squash auto-merge with:
+3. Open or update a PR targeting `main`. Identify in the PR template whether
+   its authorization comes from an approved plan, an explicit PR approval, or is
+   still pending. Leave auto-merge disabled while authorization is pending.
+4. Report the PR URL, head SHA, validated scope, remaining risk, and authorization
+   source. A PR wholly covered by an approved plan may proceed without a separate
+   PR approval; otherwise wait for explicit PR approval after all substantive
+   changes are visible in the PR.
+5. Record the plan reference or PR approval in the PR template, then enable native
+   squash auto-merge with:
 
    ```bash
    gh pr merge --auto --squash
    ```
 
-6. If any new commit is pushed after approval, disable auto-merge if it was
-   already enabled, return to step 3, and obtain fresh approval. Do not treat
-   approval of an earlier head SHA as approval of a changed PR.
+6. Preserve approval and auto-merge through a head SHA created solely by rebasing
+   onto, or merging from, `main`. For any other substantive post-approval change,
+   disable auto-merge, return to step 3, and obtain final PR-level approval.
 7. Never use `--admin`, force-push `main`, manually merge, or merge through a
    direct Git push.
 8. Observe the PR until `PR Gate / required` is successful and auto-merge has
