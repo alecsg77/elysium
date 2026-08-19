@@ -54,12 +54,14 @@ It rejects normal pull requests that change any of these immutable paths:
 - `clusters/kyrion/kustomization.yaml`, `apps.yaml`, `infrastructure.yaml`, or
   `monitoring.yaml`;
 - `infrastructure/configs/flux-instance/kustomization.yaml`, `repository.yaml`, or
-  `release.yaml`.
+  `release.yaml`;
+- `infrastructure/controllers/system-upgrade/controller.yaml`.
 
 Those files define the Flux root composition, child reconciliation paths, FluxInstance
-chart, and `instance.sync` source. Freezing whole files keeps this guard small and
-prevents a syntactically valid PR from moving future Flux reconciliation to an
-unreviewed source. It deliberately does not restore the retired critical-resource
+chart and `instance.sync` source, and the System Upgrade controller's independent
+GitRepository/Kustomization source boundary. Freezing whole files keeps this guard
+small and prevents a syntactically valid PR from moving future Flux reconciliation to
+an unreviewed source. It deliberately does not restore the retired critical-resource
 diff engine, quality ratchet, Checkov scans, report parsers, or R1/R2 intent protocol.
 
 A legitimate bootstrap recovery or source change uses
