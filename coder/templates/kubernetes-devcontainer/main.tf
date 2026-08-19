@@ -474,14 +474,32 @@ module "jetbrains" {
   folder     = local.workspace_folder
 }
 
-module "mux" {
-  count       = data.coder_workspace.me.start_count
-  source      = "registry.coder.com/coder/mux/coder"
-  version     = "1.5.0"
-  agent_id    = coder_agent.main.id
-  add_project = local.workspace_folder
-  use_cached  = true
-  open_in     = "tab"
+module "codex" {
+  count            = data.coder_workspace.me.start_count
+  source           = "registry.coder.com/coder-labs/codex/coder"
+  version          = "5.3.0"
+  agent_id         = coder_agent.main.id
+  workdir          = local.workspace_folder
+  base_config_toml = <<-EOT
+    sandbox_mode = "danger-full-access"
+    approval_policy = "never"
+    preferred_auth_method = "chatgpt"
+    allow_remote_control = true
+  EOT
+}
+
+resource "coder_app" "codex" {
+  agent_id     = coder_agent.main.id
+  slug         = "codex"
+  display_name = "Codex"
+  icon         = "/icon/openai.svg"
+  open_in      = "slim-window"
+  command      = <<-EOT
+    #!/bin/bash
+    set -e
+    cd "${local.workspace_folder}"
+    codex
+  EOT
 }
 
 resource "coder_metadata" "container_info" {
