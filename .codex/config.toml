@@ -1,0 +1,18 @@
+[mcp_servers.kubernetes]
+command = "npx"
+args = ["-y", "kubernetes-mcp-server@latest"]
+enabled = true
+
+[mcp_servers.flux-operator-mcp]
+url = "http://flux-operator-mcp.flux-system.svc:9090/mcp"
+
+[mcp_servers.grafana]
+url = "http://grafana-mcp.monitoring.svc:8000/mcp"
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+env_http_headers = { CONTEXT7_API_KEY = "CONTEXT7_API_KEY" }
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_TOKEN"
