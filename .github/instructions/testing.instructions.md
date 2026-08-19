@@ -61,7 +61,7 @@ description: "Testing strategies for GitOps infrastructure"
 - Test secret backup and restore procedures
 
 ## Security Testing
-- Scan manifests with `trivy` or `checkov`
+- Run optional security reviews deliberately; they are not a generic required PR gate.
 - Validate RBAC policies are restrictive
 - Check pod security contexts enforced
 - Test NetworkPolicy rules block unexpected traffic
@@ -111,8 +111,7 @@ description: "Testing strategies for GitOps infrastructure"
 - **flux build**: Flux manifest building
 - **helm lint**: Chart validation
 - **helm template**: Template rendering
-- **trivy/checkov**: Security scanning
-- **conftest**: Policy testing with Rego
+- **trivy**: Optional security scanning outside the required PR gate
 
 ## CI/CD Pipeline Testing
 - Validate GitHub Actions workflows execute correctly
