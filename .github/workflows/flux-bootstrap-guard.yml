@@ -32,6 +32,7 @@ jobs:
               'infrastructure/configs/flux-instance/kustomization.yaml',
               'infrastructure/configs/flux-instance/repository.yaml',
               'infrastructure/configs/flux-instance/release.yaml',
+              'infrastructure/controllers/system-upgrade/controller.yaml',
             ]);
             const files = await github.paginate(github.rest.pulls.listFiles, {
               ...context.repo,
