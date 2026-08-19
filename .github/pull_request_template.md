@@ -2,8 +2,11 @@
 
 - [ ] I identified the affected domain(s): GitOps, charts, Coder, Actions/scripts, functions, or docs.
 - [ ] I ran the applicable local validation commands and recorded them below.
-- [ ] User approval is pending; this PR intentionally has auto-merge disabled.
-- [ ] The user explicitly approved head SHA `<sha>` for merge; I then enabled native auto-merge with `gh pr merge --auto --squash`.
+- [ ] Merge authorization is pending; this PR intentionally has auto-merge disabled.
+- [ ] This PR is wholly within approved plan `<plan reference>`; plan approval authorizes native squash auto-merge.
+- [ ] The user explicitly approved this PR; authorization also covers head SHAs derived solely by rebase onto or merge from `main`.
+- [ ] This PR contains substantive changes outside its approved plan or after prior PR approval; the user explicitly approved the updated PR.
+- [ ] I enabled native auto-merge with `gh pr merge --auto --squash` after recording the applicable authorization above.
 
 ## Destructive or bootstrap changes
 

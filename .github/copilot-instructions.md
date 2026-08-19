@@ -31,7 +31,7 @@ coder template push <name> ...
 git add coder/templates/<name>/...
 git commit -m "..."
 git push origin <feature-branch>
-# → after explicit user approval and all required checks succeed, squash auto-merge to main
+# → after applicable plan or PR approval and all required checks succeed, squash auto-merge to main
 #    triggers publish-coder-templates.yaml automatically
 ```
 The `.github/workflows/publish-coder-templates.yaml` workflow handles ALL template publishing:
