@@ -330,3 +330,5 @@ checkov -d <rendered-dir> --framework kubernetes --soft-fail
 **Known limitation:** `flux build kustomization` emits `HelmRelease` custom resources but does not
 render their referenced Helm charts. Issue #60 tracks evaluating `flate`, `konflate`, or another
 maintained renderer for this gap.
+
+<!-- Temporary pull-request canary: verifies that the restored trusted-base Flux Bootstrap Guard runs and passes for an unrelated docs-only change. This branch will be closed without merging. -->
