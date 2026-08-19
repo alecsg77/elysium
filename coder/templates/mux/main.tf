@@ -152,13 +152,14 @@ module "coder-login" {
   agent_id = coder_agent.main.id
 }
 
-# Installs mux@next via npm (falls back to tarball) and runs the mux server as
+# Installs mux via npm (falls back to tarball) and runs the mux server as
 # a workspace process. Generates its own MUX_SERVER_AUTH_TOKEN per workspace
 # instance (stored in Terraform state -- no manual secret management needed).
 module "mux" {
   count                = data.coder_workspace.me.start_count
   source               = "registry.coder.com/coder/mux/coder"
   version              = "1.5.0"
+  install_version      = "0.28.2" # renovate: datasource=github-releases depName=coder/mux extractVersion=^v(?<version>.+)$
   agent_id             = coder_agent.main.id
   additional_arguments = "--host 127.0.0.1"
   subdomain            = true
