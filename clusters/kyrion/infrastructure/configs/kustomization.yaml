@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../../../../infrastructure/configs
   - dns-cloudflare-sealed-secret.yaml
+  - arc-runner-github-app-sealed-secret.yaml
 
 patches:
   - target:
