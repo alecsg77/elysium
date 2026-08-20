@@ -98,17 +98,46 @@ an application-aware or stopped backup; do not weaken the drill criteria.
 
 ## Restore drill
 
-Never restore over the production PVC during a drill. Create the scratch PVC,
-K8up `Restore`, deny-all NetworkPolicy, read-only verification Job, and offline
-application pod temporarily through GitOps. Select the tested snapshot
-timestamp privately and publish no snapshot identifier or restored content.
+Never restore over a production PVC during a drill. Every drill resource is
+created and removed through GitOps; do not use an imperative restore, PVC
+mutation, or workload scale/restart.
 
-Validate file count and aggregate size, a deterministic aggregate checksum,
-ownership and modes, configuration parsing, native database integrity, and an
-offline application startup. Record only timestamps, duration, aggregate
-counts, results, and RPO/RTO compliance. Remove all drill-only resources in a
-follow-up GitOps change while preserving the Schedule, repository PV/PVC,
-password, and Restic data.
+### Stage 1: isolated restore target
+
+The first OpenClaw drill stage creates only the temporary
+`openclaw-restore-drill` scratch PVC and the K8up `Restore` of the same name.
+The Restore references the existing repository PVC and password Secret without
+copying either one, selects `/data/openclaw-home-pvc`, and writes only to the
+scratch claim. It intentionally has no pinned snapshot ID or restore-time
+filter: K8up selects the latest snapshot that contains the requested path.
+
+The scratch PVC is deliberately not labelled `app: openclaw` and has the
+`k8up.io/backup: "false"` opt-out, so it is neither a production mount nor a
+new Schedule backup source. It is sized and configured independently of the
+production claim, is temporary, and must be removed by a later cleanup PR.
+
+After the stage-1 PR merges, wait for the Flux `apps` Kustomization to be Ready,
+the scratch PVC to be `Bound`, and the Restore to report success within its
+two-hour deadline. Confirm the generated K8up restore Job references only the
+repository PVC and scratch PVC; do not collect or publish its logs, snapshot
+identifier, restored content, repository path, or credentials. A failed Restore
+must be handled by reverting the stage-1 GitOps change or correcting it in a
+new scoped PR; production remains outside the restore target.
+
+### Stage 2: verification and cleanup
+
+Only after Stage 1 has succeeded may a follow-up GitOps PR add a deny-all
+NetworkPolicy and a read-only verification workload that mounts the scratch
+claim. Validate file count and aggregate size, a deterministic aggregate
+checksum, ownership and modes, configuration parsing, native database
+integrity, and offline application startup. Record only timestamps, duration,
+aggregate counts, results, and RPO/RTO compliance.
+
+After verification, a separate cleanup PR must remove the temporary Restore,
+any generated verification resources, and `openclaw-restore-drill` in that
+order. Preserve the production workload and PVC, the backup Schedule, the
+repository PV/PVC, the password Secret, and Restic data throughout both the
+verification and cleanup changes.
 
 ## Operator-independent Restic recovery
 

@@ -1,0 +1,44 @@
+# Temporary, non-destructive first stage of the OpenClaw restore drill. A later
+# GitOps PR adds offline verification and then removes this Restore and its PVC.
+apiVersion: k8up.io/v1
+kind: Restore
+metadata:
+  name: openclaw-restore-drill
+  namespace: ai
+spec:
+  activeDeadlineSeconds: 7200
+  backend:
+    local:
+      mountPath: /repository
+    repoPasswordSecretRef:
+      key: password
+      name: openclaw-backup-repository
+    volumeMounts:
+      - mountPath: /repository
+        name: repository
+  failedJobsHistoryLimit: 2
+  # Select the latest snapshot containing only the OpenClaw source PVC path.
+  # Do not pin a snapshot ID or a restore-time filter in Git.
+  paths:
+    - /data/openclaw-home-pvc
+  podSecurityContext:
+    fsGroup: 34
+    fsGroupChangePolicy: OnRootMismatch
+    runAsGroup: 1000
+    runAsUser: 1000
+  resources:
+    limits:
+      cpu: "1"
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  restoreMethod:
+    folder:
+      # This scratch PVC is the only restore target; never restore to production.
+      claimName: openclaw-restore-drill
+  successfulJobsHistoryLimit: 2
+  volumes:
+    - name: repository
+      persistentVolumeClaim:
+        claimName: openclaw-backup-repository

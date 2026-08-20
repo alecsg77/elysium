@@ -38,3 +38,18 @@ older commit-pinned Datree catalog entry, which does not include the
   `4821bf5c432d40baebec890e3c5c7fae899bb203089c4604492ac008a31d918e`.
 - Derived schema SHA-256:
   `fac8496b174a184ef1096deff82197d87e887006c73b736db06e1c8abb132e9a`.
+
+## K8up `Restore`
+
+`k8up.io/restore_v1.json` validates `k8up.io/v1` `Restore` resources against the
+CRD shipped by the installed K8up version. The local schema takes precedence over
+the older commit-pinned Datree catalog entry, which does not include the `paths`
+field used to select a source PVC snapshot.
+
+- K8up source: `k8up-4.10.0` tag, commit
+  `162266842bf4ce20d5b6296d14701cf46c2de8bb` from `k8up-io/k8up`.
+- CRD source: `charts/k8up/crds/k8up.io_restores.yaml`.
+- Downloaded CRD SHA-256:
+  `32a4a2491b71667a4fcfdfe8c041bdc5e38596d3753dbae31caf8f207eab91a2`.
+- Derived schema SHA-256:
+  `23bec3319c917d43dfa17a95a1ed78d7930961a66c35c8652c20733784141ce0`.
