@@ -124,20 +124,56 @@ identifier, restored content, repository path, or credentials. A failed Restore
 must be handled by reverting the stage-1 GitOps change or correcting it in a
 new scoped PR; production remains outside the restore target.
 
-### Stage 2: verification and cleanup
+### Stage 2: isolated verification and cleanup
 
-Only after Stage 1 has succeeded may a follow-up GitOps PR add a deny-all
-NetworkPolicy and a read-only verification workload that mounts the scratch
-claim. Validate file count and aggregate size, a deterministic aggregate
-checksum, ownership and modes, configuration parsing, native database
-integrity, and offline application startup. Record only timestamps, duration,
-aggregate counts, results, and RPO/RTO compliance.
+Only after Stage 1 has succeeded may a follow-up GitOps PR add the temporary
+`openclaw-restore-drill-verification` Job, its ConfigMap script, and a deny-all
+NetworkPolicy. The policy selects only that Job's unique pod label and has no
+ingress or egress rules. The Job mounts only `openclaw-restore-drill` as a
+read-only PVC; its other volumes are the read-only verifier ConfigMap and an
+in-memory `emptyDir` for temporary files. It has no Service, Ingress, production
+PVC, repository PVC, Secret, TLS material, or ServiceAccount token. It runs as
+UID/GID 1000 with RuntimeDefault seccomp, a read-only root filesystem, no
+privilege escalation, and all Linux capabilities dropped.
 
-After verification, a separate cleanup PR must remove the temporary Restore,
-any generated verification resources, and `openclaw-restore-drill` in that
-order. Preserve the production workload and PVC, the backup Schedule, the
-repository PV/PVC, the password Secret, and Restic data throughout both the
-verification and cleanup changes.
+The verifier walks the restored tree without emitting names or content. It fails
+closed if the tree has unexpected entry types, an unexpected configuration
+layout, unreadable data, or unexpected ownership/modes. It records only UTC
+timestamps, duration, file count, aggregate bytes, database count, one generic
+check result, and a deterministic aggregate SHA-256 checksum on success. It
+parses the configuration JSON, verifies the expected application home/workspace
+and config-file UID/GID/modes, and runs `PRAGMA integrity_check` read-only for
+each detected SQLite database.
+
+For an application-aware offline check, the pinned OpenClaw image runs
+`openclaw config validate` through its native CLI with an explicit restored
+configuration path and a writable temporary home. This validates the active
+schema without starting the gateway; the Job does not invoke `gateway run` or
+open a listener. No meaningful offline gateway-start/health check has been
+established without mounting the production gateway credential and TLS material
+or binding the gateway, all of which are intentionally prohibited here. Do not
+claim an application-startup check from this drill; treat the native config
+validation plus filesystem/database checks as its Stage-2 evidence.
+
+After the Stage-2 PR merges, use read-only MCP queries to confirm the Flux
+`apps` Kustomization is Ready, the NetworkPolicy selects only the verifier pod,
+and the Job reaches exactly one successful completion with no retries. Read the
+verifier's one redacted aggregate result only after it completes; do not collect
+or publish any other logs, restored files, paths, configuration, credentials, or
+snapshot/repository details. Independently confirm the production OpenClaw
+Deployment remains available with one replica and its production PVC identity is
+unchanged. Because `apps` uses `wait: false`, the bounded one-shot Job does not
+block Flux reconciliation; retain the completed Job for this review evidence and
+do not set a TTL that Flux would recreate.
+
+After the evidence is recorded, a separate cleanup PR must remove only the
+verification ConfigMap, verification Job, verification NetworkPolicy, temporary
+Restore, and `openclaw-restore-drill` scratch PVC. It must preserve the K8up
+Schedule, repository PV/PVC, repository password Secret, Restic data, production
+OpenClaw Deployment/PVC/Secrets/TLS, and all unrelated resources. Before
+verification evidence is available, reverting the Stage-2 PR removes only its
+ConfigMap, Job, and NetworkPolicy through GitOps; it leaves the Stage-1 Restore
+and scratch PVC intact.
 
 ## Operator-independent Restic recovery
 
