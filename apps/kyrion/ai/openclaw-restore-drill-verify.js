@@ -68,7 +68,7 @@ async function walk(directory, relativeDirectory = "") {
 
   for (const entry of entries) {
     const relativePath = relativeDirectory
-      ? `${relativeDirectory}/${entry.name}`
+      ? relativeDirectory + "/" + entry.name
       : entry.name;
     const absolutePath = path.join(directory, entry.name);
     let stat;
@@ -225,19 +225,19 @@ function verifySqliteIntegrity(filePath) {
 function report(result, check, aggregateChecksum) {
   const durationSeconds = ((Date.now() - startedAtMs) / 1000).toFixed(3);
   const fields = [
-    `result=${result}`,
-    `timestamp=${startedAt.toISOString()}`,
-    `duration_seconds=${durationSeconds}`,
-    `file_count=${fileCount}`,
-    `data_bytes=${dataBytes}`,
-    `database_count=${databaseCount}`,
+    "result=" + result,
+    "timestamp=" + startedAt.toISOString(),
+    "duration_seconds=" + durationSeconds,
+    "file_count=" + fileCount,
+    "data_bytes=" + dataBytes,
+    "database_count=" + databaseCount,
   ];
 
   if (aggregateChecksum) {
-    fields.push(`aggregate_sha256=${aggregateChecksum}`);
+    fields.push("aggregate_sha256=" + aggregateChecksum);
   }
   if (check) {
-    fields.push(`check=${check}`);
+    fields.push("check=" + check);
   }
 
   console.log(fields.join(" "));
