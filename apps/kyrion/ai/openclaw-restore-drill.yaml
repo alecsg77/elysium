@@ -1,9 +1,9 @@
-# Temporary, non-destructive first stage of the OpenClaw restore drill. A later
-# GitOps PR adds offline verification and then removes this Restore and its PVC.
+# Temporary, non-destructive rebaseline of the OpenClaw restore drill. It uses
+# supplementalGroups instead of fsGroup to preserve restored application metadata.
 apiVersion: k8up.io/v1
 kind: Restore
 metadata:
-  name: openclaw-restore-drill
+  name: openclaw-restore-drill-rebaseline-1
   namespace: ai
 spec:
   activeDeadlineSeconds: 7200
@@ -21,11 +21,13 @@ spec:
   # Do not pin a snapshot ID or a restore-time filter in Git.
   paths:
     - /data/openclaw-home-pvc
+  # The repository requires supplemental GID 34. Avoid fsGroup so the restore
+  # does not mutate the restored application ownership and mode metadata.
   podSecurityContext:
-    fsGroup: 34
-    fsGroupChangePolicy: OnRootMismatch
     runAsGroup: 1000
     runAsUser: 1000
+    supplementalGroups:
+      - 34
   resources:
     limits:
       cpu: "1"
@@ -36,7 +38,7 @@ spec:
   restoreMethod:
     folder:
       # This scratch PVC is the only restore target; never restore to production.
-      claimName: openclaw-restore-drill
+      claimName: openclaw-restore-drill-rebaseline-1
   successfulJobsHistoryLimit: 2
   volumes:
     - name: repository
