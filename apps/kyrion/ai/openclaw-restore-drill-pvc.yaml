@@ -1,0 +1,18 @@
+# Temporary, dedicated target for the OpenClaw restore drill. A follow-up GitOps
+# cleanup PR removes this PVC after offline verification has completed.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-restore-drill
+  namespace: ai
+  annotations:
+    # Do not make this temporary restore target eligible for K8up backup.
+    k8up.io/backup: "false"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+  volumeMode: Filesystem
