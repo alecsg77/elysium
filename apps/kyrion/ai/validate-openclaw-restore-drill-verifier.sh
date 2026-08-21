@@ -19,4 +19,16 @@ if grep -Fq "\${" "$verifier"; then
 fi
 
 node --check "$verifier"
+node - "$verifier" <<'NODE'
+const assert = require("node:assert/strict");
+const path = require("node:path");
+const verifierPath = path.resolve(process.argv[2]);
+const { isSafeRelativeRestoreSymlink } = require(verifierPath);
+const linkPath = "/restore/.openclaw/workspace/link";
+
+assert.equal(isSafeRelativeRestoreSymlink(linkPath, "../shared"), true);
+assert.equal(isSafeRelativeRestoreSymlink(linkPath, "/etc/passwd"), false);
+assert.equal(isSafeRelativeRestoreSymlink(linkPath, "../../../outside"), false);
+NODE
+
 kustomize build apps/kyrion/ai | flux envsubst >/dev/null

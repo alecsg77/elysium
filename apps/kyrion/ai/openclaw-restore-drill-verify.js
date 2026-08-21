@@ -19,6 +19,7 @@ const startedAtMs = Date.now();
 let fileCount = 0;
 let dataBytes = 0;
 let databaseCount = 0;
+let symlinkCount = 0;
 const aggregate = crypto.createHash("sha256");
 const configCandidates = [];
 const databaseCandidates = [];
@@ -52,6 +53,22 @@ async function sha256File(filePath) {
     stream.on("data", (chunk) => hash.update(chunk));
     stream.on("end", () => resolve(hash.digest("hex")));
   });
+}
+
+function isSafeRelativeRestoreSymlink(absolutePath, target) {
+  if (path.isAbsolute(target)) {
+    return false;
+  }
+
+  const resolvedRestoreRoot = path.resolve(restoreRoot);
+  const resolvedTarget = path.resolve(path.dirname(absolutePath), target);
+  const relativeTarget = path.relative(resolvedRestoreRoot, resolvedTarget);
+
+  return (
+    relativeTarget !== ".." &&
+    !relativeTarget.startsWith(".." + path.sep) &&
+    !path.isAbsolute(relativeTarget)
+  );
 }
 
 async function walk(directory, relativeDirectory = "") {
@@ -90,7 +107,25 @@ async function walk(directory, relativeDirectory = "") {
       continue;
     }
 
-    if (stat.isSymbolicLink() || !stat.isFile()) {
+    if (stat.isSymbolicLink()) {
+      let target;
+      try {
+        target = await fsp.readlink(absolutePath);
+      } catch {
+        fail("restore_symlink_unreadable");
+      }
+
+      if (!isSafeRelativeRestoreSymlink(absolutePath, target)) {
+        fail("unsafe_restore_symlink");
+      }
+
+      updateText("symlink");
+      updateText(target);
+      symlinkCount += 1;
+      continue;
+    }
+
+    if (!stat.isFile()) {
       fail("unexpected_restore_entry");
     }
 
@@ -231,6 +266,7 @@ function report(result, check, aggregateChecksum) {
     "file_count=" + fileCount,
     "data_bytes=" + dataBytes,
     "database_count=" + databaseCount,
+    "symlink_count=" + symlinkCount,
   ];
 
   if (aggregateChecksum) {
@@ -305,8 +341,12 @@ async function main() {
   report("pass", null, aggregate.digest("hex"));
 }
 
-main().catch((error) => {
-  const check = error instanceof VerificationError ? error.code : "verification_error";
-  report("fail", check, null);
-  process.exitCode = 1;
-});
+module.exports = { isSafeRelativeRestoreSymlink };
+
+if (require.main === module) {
+  main().catch((error) => {
+    const check = error instanceof VerificationError ? error.code : "verification_error";
+    report("fail", check, null);
+    process.exitCode = 1;
+  });
+}
