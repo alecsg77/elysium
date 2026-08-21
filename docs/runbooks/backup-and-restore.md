@@ -128,7 +128,7 @@ new scoped PR; production remains outside the restore target.
 
 Only after Stage 1 has succeeded may a follow-up GitOps PR add the temporary
 `openclaw-restore-drill-verification` Job, its ConfigMap script, and a deny-all
-NetworkPolicy. The policy selects only that Job's unique pod label and has no
+NetworkPolicy. The policy selects only that Job's dedicated pod label and has no
 ingress or egress rules. The Job mounts only `openclaw-restore-drill` as a
 read-only PVC; its other volumes are the read-only verifier ConfigMap and an
 in-memory `emptyDir` for temporary files. It has no Service, Ingress, production
@@ -168,6 +168,13 @@ Deployment remains available with one replica and its production PVC identity is
 unchanged. Because `apps` uses `wait: false`, the bounded one-shot Job does not
 block Flux reconciliation; retain the completed Job for this review evidence and
 do not set a TTL that Flux would recreate.
+
+A failed one-shot Job never reruns when only its referenced ConfigMap changes.
+After correcting verifier code, a follow-up GitOps PR must replace it with one
+new, distinctly named, one-shot Job that retains the same isolation, read-only
+mount, resource, and pod-label constraints. Do not imperatively delete or rerun
+the Job. Record the failed attempt separately, then assess only the new Job for
+the single successful completion required as Stage-2 evidence.
 
 After the evidence is recorded, a separate cleanup PR must remove only the
 verification ConfigMap, verification Job, verification NetworkPolicy, temporary
