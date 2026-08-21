@@ -14,9 +14,6 @@ resources:
   - openclaw-backup-repository-pvc.yaml
   - openclaw-backup-repository-sealed-secret.yaml
   - openclaw-backup-schedule.yaml
-  - openclaw-restore-drill-pvc.yaml
-  - openclaw-restore-drill.yaml
-  - openclaw-restore-drill-diagnostic-network-policy.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml

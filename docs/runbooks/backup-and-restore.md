@@ -151,12 +151,15 @@ allowed only when it is under `/app`, the pinned OpenClaw image's application
 root, and resolves to an existing directory beneath that root. Never traverse a
 restored symlink.
 
-The diagnostic parses the single restored `openclaw.json`, verifies the
-application-home, workspace, and configuration metadata against the production
-workload, runs `PRAGMA integrity_check` read-only for each detected SQLite
-database, and runs `openclaw config validate` with the restored configuration and
-a writable temporary home. It must not invoke `gateway run` or bind a listener.
-No meaningful offline gateway-start/health check is established without mounting
+The K8up folder Restore creates a target-wrapper directory, so its ownership and
+mode are not source-data evidence. The diagnostic parses the single restored
+`openclaw.json` and verifies the workspace and configuration metadata against
+the production workload. It runs `PRAGMA integrity_check` through SQLite's
+immutable read-only URI mode for each detected database, so the checker does not
+create or require journal/lock sidecars on the scratch mount. It then runs
+`openclaw config validate` with the restored configuration and a writable
+temporary home. It must not invoke `gateway run` or bind a listener. No
+meaningful offline gateway-start/health check is established without mounting
 production credentials and TLS material, which remain prohibited here.
 
 After the direct evidence is recorded, delete the diagnostic Pod immediately and
