@@ -1,10 +1,11 @@
 # Temporary, offline Stage-2 verification of the isolated OpenClaw restore.
-# Keep the completed Job for review; a dedicated cleanup PR removes it with the
-# verifier ConfigMap, deny-all NetworkPolicy, Restore, and scratch PVC.
+# This distinct retry Job reruns the corrected verifier once; a dedicated cleanup
+# PR removes it with the verifier ConfigMap, deny-all NetworkPolicy, Restore,
+# and scratch PVC.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: openclaw-restore-drill-verification
+  name: openclaw-restore-drill-verification-retry-1
   namespace: ai
   labels:
     app.kubernetes.io/component: restore-drill-verification
