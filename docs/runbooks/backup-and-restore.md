@@ -137,13 +137,16 @@ UID/GID 1000 with RuntimeDefault seccomp, a read-only root filesystem, no
 privilege escalation, and all Linux capabilities dropped.
 
 The verifier walks the restored tree without emitting names or content. It fails
-closed if the tree has unexpected entry types, an unexpected configuration
-layout, unreadable data, or unexpected ownership/modes. It records only UTC
-timestamps, duration, file count, aggregate bytes, database count, one generic
-check result, and a deterministic aggregate SHA-256 checksum on success. It
-parses the configuration JSON, verifies the expected application home/workspace
-and config-file UID/GID/modes, and runs `PRAGMA integrity_check` read-only for
-each detected SQLite database.
+closed if the tree has special entry types, an unexpected configuration layout,
+unreadable data, unexpected ownership/modes, or a symlink with an absolute or
+out-of-tree target. It accepts only relative symlinks whose lexical target stays
+inside the restored tree, incorporates their metadata and target into the
+aggregate checksum without following them, and records only UTC timestamps,
+duration, file count, aggregate bytes, database count, symlink count, one
+generic check result, and a deterministic aggregate SHA-256 checksum on success.
+It parses the configuration JSON, verifies the expected application
+home/workspace and config-file UID/GID/modes, and runs `PRAGMA integrity_check`
+read-only for each detected SQLite database.
 
 For an application-aware offline check, the pinned OpenClaw image runs
 `openclaw config validate` through its native CLI with an explicit restored
