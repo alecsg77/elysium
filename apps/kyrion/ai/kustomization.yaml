@@ -16,8 +16,7 @@ resources:
   - openclaw-backup-schedule.yaml
   - openclaw-restore-drill-pvc.yaml
   - openclaw-restore-drill.yaml
-  - openclaw-restore-drill-verification-network-policy.yaml
-  - openclaw-restore-drill-verification-job.yaml
+  - openclaw-restore-drill-diagnostic-network-policy.yaml
   - openclaw-sealed-secret.yaml
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml
@@ -25,11 +24,6 @@ resources:
   - paperclip-sealed-secret.yaml
 
 configMapGenerator:
-  - name: openclaw-restore-drill-verification
-    files:
-      - openclaw-restore-drill-verify.js
-    options:
-      disableNameSuffixHash: true
   - name: local-ai-helm-values
     files:
       - values.yaml=local-ai-values.yaml

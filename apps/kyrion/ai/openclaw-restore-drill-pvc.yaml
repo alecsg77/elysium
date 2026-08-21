@@ -1,9 +1,9 @@
-# Temporary, dedicated target for the OpenClaw restore drill. A follow-up GitOps
-# cleanup PR removes this PVC after offline verification has completed.
+# Temporary, dedicated target for the OpenClaw restore rebaseline. A follow-up
+# GitOps cleanup PR removes this PVC after direct offline verification completes.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: openclaw-restore-drill
+  name: openclaw-restore-drill-rebaseline-1
   namespace: ai
   annotations:
     # Do not make this temporary restore target eligible for K8up backup.

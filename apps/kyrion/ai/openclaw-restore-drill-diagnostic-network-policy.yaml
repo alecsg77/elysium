@@ -1,14 +1,14 @@
-# Temporary isolation for the Stage-2 OpenClaw restore-drill verifier only.
+# Temporary deny-all isolation for an authorized scratch-only restore diagnostic.
 # It does not select production OpenClaw pods.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: openclaw-restore-drill-verification
+  name: openclaw-restore-drill-diagnostic
   namespace: ai
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: openclaw-restore-drill-verification
+      app.kubernetes.io/component: restore-drill-diagnostic
   policyTypes:
     - Ingress
     - Egress

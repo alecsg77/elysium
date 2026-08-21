@@ -16,11 +16,13 @@ spec:
     volumeMounts:
       - mountPath: /repository
         name: repository
+  # The repository requires supplemental GID 34. Do not use fsGroup here: it
+  # can rewrite ownership on the application PVC selected for backup.
   podSecurityContext:
-    fsGroup: 34
-    fsGroupChangePolicy: OnRootMismatch
     runAsGroup: 1000
     runAsUser: 1000
+    supplementalGroups:
+      - 34
   resourceRequirementsTemplate:
     limits:
       cpu: "1"
