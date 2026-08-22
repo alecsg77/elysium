@@ -1,6 +1,7 @@
 suite: test legacy selector adoption
 templates:
   - deployment.yaml
+  - configmap.yaml
   - service.yaml
 tests:
   - it: Should preserve custom selector labels across Deployment, Pod, and Service
