@@ -14,7 +14,7 @@ tests:
       - template: deployment.yaml
         documentIndex: 0
         equal:
-          path: metadata.annotations.example.com/retain
+          path: metadata.annotations["example.com/retain"]
           value: "true"
       - template: deployment.yaml
         documentIndex: 0
