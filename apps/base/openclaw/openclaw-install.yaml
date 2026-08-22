@@ -12,7 +12,10 @@ spec:
     kind: GitRepository
     name: openclaw
   path: ./scripts/k8s/manifests
-  prune: true
+  # Keep the current resources when this source Kustomization is removed in the
+  # subsequent OneChart cutover; Flux Helm can then adopt them without a race.
+  prune: false
+  deletionPolicy: Orphan
   wait: true
   postBuild:
     substituteFrom:
