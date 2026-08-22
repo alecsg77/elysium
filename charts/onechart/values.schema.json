@@ -144,6 +144,13 @@
               "command": {
                 "type": "string",
                 "title": "Command"
+              },
+              "resources": {
+                "type": "object",
+                "title": "Resources",
+                "description": "Optional resource requests and limits for the init container.",
+                "default": {},
+                "additionalProperties": true
               }
             },
             "required": [
@@ -241,6 +248,20 @@
       "required": [],
       "additionalProperties": true
     },
+    "deploymentAnnotations": {
+      "$id": "#/properties/deploymentAnnotations",
+      "type": "object",
+      "title": "Deployment annotations",
+      "description": "Annotations to place on the Deployment object.",
+      "default": {},
+      "examples": [
+        {}
+      ],
+      "required": [],
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "podLabels": {
       "$id": "#/properties/podLabels",
       "type": "object",
@@ -252,6 +273,23 @@
       ],
       "required": [],
       "additionalProperties": true
+    },
+    "selectorLabels": {
+      "$id": "#/properties/selectorLabels",
+      "type": "object",
+      "title": "Selector labels",
+      "description": "Optional stable labels used by the Deployment and Service selectors. Use only to adopt existing selector identities.",
+      "default": {},
+      "examples": [
+        {},
+        {
+          "app": "example"
+        }
+      ],
+      "required": [],
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "name": {
       "$id": "#/properties/name",

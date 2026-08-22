@@ -1,0 +1,198 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openclaw
+spec:
+  releaseName: openclaw
+  chart:
+    spec:
+      chart: ./charts/onechart
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  # A short interval retries a failed adoption without Helm uninstalling the
+  # adopted resources between attempts.
+  interval: 5m
+  timeout: 15m
+  install:
+    # The handoff PR orphaned the upstream inventory so Helm can adopt these
+    # same-named resources without a delete/recreate race on the RWO PVC.
+    disableTakeOwnership: false
+    # Never uninstall adopted production resources between failed retries.
+    remediation:
+      retries: 0
+  upgrade:
+    disableTakeOwnership: false
+    remediation:
+      retries: 0
+  valuesFrom:
+    - kind: ConfigMap
+      name: openclaw-image-auto
+      valuesKey: values.yaml
+  values:
+    replicas: 1
+    # Keep a single writer on openclaw-home-pvc during every rollout.
+    strategy: Recreate
+    fullnameOverride: openclaw
+    # Preserve the immutable legacy Deployment selector and the Service/K8up
+    # selector while Helm takes ownership of the existing resources.
+    selectorLabels:
+      app: openclaw
+    containerPort: 18789
+    svcPort: 443
+    ports:
+      - name: gateway
+        containerPort: 18789
+        svcPort: 443
+    serviceAnnotations:
+      external-dns.alpha.kubernetes.io/hostname: openclaw.${PRIVATE_DOMAIN}
+      # Retain the adopted Service until a future intentional two-PR removal.
+      helm.sh/resource-policy: keep
+    deploymentAnnotations:
+      # Retain the adopted single writer if an install/rollback must be repaired.
+      helm.sh/resource-policy: keep
+    podDisruptionBudgetEnabled: false
+    podSecurityContext:
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    podSpec:
+      automountServiceAccountToken: false
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    existingFileSecrets:
+      - name: openclaw-tls
+        path: /etc/openclaw/tls
+    volumes:
+      - name: shared-openclaw-home
+        path: /home/node/.openclaw
+        existingClaim: openclaw-home-pvc
+      - name: shared-config
+        path: /config
+        existingConfigMap: openclaw-config
+      - name: tmp-volume
+        path: /tmp
+        emptyDir: true
+    initContainers:
+      - name: init-config
+        # This pinned image is only used for POSIX/Node bootstrap work; runtime
+        # image updates remain driven by the generated Helm values ConfigMap.
+        image: ghcr.io/openclaw/openclaw
+        tag: 2026.7.1
+        digest: sha256:6a31d44b2944e7adcd2b582bf6fb463111264ebca97a0201795b799135bd102c
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        command: |
+          mkdir -p /home/node/.openclaw/workspace
+          mkdir -p /home/node/.openclaw/.npm
+          chown 1000:1000 /home/node/.openclaw /home/node/.openclaw/workspace
+          chown 1000:1000 /home/node/.openclaw/.npm
+          if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+            cp /config/openclaw.json /home/node/.openclaw/openclaw.json
+          fi
+          if [ ! -f /home/node/.openclaw/workspace/AGENTS.md ]; then
+            cp /config/AGENTS.md /home/node/.openclaw/workspace/AGENTS.md
+          fi
+    container:
+      name: gateway
+      command:
+        - node
+        - /app/dist/index.js
+        - gateway
+        - run
+      env:
+        - name: NPM_CONFIG_CACHE
+          value: /home/node/.openclaw/.npm
+        - name: npm_config_cache
+          value: /home/node/.openclaw/.npm
+        - name: COPILOT_GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-copilot-auth
+              key: COPILOT_GITHUB_TOKEN
+              optional: true
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-copilot-auth
+              key: GH_TOKEN
+              optional: true
+        - name: HOME
+          value: /home/node
+        - name: OPENCLAW_CONFIG_DIR
+          value: /home/node/.openclaw
+        - name: NODE_ENV
+          value: production
+        - name: OPENCLAW_GATEWAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: OPENCLAW_GATEWAY_TOKEN
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: ANTHROPIC_API_KEY
+              optional: true
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: OPENAI_API_KEY
+              optional: true
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: GEMINI_API_KEY
+              optional: true
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: OPENROUTER_API_KEY
+              optional: true
+      readinessProbe:
+        exec:
+          command:
+            - node
+            - -e
+            - >-
+              require("https").get({hostname:"127.0.0.1",port:18789,path:"/readyz",rejectUnauthorized:false}, r => process.exit(r.statusCode < 400 ? 0 : 1)).on("error", () => process.exit(1))
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        timeoutSeconds: 5
+      livenessProbe:
+        exec:
+          command:
+            - node
+            - -e
+            - >-
+              require("https").get({hostname:"127.0.0.1",port:18789,path:"/healthz",rejectUnauthorized:false}, r => process.exit(r.statusCode < 400 ? 0 : 1)).on("error", () => process.exit(1))
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        timeoutSeconds: 10

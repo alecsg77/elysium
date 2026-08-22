@@ -18,7 +18,7 @@ spec:
     semver: '>=0.0.0'
     limit: 1
 ---
-# The ResourceSet owns only this ConfigMap. The HelmRelease/Kustomization remains Git-managed.
+# The ResourceSet owns only this ConfigMap; the HelmRelease remains Git-managed.
 apiVersion: fluxcd.controlplane.io/v1
 kind: ResourceSet
 metadata:
@@ -47,7 +47,8 @@ spec:
       labels:
         reconcile.fluxcd.io/watch: Enabled
     data:
-      repository: << inputs.repository | quote >>
-      tag: << inputs.tag | quote >>
-      digest: << inputs.digest | quote >>
-      image: "<< inputs.repository >>:<< inputs.tag >>@<< inputs.digest >>"
+      values.yaml: |
+        image:
+          repository: << inputs.repository | quote >>
+          tag: << inputs.tag | quote >>
+          digest: << inputs.digest | quote >>

@@ -36,7 +36,14 @@ fullnameOverride: ""
 
 podAnnotations: {}
 
+# Annotations for the Deployment object itself (not the Pod template).
+deploymentAnnotations: {}
+
 podLabels: {}
+
+# Optional stable selector labels. Set this only when adopting an existing
+# Deployment or Service whose selectors cannot change.
+selectorLabels: {}
 
 podSecurityContext:
   fsGroup: 999
