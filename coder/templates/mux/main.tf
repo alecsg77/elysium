@@ -168,7 +168,7 @@ module "mux" {
   # use_cached skips reinstall when the binary is already present.
   install_prefix = "/home/coder/.local/bin"
   log_path       = "/home/coder/.mux/mux.log"
-  use_cached     = true
+  use_cached     = false
   open_in        = "tab"
 }
 
