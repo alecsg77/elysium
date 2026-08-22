@@ -1,0 +1,36 @@
+suite: test legacy selector adoption
+templates:
+  - deployment.yaml
+  - configmap.yaml
+  - service.yaml
+tests:
+  - it: Should preserve custom selector labels across Deployment, Pod, and Service
+    set:
+      deploymentAnnotations:
+        example.com/retain: "true"
+      selectorLabels:
+        app: example
+    asserts:
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: metadata.annotations["example.com/retain"]
+          value: "true"
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.selector.matchLabels
+          value:
+            app: example
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.metadata.labels
+          value:
+            app: example
+      - template: service.yaml
+        documentIndex: 0
+        equal:
+          path: spec.selector
+          value:
+            app: example

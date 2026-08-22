@@ -47,8 +47,12 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "helm-chart.selectorLabels" -}}
+{{- if .Values.selectorLabels }}
+{{- toYaml .Values.selectorLabels }}
+{{- else }}
 app.kubernetes.io/name: {{ include "helm-chart.name" . }}
 app.kubernetes.io/instance: {{ template "robustName" .Release.Name }}
+{{- end }}
 {{- end }}
 
 {{/*

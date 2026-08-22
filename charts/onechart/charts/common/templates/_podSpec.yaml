@@ -34,6 +34,10 @@ initContainers:
     securityContext:
     {{- toYaml .securityContext | nindent 6 }}
     {{- end}}
+    {{- if .resources }}
+    resources:
+    {{- toYaml .resources | nindent 6 }}
+    {{- end}}
   {{- end }}      
 containers:
   {{- $containerTpl := include "common.container.tpl" . | fromYaml }}
