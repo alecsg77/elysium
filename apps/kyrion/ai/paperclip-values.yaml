@@ -20,6 +20,10 @@ container:
           value: paperclip.${ts_net}
 
 ingress:
+  # Resolve the canonical tailnet hostname to the ingress proxy Pod IP for
+  # in-cluster clients; the proxy listens on that IP when this is enabled.
+  annotations:
+    tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
   # The Tailscale Ingress controller expands this short name in the tailnet.
   host: paperclip
   ingressClassName: tailscale
