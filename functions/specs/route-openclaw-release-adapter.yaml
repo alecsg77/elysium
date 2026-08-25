@@ -7,7 +7,7 @@ spec:
   createingress: false
   functionref:
     functionweights: null
-    name: openclaw-release-adapter
+    name: openclaw-release-adapter-v2
     type: name
   host: ""
   ingressconfig:
