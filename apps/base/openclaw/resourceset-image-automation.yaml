@@ -9,13 +9,12 @@ metadata:
     app.kubernetes.io/component: image-automation
     app.kubernetes.io/part-of: openclaw
 spec:
-  type: OCIArtifactTag
-  url: oci://ghcr.io/openclaw/openclaw
-  defaultValues:
-    repository: ghcr.io/openclaw/openclaw
+  # The adapter emits exactly one validated stable input. Do not supply defaults:
+  # an unavailable or incomplete adapter response must not advance the image.
+  type: ExternalService
+  url: http://router.fission.svc.cluster.local/openclaw/release
+  insecure: true
   filter:
-    includeTag: '^[0-9]+\.[0-9]+\.[0-9]+$'
-    semver: '>=0.0.0'
     limit: 1
 ---
 # The ResourceSet owns only this ConfigMap; the HelmRelease remains Git-managed.
