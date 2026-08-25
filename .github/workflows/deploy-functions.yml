@@ -39,7 +39,10 @@ jobs:
           curl -fsSL -o fission \
             "https://github.com/fission/fission/releases/download/${FISSION_VERSION}/${archive}"
           echo "${FISSION_SHA256}  fission" | sha256sum --check --strict
-          install -m 0755 fission /usr/local/bin/fission
+          install_dir="${RUNNER_TEMP}/bin"
+          install -d -m 0755 "${install_dir}"
+          install -m 0755 fission "${install_dir}/fission"
+          echo "${install_dir}" >> "${GITHUB_PATH}"
       
       - name: Verify cluster connection
         run: fission version
