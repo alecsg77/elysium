@@ -23,12 +23,24 @@ The active workloads that remain on Flux ImagePolicy/ImageUpdateAutomation are a
 
 SearXNG also has an extraction-based legacy manifest, but its base is not selected by the `ai` overlay, so it has no live ImagePolicy or workload in this rollout. `RomM` is not included because it has no ImagePolicy setter target.
 
+## OpenClaw adapter-backed selection
+
+OpenClaw is intentionally an exception to direct OCI tag discovery. `ResourceSetInputProvider/openclaw-image` is an `ExternalService` that calls the Fission router at `http://router.fission.svc.cluster.local/openclaw/release`. Plain HTTP is allowed only for this in-cluster Service path (`insecure: true`); the Fission trigger itself is the exact `GET /openclaw/release` route.
+
+The adapter source is `functions/nodejs/openclaw-release-adapter.js`. On each 24-hour provider reconciliation it returns at most one `inputs` element (`id: openclaw-stable`) and validates all three image fields before returning HTTP 200:
+
+- `repository` is the fixed `ghcr.io/openclaw/openclaw` repository.
+- `tag` is the npm `openclaw` latest version after it matches GitHub's `/releases/latest` redirect. GitHub's required leading `v` is removed **only** for comparison and the emitted tag; no other tag rewriting is allowed.
+- `digest` is the complete `sha256:` digest read from the matching GHCR manifest response.
+
+The adapter fails with HTTP 502 rather than emitting a partial or mismatched input when either public-source crosscheck, stable-version validation, or manifest-digest validation fails. The provider intentionally has no `defaultValues`, so a failed adapter response cannot synthesize an image. Its `limit: 1` preserves the one validated response; the ResourceSet maps its `repository`, normalized stable `tag`, and complete `digest` into `ConfigMap/openclaw-image-auto`'s `values.yaml`. The existing OpenClaw HelmRelease remains the sole workload owner and consumer.
+
 ## How it works
 
 Each migrated workload has `resourceset-image-automation.yaml` next to its current manifest:
 
-1. `ResourceSetInputProvider/<workload>-image` scans the OCI image repository at `fluxcd.controlplane.io/reconcileEvery`.
-2. Its `filter` admits one tag (`limit: 1`) and exports the tag plus its immutable SHA256 digest.
+1. `ResourceSetInputProvider/<workload>-image` obtains a permitted image input at `fluxcd.controlplane.io/reconcileEvery`, normally from OCI and, for OpenClaw, from its Fission `ExternalService` adapter.
+2. Its provider-specific selection emits one permitted tag (`limit: 1`) and immutable SHA256 digest.
 3. `ResourceSet/<workload>-image` generates `ConfigMap/<workload>-image-auto` with repository/tag/digest keys; Helm adapters also include a `values.yaml` key.
 4. The ConfigMap label `reconcile.fluxcd.io/watch: Enabled` triggers the consuming HelmRelease or Kustomization to reconcile promptly.
 
@@ -43,6 +55,42 @@ kubectl -n <namespace> get resourceset,resourcesetinputprovider
 kubectl -n <namespace> get configmap <workload>-image-auto
 flux get helmreleases -A
 flux get kustomizations -A
+```
+
+### OpenClaw read-only diagnostics
+
+These commands read status and generated image values only; they do not reconcile, suspend, resume, or read Secrets:
+
+```bash
+kubectl -n ai get resourcesetinputprovider openclaw-image
+kubectl -n ai get resourceset openclaw-image
+kubectl -n ai get configmap openclaw-image-auto \
+  -o jsonpath='{.data.values\.yaml}{"\n"}'
+kubectl -n ai get helmrelease openclaw
+kubectl -n ai get deployment openclaw
+kubectl -n default get httptrigger openclaw-release-adapter
+```
+
+A trusted operator can use a local port-forward to inspect the adapter's current mapped response without exposing the in-cluster router:
+
+```bash
+kubectl -n fission port-forward service/router 8888:80
+curl --fail --silent --show-error \
+  http://127.0.0.1:8888/openclaw/release | jq .
+```
+
+Crosscheck the adapter's public release inputs without selecting or writing an image. The first command reads npm's latest package version; the second follows GitHub's latest-release redirect. Confirm the redirect ends in `/releases/tag/v<version>`, remove that one leading `v`, and require the two versions to match exactly:
+
+```bash
+npm_version="$(curl --fail --silent --show-error \
+  https://registry.npmjs.org/openclaw/latest | jq -r .version)"
+github_release="$(curl --fail --silent --show-error --location --output /dev/null \
+  --write-out '%{url_effective}' \
+  https://github.com/openclaw/openclaw/releases/latest)"
+github_tag="${github_release##*/}"
+case "$github_tag" in v*) github_version="${github_tag#v}" ;; *) exit 1 ;; esac
+test "$npm_version" = "$github_version"
+printf 'stable version: %s\n' "$npm_version"
 ```
 
 A healthy image update has this ordering:
