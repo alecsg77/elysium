@@ -51,6 +51,7 @@
 		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
 		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
 		"./features/fission-cli": {
+			// renovate: datasource=custom.fission-releases depName=fission/fission versioning=semver-coerced
 			"version": "1.27.0"
 		},
 		"ghcr.io/devcontainers/features/terraform:1": {},

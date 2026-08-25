@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # renovate: datasource=custom.fission-releases depName=fission/fission versioning=semver-coerced
   FISSION_VERSION: v1.27.0
   FISSION_SHA256: 69eb82c53945ae8bdd5842933a88459b7004fe8eb2f0ab1c3de0a814e04ca9e9
 

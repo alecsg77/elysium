@@ -42,6 +42,41 @@
       ]
     },
     {
+      "description": "Fission chart and Dev Container CLI versions marked with a preceding Renovate comment",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^apps\\/base\\/fission\\/release\\.yaml$/",
+        "/^\\.devcontainer\\/devcontainer\\.json$/"
+      ],
+      "matchStrings": [
+        "(?:#|//) renovate: datasource=(?<datasource>custom\\.fission-releases) depName=(?<depName>fission\\/fission) versioning=(?<versioning>[^\\s]+)\\r?\\n[ \\t]*[\\\"]?version[\\\"]?:[ \\t]*[\\\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"]?"
+      ]
+    },
+    {
+      "description": "Fission CRD tag and immutable Git object pin",
+      "customType": "regex",
+      "managerFilePatterns": ["/^apps\\/base\\/fission\\/kustomization\\.yaml$/"],
+      "matchStrings": [
+        "# renovate: datasource=custom\\.fission-git-tags depName=fission\\/fission versioning=semver-coerced\\r?\\n  # Fission v(?<currentValue>\\d+\\.\\d+\\.\\d+) tag, resolved to immutable Git object (?<currentDigest>[a-f0-9]{40})\\.\\r?\\n  - https://github\\.com/fission/fission/crds/v1\\?ref=[a-f0-9]{40}"
+      ],
+      "datasourceTemplate": "custom.fission-git-tags",
+      "depNameTemplate": "fission/fission",
+      "versioningTemplate": "semver-coerced",
+      "autoReplaceStringTemplate": "# renovate: datasource=custom.fission-git-tags depName=fission/fission versioning=semver-coerced\n  # Fission v{{{newValue}}} tag, resolved to immutable Git object {{{newDigest}}}.\n  - https://github.com/fission/fission/crds/v1?ref={{{newDigest}}}"
+    },
+    {
+      "description": "Fission deployment CLI version and release-published SHA-256",
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/deploy-functions\\.yml$/"],
+      "matchStrings": [
+        "# renovate: datasource=custom\\.fission-releases depName=fission\\/fission versioning=semver-coerced\\r?\\n  FISSION_VERSION: v(?<currentValue>\\d+\\.\\d+\\.\\d+)\\r?\\n  FISSION_SHA256: (?<currentDigest>[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "custom.fission-releases",
+      "depNameTemplate": "fission/fission",
+      "versioningTemplate": "semver-coerced",
+      "autoReplaceStringTemplate": "# renovate: datasource=custom.fission-releases depName=fission/fission versioning=semver-coerced\n  FISSION_VERSION: v{{{newValue}}}\n  FISSION_SHA256: {{{newDigest}}}"
+    },
+    {
       "description": "Pinned K3s versions in System Upgrade Controller Plans",
       "customType": "regex",
       "managerFilePatterns": [
@@ -55,12 +90,37 @@
       "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$"
     }
   ],
+  "customDatasources": {
+    "fission-git-tags": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/fission/fission/git/matching-refs/tags/v",
+      "transformTemplates": [
+        "{\"releases\": $map($[$match(ref, /^refs\\/tags\\/v\\d+\\.\\d+\\.\\d+$/)], function($tag) { {\"version\": $substringAfter($tag.ref, \"refs/tags/v\"), \"digest\": $tag.object.sha, \"sourceUrl\": \"https://github.com/fission/fission\"} })}"
+      ]
+    },
+    "fission-releases": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/fission/fission/releases?per_page=100",
+      "transformTemplates": [
+        "{\"releases\": $map($filter($[draft = false and prerelease = false and $match(tag_name, /^v\\d+\\.\\d+\\.\\d+$/)], function($release) { $type($release.assets[name = $join([\"fission-\", $release.tag_name, \"-linux-amd64\"])].digest) = \"string\" }), function($release) { {\"version\": $substringAfter($release.tag_name, \"v\"), \"digest\": $substringAfter($release.assets[name = $join([\"fission-\", $release.tag_name, \"-linux-amd64\"])].digest, \"sha256:\"), \"releaseTimestamp\": $release.published_at, \"sourceUrl\": \"https://github.com/fission/fission\", \"changelogUrl\": $release.html_url} })}"
+      ]
+    }
+  },
   "packageRules": [
     {
       "description": "Pause custom-regex auto-merge until PR Validate Simple / validate is enforced and R0 rules are proven",
       "matchManagers": ["custom.regex"],
       "automerge": false,
       "commitMessagePrefix": "chore(deps): "
+    },
+    {
+      "description": "Keep Fission chart, CRDs, and CLI pins in one reviewable update",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["fission/fission"],
+      "groupName": "Fission platform",
+      "groupSlug": "fission-platform",
+      "separateMajorMinor": false,
+      "automerge": false,
+      "commitMessagePrefix": "chore(fission): ",
+      "commitMessageTopic": "align platform version"
     },
     {
       "description": "Pause Terraform minor/patch auto-merge until PR Validate Simple / validate is enforced and R0 rules are proven",
