@@ -12,8 +12,8 @@ spec:
     image: ghcr.io/fission/node-builder-22:1.35@sha256:197cdc4e3e795fbdc376991834dbcb9d7061911137336e6df5033ffd473e84bb
     podspec:
       containers:
-      - name: builder
-        resources: {}
+        - name: builder
+          resources: {}
   imagepullsecret: ""
   keeparchive: false
   poolsize: 1
@@ -25,6 +25,6 @@ spec:
     image: ghcr.io/fission/node-env-22:1.35@sha256:dcac467eb08b9f20f62a32d9696f7e10344753d69c6cccddc55e07be15337796
     podspec:
       containers:
-      - name: nodejs22
-        resources: {}
+        - name: nodejs22
+          resources: {}
   version: 3

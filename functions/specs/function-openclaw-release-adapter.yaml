@@ -1,5 +1,5 @@
 include:
-- nodejs/openclaw-release-adapter.js
+  - nodejs/openclaw-release-adapter.js
 kind: ArchiveUploadSpec
 name: nodejs-openclaw-release-adapter-js-xlyJ
 

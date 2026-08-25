@@ -17,6 +17,6 @@ spec:
     tls: ""
   method: ""
   methods:
-  - GET
+    - GET
   prefix: ""
   relativeurl: /openclaw/release
