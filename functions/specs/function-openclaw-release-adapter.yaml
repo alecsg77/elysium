@@ -12,13 +12,13 @@ metadata:
 spec:
   deployment:
     checksum: {}
+    type: url
+    url: archive://nodejs-openclaw-release-adapter-js-xlyJ
   environment:
     name: nodejs22
     namespace: default
   source:
     checksum: {}
-    type: url
-    url: archive://nodejs-openclaw-release-adapter-js-xlyJ
 
 ---
 apiVersion: fission.io/v1
