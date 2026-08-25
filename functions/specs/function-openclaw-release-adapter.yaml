@@ -1,9 +1,7 @@
 include:
-  - package.json
-  - openclaw-release-adapter.js
+  - nodejs/openclaw-release-adapter.js
 kind: ArchiveUploadSpec
-name: nodejs-openclaw-release-adapter-source
-rootdir: nodejs
+name: nodejs-openclaw-release-adapter-js
 
 ---
 apiVersion: fission.io/v1
@@ -12,13 +10,15 @@ metadata:
   name: openclaw-release-adapter-6e3e13ad-98dc-4dca-aed0-c3d252a4a554
   namespace: default
 spec:
+  deployment:
+    checksum: {}
+    type: url
+    url: archive://nodejs-openclaw-release-adapter-js
   environment:
     name: nodejs22
     namespace: default
   source:
     checksum: {}
-    type: url
-    url: archive://nodejs-openclaw-release-adapter-source
 
 ---
 apiVersion: fission.io/v1
