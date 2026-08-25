@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FISSION_VERSION: v1.21.0
-  FISSION_SHA256: b12b0d4499fa74406b885c3d5be642ae698d87251e3d19ec09c4588935de5555
+  FISSION_VERSION: v1.27.0
+  FISSION_SHA256: 69eb82c53945ae8bdd5842933a88459b7004fe8eb2f0ab1c3de0a814e04ca9e9
 
 jobs:
   deploy:
@@ -43,6 +43,14 @@ jobs:
       - name: Verify cluster connection
         run: fission version
       
+      - name: Validate function specification
+        working-directory: functions
+        run: fission spec validate -n default
+
+      - name: Preview reviewed function specification
+        working-directory: functions
+        run: fission spec apply -n default --delete --wait --dry-run
+
       - name: Apply reviewed function specification
         working-directory: functions
         run: |

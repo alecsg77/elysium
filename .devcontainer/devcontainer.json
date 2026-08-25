@@ -50,7 +50,9 @@
 		"ghcr.io/gickis/devcontainer-features/kubeseal:1": {},
 		"ghcr.io/gickis/devcontainer-features/kubeconform:1": {},
 		"ghcr.io/goldsam/dev-container-features/flux2:1": {},
-		"./features/fission-cli": {},
+		"./features/fission-cli": {
+			"version": "1.27.0"
+		},
 		"ghcr.io/devcontainers/features/terraform:1": {},
 		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"./features/coder-cli": {},

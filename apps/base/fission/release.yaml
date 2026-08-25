@@ -8,6 +8,7 @@ spec:
   chart:
     spec:
       chart: fission-all
+      version: 1.27.0
       sourceRef:
         name: fission-charts
         kind: HelmRepository
