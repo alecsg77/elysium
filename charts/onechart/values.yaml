@@ -18,12 +18,13 @@ image:
 # vars:
 #   MY_VAR: "value"
 
-# Optional init containers accept image, tag, and an optional immutable digest.
+# Optional init containers inherit image.repository, image.tag, image.digest, and
+# image.pullPolicy when their respective overrides are omitted.
 # initContainers:
 #   - name: initialize-data
-#     image: example/init
-#     tag: v1.2.3
-#     digest: sha256:<64 hexadecimal characters>
+#     # image: example/init
+#     # tag: v1.2.3
+#     # digest: sha256:<64 hexadecimal characters>
 
 replicas: 1
 

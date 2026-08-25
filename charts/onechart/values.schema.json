@@ -119,16 +119,18 @@
               },
               "image": {
                 "type": "string",
-                "title": "Image"
+                "title": "Image",
+                "description": "Optional init-container repository. Defaults to image.repository."
               },
               "tag": {
                 "type": "string",
-                "title": "Tag"
+                "title": "Tag",
+                "description": "Optional init-container tag. Defaults to image.tag."
               },
               "digest": {
                 "type": "string",
                 "title": "Digest",
-                "description": "Optional SHA-256 OCI image digest appended to the init-container image tag.",
+                "description": "Optional SHA-256 OCI image digest appended to the init-container image tag. Defaults to image.digest.",
                 "default": "",
                 "pattern": "^(|sha256:[A-Fa-f0-9]{64})$",
                 "examples": [
@@ -138,7 +140,8 @@
               },
               "imagePullPolicy": {
                 "type": "string",
-                "title": "Command",
+                "title": "Image pull policy",
+                "description": "Optional init-container pull policy. Defaults to image.pullPolicy.",
                 "default": "IfNotPresent"
               },
               "command": {
@@ -154,9 +157,7 @@
               }
             },
             "required": [
-              "name",
-              "image",
-              "tag"
+              "name"
             ]
           }
         ]

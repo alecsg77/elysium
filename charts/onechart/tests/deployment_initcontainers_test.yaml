@@ -34,6 +34,52 @@ tests:
           path: spec.template.spec.initContainers[0].image
           value: "nginx:1.2.2@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
+  - it: Should inherit the main digest-pinned image when an init image is omitted
+    set:
+      image:
+        repository: ghcr.io/example/application
+        tag: v1.2.3
+        digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        pullPolicy: Always
+      initContainers:
+        - name: pod1
+    asserts:
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "ghcr.io/example/application:v1.2.3@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[0].imagePullPolicy
+          value: Always
+
+  - it: Should retain explicit init-container image overrides
+    set:
+      image:
+        repository: ghcr.io/example/application
+        tag: v1.2.3
+        digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        pullPolicy: Always
+      initContainers:
+        - name: pod1
+          image: busybox
+          tag: 1.37.0
+          digest: sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789
+          imagePullPolicy: Never
+    asserts:
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "busybox:1.37.0@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+      - template: deployment.yaml
+        documentIndex: 0
+        equal:
+          path: spec.template.spec.initContainers[0].imagePullPolicy
+          value: Never
+
   - it: Should set command  
     set:
       initContainers:
