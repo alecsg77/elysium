@@ -348,7 +348,7 @@ resource "kubernetes_deployment" "main" {
           }
           env {
             name  = "CODER_INNER_IMAGE"
-            value = "codercom/enterprise-node:ubuntu-20260820"
+            value = "codercom/enterprise-node:ubuntu-20260824"
           }
           env {
             name  = "CODER_INNER_USERNAME"
