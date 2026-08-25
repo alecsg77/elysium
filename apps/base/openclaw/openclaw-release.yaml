@@ -91,11 +91,8 @@ spec:
         emptyDir: true
     initContainers:
       - name: init-config
-        # This pinned image is only used for POSIX/Node bootstrap work; runtime
-        # image updates remain driven by the generated Helm values ConfigMap.
-        image: ghcr.io/openclaw/openclaw
-        tag: 2026.7.1
-        digest: sha256:6a31d44b2944e7adcd2b582bf6fb463111264ebca97a0201795b799135bd102c
+        # Inherit the generated digest-pinned image so bootstrap and gateway
+        # always run the same adapter-validated OpenClaw release.
         securityContext:
           runAsUser: 0
           runAsGroup: 0
