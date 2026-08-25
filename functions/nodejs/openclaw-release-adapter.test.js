@@ -7,10 +7,11 @@ const handler = require('./openclaw-release-adapter');
 
 const DIGEST = `sha256:${'a'.repeat(64)}`;
 
-function response(status, { body, headers = {} } = {}) {
+function response(status, { body, headers = {}, url = '' } = {}) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    url,
     headers: new Headers(headers),
     async json() {
       if (body instanceof Error) {
@@ -34,9 +35,9 @@ function successfulFetch({ version = '2026.7.1-2', digest = DIGEST, npmResponses
       if (url === 'https://registry.npmjs.org/openclaw/latest') {
         return npmQueue.shift();
       }
-      if (url === 'https://api.github.com/repos/openclaw/openclaw/releases/latest') {
+      if (url === 'https://github.com/openclaw/openclaw/releases/latest') {
         return response(200, {
-          body: { draft: false, prerelease: false, tag_name: `v${version}` },
+          url: `https://github.com/openclaw/openclaw/releases/tag/v${version}`,
         });
       }
       if (url.startsWith('https://ghcr.io/token?')) {
@@ -89,9 +90,9 @@ test('rejects an npm and GitHub version mismatch before contacting GHCR', async 
     if (url === 'https://registry.npmjs.org/openclaw/latest') {
       return response(200, { body: { name: 'openclaw', version: '2026.7.1-2' } });
     }
-    if (url === 'https://api.github.com/repos/openclaw/openclaw/releases/latest') {
+    if (url === 'https://github.com/openclaw/openclaw/releases/latest') {
       return response(200, {
-        body: { draft: false, prerelease: false, tag_name: 'v2026.7.1-1' },
+        url: 'https://github.com/openclaw/openclaw/releases/tag/v2026.7.1-1',
       });
     }
     throw new Error(`GHCR must not be called: ${url}`);
@@ -110,12 +111,12 @@ test('rejects beta, malformed, and zero-valued stable-version candidates', () =>
   }
 });
 
-test('rejects GitHub prereleases even when the tag syntax is otherwise valid', async () => {
+test('rejects a GitHub latest-release response that does not resolve to a stable tag', async () => {
   const scenario = successfulFetch();
   const fetchImpl = async (url, options) => {
-    if (url === 'https://api.github.com/repos/openclaw/openclaw/releases/latest') {
+    if (url === 'https://github.com/openclaw/openclaw/releases/latest') {
       return response(200, {
-        body: { draft: false, prerelease: true, tag_name: 'v2026.7.1-2' },
+        url: 'https://github.com/openclaw/openclaw/releases/tag/v2026.7.1-beta.1',
       });
     }
     return scenario.fetchImpl(url, options);
@@ -123,7 +124,7 @@ test('rejects GitHub prereleases even when the tag syntax is otherwise valid', a
 
   await assert.rejects(
     handler.resolveOpenClawStableInput({ fetchImpl, sleepImpl: async () => {} }),
-    /draft or prerelease/,
+    /supported stable release/,
   );
 });
 
