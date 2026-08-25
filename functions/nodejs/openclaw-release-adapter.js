@@ -41,16 +41,29 @@ function parseStableVersion(version) {
   return version;
 }
 
-function normalizeGitHubReleaseTag(release) {
-  if (!release || release.draft !== false || release.prerelease !== false) {
-    throw new AdapterError('GitHub latest release is draft or prerelease');
+function normalizeGitHubLatestReleaseURL(url) {
+  let releaseURL;
+  try {
+    releaseURL = new URL(url);
+  } catch {
+    throw new AdapterError('GitHub latest release did not resolve to a URL');
   }
 
-  if (typeof release.tag_name !== 'string' || !release.tag_name.startsWith('v')) {
+  const releasePath = `/${REPOSITORY}/releases/tag/`;
+  if (
+    releaseURL.protocol !== 'https:' ||
+    releaseURL.hostname !== 'github.com' ||
+    !releaseURL.pathname.startsWith(releasePath)
+  ) {
+    throw new AdapterError('GitHub latest release did not resolve to a release tag');
+  }
+
+  const tag = decodeURIComponent(releaseURL.pathname.slice(releasePath.length));
+  if (!tag.startsWith('v')) {
     throw new AdapterError('GitHub latest release tag does not start with v');
   }
 
-  return parseStableVersion(release.tag_name.slice(1));
+  return parseStableVersion(tag.slice(1));
 }
 
 function retryAfterMilliseconds(value, now = Date.now()) {
@@ -129,23 +142,22 @@ async function resolveOpenClawStableInput({
       sleepImpl,
       options: { headers: { accept: 'application/json' } },
     }),
-    fetchJson({
+    fetchResponse({
       fetchImpl,
-      url: `https://api.github.com/repos/${REPOSITORY}/releases/latest`,
+      url: `https://github.com/${REPOSITORY}/releases/latest`,
       timeoutMs,
       sleepImpl,
       options: {
         headers: {
-          accept: 'application/vnd.github+json',
+          accept: 'text/html',
           'user-agent': 'elysium-openclaw-release-adapter',
-          'x-github-api-version': '2022-11-28',
         },
       },
     }),
   ]);
 
   const npmVersion = parseStableVersion(npmMetadata?.version);
-  const githubVersion = normalizeGitHubReleaseTag(githubRelease);
+  const githubVersion = normalizeGitHubLatestReleaseURL(githubRelease.url);
   if (npmVersion !== githubVersion) {
     throw new AdapterError('npm latest and GitHub latest release do not match');
   }
@@ -217,7 +229,7 @@ async function handler() {
 
 module.exports = handler;
 module.exports.AdapterError = AdapterError;
-module.exports.normalizeGitHubReleaseTag = normalizeGitHubReleaseTag;
+module.exports.normalizeGitHubLatestReleaseURL = normalizeGitHubLatestReleaseURL;
 module.exports.parseStableVersion = parseStableVersion;
 module.exports.resolveOpenClawStableInput = resolveOpenClawStableInput;
 module.exports.retryAfterMilliseconds = retryAfterMilliseconds;
