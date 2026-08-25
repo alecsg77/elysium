@@ -88,10 +88,16 @@ complete matrix and known limits.
 ## Bot update policy
 
 Renovate and Dependabot use PR-based auto-merge and are subject to the same ruleset
-and required-check results. Broad Renovate auto-merge remains paused
-until R0 update rules are demonstrated. Major upgrades and changes affecting
-controllers, CRDs, stateful workloads, storage, Tailscale, or the GitOps control plane
-remain outside the automatic R0 category.
+and required-check results. Renovate enables native squash auto-merge for eligible
+`custom.regex` updates and Terraform minor or patch updates after `PR Validate Simple /
+validate` and `Flux Bootstrap Guard / guard` pass. Custom-regex major updates, K3s
+controller upgrades, and the grouped Fission platform update are explicit manual
+exceptions.
+
+Major upgrades and changes affecting controllers, CRDs, stateful workloads, storage,
+Tailscale, or the GitOps control plane remain outside the automatic R0 category. There
+is no global CODEOWNERS mapping that requests an informational owner review for every
+PR; the required checks are the automated gate for bot updates.
 
 ## Break-glass
 

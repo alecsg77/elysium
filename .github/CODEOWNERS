@@ -1,3 +1,0 @@
-# Global ownership is informational in the initial PR-only rollout. The ruleset does
-# not require review yet, but this establishes the owner mapping for future hardening.
-* @alecsg77
