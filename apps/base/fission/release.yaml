@@ -8,6 +8,8 @@ spec:
   chart:
     spec:
       chart: fission-all
+      # renovate: datasource=custom.fission-releases depName=fission/fission versioning=semver-coerced
+      version: 1.27.0
       sourceRef:
         name: fission-charts
         kind: HelmRepository

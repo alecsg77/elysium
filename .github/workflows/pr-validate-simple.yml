@@ -52,6 +52,13 @@ jobs:
             core.setOutput('charts', hasPrefix('charts/'));
             core.setOutput('coder', hasPrefix('coder/templates/'));
             core.setOutput('actions-scripts', hasPrefix('.github/workflows/', 'scripts/'));
+            core.setOutput('fission', hasPrefix(
+              'apps/base/fission/', 'apps/kyrion/fission/',
+              '.github/workflows/deploy-functions.yml',
+              '.devcontainer/devcontainer.json',
+              'renovate.json',
+              'scripts/ci/verify-fission-version-alignment.sh',
+              'tests/ci/test-verify-fission-version-alignment.sh'));
 
       - name: Install YAML linter
         run: |
@@ -178,8 +185,14 @@ jobs:
               -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 
       - name: Set up Helm
-        if: steps.changes.outputs.charts == 'true'
+        if: steps.changes.outputs.charts == 'true' || steps.changes.outputs.fission == 'true'
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Validate Fission platform version alignment
+        if: steps.changes.outputs.fission == 'true'
+        run: |
+          bash tests/ci/test-verify-fission-version-alignment.sh
+          bash scripts/ci/verify-fission-version-alignment.sh
 
       - name: Lint local charts
         if: steps.changes.outputs.charts == 'true'
@@ -232,5 +245,7 @@ jobs:
       - name: Check shell syntax
         if: steps.changes.outputs.actions-scripts == 'true'
         run: |
-          bash -n scripts/collect-monitoring-baseline.sh
+          bash -n scripts/collect-monitoring-baseline.sh \
+            scripts/ci/verify-fission-version-alignment.sh \
+            tests/ci/test-verify-fission-version-alignment.sh
           sh -n scripts/bootstrap_flux.sh scripts/rotate-oidc-sealed-secrets.sh
