@@ -106,9 +106,12 @@
   },
   "packageRules": [
     {
-      "description": "Pause custom-regex auto-merge until PR Validate Simple / validate is enforced and R0 rules are proven",
+      "description": "Automerge custom-regex updates after required checks pass",
       "matchManagers": ["custom.regex"],
-      "automerge": false,
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true,
       "commitMessagePrefix": "chore(deps): "
     },
     {
@@ -123,10 +126,25 @@
       "commitMessageTopic": "align platform version"
     },
     {
-      "description": "Pause Terraform minor/patch auto-merge until PR Validate Simple / validate is enforced and R0 rules are proven",
+      "description": "Keep custom-regex major updates manual",
+      "matchManagers": ["custom.regex"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Keep K3s controller upgrades manual",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["k3s-io/k3s"],
+      "automerge": false
+    },
+    {
+      "description": "Automerge Terraform minor and patch updates after required checks pass",
       "matchManagers": ["terraform"],
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": false,
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true,
       "commitMessagePrefix": "chore(deps): "
     },
     {
