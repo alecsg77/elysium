@@ -93,6 +93,15 @@ rules:
       - update  # canary - update; function - update; package- rebuild,update;spec-apply,destroy
       - delete  # canary - delete;package-delete;spec-apply,destroy
 
+  # `fission spec apply --wait` persists package build results through this
+  # subresource; Kubernetes RBAC does not inherit `packages` verbs here.
+  - apiGroups:
+      - fission.io
+    resources:
+      - packages/status
+    verbs:
+      - update
+
   - apiGroups:
       - fission.io
     resources:
