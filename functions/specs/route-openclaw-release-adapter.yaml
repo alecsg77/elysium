@@ -1,0 +1,22 @@
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: openclaw-release-adapter
+  namespace: default
+spec:
+  createingress: false
+  functionref:
+    functionweights: null
+    name: openclaw-release-adapter
+    type: name
+  host: ""
+  ingressconfig:
+    annotations: null
+    host: '*'
+    path: /openclaw/release
+    tls: ""
+  method: ""
+  methods:
+  - GET
+  prefix: ""
+  relativeurl: /openclaw/release

@@ -1,0 +1,49 @@
+include:
+- nodejs/openclaw-release-adapter.js
+kind: ArchiveUploadSpec
+name: nodejs-openclaw-release-adapter-js-xlyJ
+
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: openclaw-release-adapter-12da4f05-9f99-41ba-8d84-6f5f3d663f9d
+  namespace: default
+spec:
+  deployment:
+    checksum: {}
+  environment:
+    name: nodejs22
+    namespace: default
+  source:
+    checksum: {}
+    type: url
+    url: archive://nodejs-openclaw-release-adapter-js-xlyJ
+
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: openclaw-release-adapter
+  namespace: default
+spec:
+  InvokeStrategy:
+    ExecutionStrategy:
+      ExecutorType: poolmgr
+      MaxScale: 0
+      MinScale: 0
+      SpecializationTimeout: 120
+      TargetCPUPercent: 0
+    StrategyType: execution
+  concurrency: 1
+  environment:
+    name: nodejs22
+    namespace: default
+  functionTimeout: 45
+  idletimeout: 120
+  package:
+    packageref:
+      name: openclaw-release-adapter-12da4f05-9f99-41ba-8d84-6f5f3d663f9d
+      namespace: default
+  requestsPerPod: 1
+  resources: {}
