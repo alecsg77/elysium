@@ -477,7 +477,7 @@ module "jetbrains" {
 module "codex" {
   count            = data.coder_workspace.me.start_count
   source           = "registry.coder.com/coder-labs/codex/coder"
-  version          = "5.3.0"
+  version          = "5.3.2"
   agent_id         = coder_agent.main.id
   workdir          = local.workspace_folder
   base_config_toml = <<-EOT
