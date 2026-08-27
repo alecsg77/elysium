@@ -3,8 +3,12 @@
 This catalog entry installs Paperclip with a dedicated Bitnami PostgreSQL release.
 The database chart follows compatible `18.x` updates; a chart-major upgrade requires
 an explicit backup-gated change. Flux Operator ResourceSet automation tracks the
-upstream `latest` Paperclip tag by immutable digest and owns only the generated
-`paperclip-image-auto` ConfigMap.
+upstream `latest-cloud` Paperclip tag by immutable digest and owns only the generated
+`paperclip-image-auto` ConfigMap. The cloud image is a production-image variant with
+pre-built sandbox-provider plugins; it does not make this private self-hosted instance
+Cloud-managed, so `PAPERCLIP_MANAGED_CONFIG` must remain unset. Upstream currently
+publishes this image lane for `linux/amd64` only, and the `ai` overlay pins the
+Paperclip Pod to that architecture.
 
 The `ai` overlay supplies two namespace-bound SealedSecrets:
 

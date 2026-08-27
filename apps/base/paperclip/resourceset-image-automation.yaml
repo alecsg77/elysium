@@ -1,4 +1,5 @@
-# Gitless image automation: the provider selects the upstream latest tag and its immutable digest.
+# Gitless image automation: select the upstream cloud-image lane and immutable digest.
+# `latest-cloud` is the managed-deployment image variant with pre-built sandbox plugins.
 apiVersion: fluxcd.controlplane.io/v1
 kind: ResourceSetInputProvider
 metadata:
@@ -14,8 +15,8 @@ spec:
   defaultValues:
     repository: ghcr.io/paperclipai/paperclip
   filter:
-    # Upstream's sha-* tags have no release ordering; select only latest.
-    includeTag: '^latest$'
+    # Upstream's sha-* tags have no release ordering; select only the cloud lane.
+    includeTag: '^latest-cloud$'
     limit: 1
 ---
 # The ResourceSet owns only this ConfigMap. The HelmRelease remains Git-managed.
