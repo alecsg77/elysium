@@ -1,5 +1,7 @@
 vars:
   HOST: "0.0.0.0"
+  # Enables the board-authorized company hard-delete endpoint and CLI command.
+  PAPERCLIP_ENABLE_COMPANY_DELETION: "true"
   PAPERCLIP_DEPLOYMENT_MODE: authenticated
   PAPERCLIP_DEPLOYMENT_EXPOSURE: private
   PAPERCLIP_PUBLIC_URL: https://paperclip.${ts_net}
