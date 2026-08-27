@@ -7,6 +7,10 @@ vars:
   PAPERCLIP_PUBLIC_URL: https://paperclip.${ts_net}
   PAPERCLIP_AUTH_PUBLIC_BASE_URL: https://paperclip.${ts_net}
   PAPERCLIP_ALLOWED_HOSTNAMES: paperclip.${ts_net}
+# The official cloud image currently publishes linux/amd64 only.
+nodeSelector:
+  kubernetes.io/arch: amd64
+
 # Paperclip rejects kubelet's default Pod-IP Host header in authenticated mode.
 # Override only the host header so OneChart retains the shared probe path and timing.
 container:
