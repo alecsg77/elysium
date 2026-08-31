@@ -267,7 +267,7 @@ resource "kubernetes_deployment" "main" {
 
         container {
           name              = "main"
-          image             = "codercom/enterprise-desktop:ubuntu-20260824"
+          image             = "codercom/enterprise-desktop:ubuntu-20260831"
           image_pull_policy = "IfNotPresent"
           command           = ["sh", "-c", coder_agent.main.init_script]
 
