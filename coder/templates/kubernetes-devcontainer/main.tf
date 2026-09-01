@@ -475,12 +475,13 @@ module "jetbrains" {
 }
 
 module "codex" {
-  count            = data.coder_workspace.me.start_count
-  source           = "registry.coder.com/coder-labs/codex/coder"
-  version          = "5.3.2"
-  agent_id         = coder_agent.main.id
-  workdir          = local.workspace_folder
-  base_config_toml = <<-EOT
+  count               = data.coder_workspace.me.start_count
+  source              = "registry.coder.com/coder-labs/codex/coder"
+  version             = "5.3.2"
+  agent_id            = coder_agent.main.id
+  workdir             = local.workspace_folder
+  post_install_script = file("${path.module}/scripts/install-codex-code-mode-host.sh")
+  base_config_toml    = <<-EOT
     sandbox_mode = "danger-full-access"
     approval_policy = "never"
     preferred_auth_method = "chatgpt"
