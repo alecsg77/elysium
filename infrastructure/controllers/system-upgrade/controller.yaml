@@ -21,6 +21,11 @@ spec:
   interval: 12h
   path: ./
   prune: true
+  # The v0.20.1 root manifest still pins the controller image to v0.14.0.
+  # Keep the reviewed source tag and running controller version aligned.
+  images:
+    - name: rancher/system-upgrade-controller
+      newTag: v0.20.1
   sourceRef:
     kind: GitRepository
     name: system-upgrade
