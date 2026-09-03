@@ -89,6 +89,9 @@ spec:
       - name: tmp-volume
         path: /tmp
         emptyDir: true
+      - name: shared-openclaw-cache
+        path: /home/node/.cache
+        emptyDir: true
     initContainers:
       - name: init-config
         # Inherit the generated digest-pinned image so bootstrap and gateway
@@ -106,8 +109,10 @@ spec:
         command: |
           mkdir -p /home/node/.openclaw/workspace
           mkdir -p /home/node/.openclaw/.npm
+          mkdir -p /home/node/.cache
           chown 1000:1000 /home/node/.openclaw /home/node/.openclaw/workspace
           chown 1000:1000 /home/node/.openclaw/.npm
+          chown 1000:1000 /home/node/.cache
           if [ ! -f /home/node/.openclaw/openclaw.json ]; then
             cp /config/openclaw.json /home/node/.openclaw/openclaw.json
           fi
