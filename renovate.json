@@ -2,6 +2,11 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "enabledManagers": ["custom.regex", "devcontainer", "flux", "terraform"],
+  "flux": {
+    "managerFilePatterns": [
+      "/^apps/base/n8n/(?:repository|release)\\.yaml$/"
+    ]
+  },
   "customManagers": [
     {
       "description": "Container image field in Kubernetes pod specs inside Coder templates",
@@ -105,6 +110,12 @@
     }
   },
   "packageRules": [
+    {
+      "description": "Require reviewed PRs for n8n hosting manifests and PostgreSQL",
+      "matchManagers": ["flux"],
+      "matchPackageNames": ["n8n-io/n8n-hosting", "postgres"],
+      "automerge": false
+    },
     {
       "description": "Automerge custom-regex updates after required checks pass",
       "matchManagers": ["custom.regex"],

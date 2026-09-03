@@ -7,7 +7,7 @@ spec:
   interval: 24h
   url: https://github.com/n8n-io/n8n-hosting
   ref:
-    branch: main
+    tag: v1.11.0
   ignore: |
     /*
     !/kubernetes
