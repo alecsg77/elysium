@@ -158,7 +158,7 @@ module "coder-login" {
 module "mux" {
   count                = data.coder_workspace.me.start_count
   source               = "registry.coder.com/coder/mux/coder"
-  version              = "1.5.0"
+  version              = "2.0.0"
   install_version      = "0.28.4" # renovate: datasource=github-releases depName=coder/mux extractVersion=^v(?<version>.+)$
   agent_id             = coder_agent.main.id
   additional_arguments = "--host 127.0.0.1"
