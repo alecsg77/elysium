@@ -319,7 +319,7 @@ resource "kubernetes_deployment" "main" {
 
         container {
           name              = "dev"
-          image             = "ghcr.io/coder/envbox:0.6.7"
+          image             = "ghcr.io/coder/envbox:0.6.8"
           image_pull_policy = "IfNotPresent"
           command           = ["/envbox", "docker"]
 
