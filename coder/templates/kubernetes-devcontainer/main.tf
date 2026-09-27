@@ -477,7 +477,7 @@ module "jetbrains" {
 module "codex" {
   count               = data.coder_workspace.me.start_count
   source              = "registry.coder.com/coder-labs/codex/coder"
-  version             = "5.4.0"
+  version             = "5.4.1"
   agent_id            = coder_agent.main.id
   workdir             = local.workspace_folder
   post_install_script = file("${path.module}/scripts/install-codex-code-mode-host.sh")
