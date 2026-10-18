@@ -119,6 +119,31 @@ spec:
           if [ ! -f /home/node/.openclaw/workspace/AGENTS.md ]; then
             cp /config/AGENTS.md /home/node/.openclaw/workspace/AGENTS.md
           fi
+      - name: migrate-state
+        # OpenClaw requires its own offline Doctor to migrate persistent state
+        # before a newer container starts the gateway.
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        command: |
+          HOME=/home/node \
+          OPENCLAW_CONFIG_DIR=/home/node/.openclaw \
+          OPENCLAW_CONFIG_PATH=/home/node/.openclaw/openclaw.json \
+          OPENCLAW_STATE_DIR=/home/node/.openclaw \
+          OPENCLAW_SERVICE_REPAIR_POLICY=external \
+            openclaw doctor --fix --non-interactive
     container:
       name: gateway
       command:
