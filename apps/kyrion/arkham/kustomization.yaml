@@ -24,7 +24,17 @@ resources:
   - ../../base/unmonitorr
   - arkham-unmonitorr-sealed-secret.yaml
 
-patches: []
+# Remove this migration gate only after Overseerr is gone and the stopped
+# configuration copy has passed verification; see the Seerr migration runbook.
+patches:
+  - target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: seerr
+    patch: |-
+      - op: add
+        path: /spec/suspend
+        value: true
 
 configMapGenerator:
   - name: apprise-api-helm-values
@@ -62,7 +72,7 @@ configMapGenerator:
       - values.yaml=msmtpd-values.yaml
     options:
       disableNameSuffixHash: true
-  - name: overseerr-helm-values
+  - name: seerr-helm-values
     files:
       - values.yaml=seerr-values.yaml
     options:

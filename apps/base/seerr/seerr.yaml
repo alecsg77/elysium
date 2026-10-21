@@ -1,9 +1,9 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: overseerr
+  name: seerr
 spec:
-  releaseName: overseerr
+  releaseName: seerr
   chart:
     spec:
       chart: ./charts/onechart
@@ -15,7 +15,7 @@ spec:
   interval: 12h
   valuesFrom:
     - kind: ConfigMap
-      name: overseerr-helm-values
+      name: seerr-helm-values
       optional: true
   values:
     image:
@@ -41,7 +41,7 @@ spec:
       - name: config
         size: "100Mi"
         path: /app/config
-        subPath: overseerr/config
+        subPath: seerr/config
         existingClaim: pvc-storage
     containerPort: 5055
     probe:
