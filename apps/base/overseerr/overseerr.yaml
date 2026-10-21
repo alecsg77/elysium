@@ -19,55 +19,46 @@ spec:
       optional: true
   values:
     image:
-      repository: lscr.io/linuxserver/overseerr # {"$imagepolicy": "arkham:overseerr-policy:name"}
-      tag: "version-v1.35.0" # {"$imagepolicy": "arkham:overseerr-policy:tag"}
-      digest: "" # {"$imagepolicy": "arkham:overseerr-policy:digest"}
+      repository: ghcr.io/seerr-team/seerr
+      tag: "v3.0.0"
     vars:
-      PUID: ${PUID:=1000}
-      PGID: ${PGID:=1000}
       TZ: ${TZ:=Etc/UTC}
     podSecurityContext:
-      fsGroup: ${PGID:=1000}
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
     volumes:
       - name: config
         size: "100Mi"
-        path: /config
+        path: /app/config
         subPath: overseerr/config
         existingClaim: pvc-storage
     containerPort: 5055
     probe:
       enabled: true
-      path: /api/v1/status
+      path: /api/v1/settings/public
       settings:
-        initialDelaySeconds: 30
         timeoutSeconds: 5
     livenessProbe:
       enabled: true
-      path: /api/v1/status
+      path: /api/v1/settings/public
       settings:
-        initialDelaySeconds: 30
         timeoutSeconds: 10
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: overseerr
-spec:
-  image: lscr.io/linuxserver/overseerr
-  interval: 24h
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: overseerr-policy
-spec:
-  imageRepositoryRef:
-    name: overseerr
-  filterTags:
-    pattern: '^version-v(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$'
-    extract: "$major.$minor.$patch"
-  policy:
-    semver:
-      range: 1.x
-  digestReflectionPolicy: Always
-  interval: 24h
+    container:
+      startupProbe:
+        httpGet:
+          path: /api/v1/settings/public
+          port: 5055
+        periodSeconds: 10
+        failureThreshold: 60
+        timeoutSeconds: 5

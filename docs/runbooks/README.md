@@ -15,6 +15,7 @@ This directory contains step-by-step procedures for routine operational tasks. E
 - **[Resource Optimization](resource-optimization.md)** - Procedures for optimizing cluster resource usage and resolving resource constraints
 - **[tsidp OIDC for Headlamp](tsidp-sso.md)** - Per-user Headlamp OIDC and Kubernetes RBAC rollout
 - **[Gitless ResourceSet Image Automation](resourceset-image-automation.md)** - Gitless workload image updates, safety gates, and rollback pins
+- **[Overseerr to Seerr Migration](seerr-migration.md)** - Data backup, image cutover, validation, and rollback
 
 ### Change Safety and Recovery
 - **[Destructive GitOps Changes](destructive-gitops-change.md)** - R2 classification, required two-PR removal sequence, backup evidence, and rollback
