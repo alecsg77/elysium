@@ -23,7 +23,7 @@ resources:
   - ollama
   - openclaw
   - openwebui
-  - overseerr
+  - seerr
   - pihole
   - paperclip
   - plex
