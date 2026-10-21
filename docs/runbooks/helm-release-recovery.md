@@ -131,17 +131,13 @@ flux suspend helmrelease <name> -n <namespace>
 flux resume helmrelease <name> -n <namespace>
 ```
 
-#### Option C: Manual Rollback
+#### Option C: Roll back desired configuration through Git
 
-```bash
-# View Helm release history
-helm history <name> -n <namespace>
-
-# Rollback to previous working version
-helm rollback <name> <revision> -n <namespace>
-
-# Update HelmRelease in Git to prevent re-upgrade
-```
+Restore the known-good image/chart/values in a branch and PR, then let Flux
+reconcile. Do not run `helm rollback` against a Flux-owned release: it leaves
+Helm and Git disagreeing about the desired configuration. Operational reset,
+reconcile, and bounded suspend/resume follow
+[Cluster maintenance](cluster-maintenance.md).
 
 #### Destructive-operation checkpoint
 
@@ -155,19 +151,10 @@ Before deleting a HelmRelease, uninstalling a release, or deleting a PVC:
 
 #### Option D: Delete and Recreate (Last Resort)
 
-```bash
-# Remove HelmRelease (keeps deployed resources)
-kubectl delete hr <name> -n <namespace>
-
-# Uninstall Helm release if needed
-helm uninstall <name> -n <namespace>
-
-# Fix configuration in Git
-# Commit changes
-
-# Recreate HelmRelease
-flux reconcile kustomization apps
-```
+Removing a managed release is a GitOps change, even during recovery. Follow the
+checkpoint above and represent the removal/recreation through reviewed source
+changes. Do not delete a HelmRelease or run `helm uninstall` directly to force
+an outcome. Prefer repairing and reconciling the existing release.
 
 ### Step 4: Persistent MongoDB Failures (LibreChat Example)
 

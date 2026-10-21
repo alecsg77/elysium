@@ -17,6 +17,7 @@ This directory contains step-by-step procedures for routine operational tasks. E
 - **[Gitless ResourceSet Image Automation](resourceset-image-automation.md)** - Gitless workload image updates, safety gates, and rollback pins
 
 ### Change Safety and Recovery
+- **[GitOps Changes and Direct Cluster Maintenance](cluster-maintenance.md)** - Decision table, bounded maintenance, data safeguards, and cleanup
 - **[Destructive GitOps Changes](destructive-gitops-change.md)** - R2 classification, required two-PR removal sequence, backup evidence, and rollback
 - **[Backup, Restore, and Out-of-Band Recovery](backup-and-restore.md)** - Required recovery contract, restore drills, and no-private-details policy
 - **[GitHub Merge-Control Break-Glass](github-break-glass.md)** - Repairing a failed required gate without direct pushes

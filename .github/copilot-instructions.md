@@ -43,8 +43,8 @@ The `.github/workflows/publish-coder-templates.yaml` workflow handles ALL templa
 
 `coder update` / `coder restart` for **workspace recovery** is acceptable when workspaces are disconnected. `coder templates push` is **never** acceptable.
 
-### Flux / Kubernetes — all changes via Git
-All cluster state changes must go through Git → Flux reconciliation. Never `kubectl apply` directly.
+### Flux / Kubernetes — desired configuration via Git
+Desired configuration goes through Git → Flux reconciliation. For diagnostics, controller triggers, and bounded direct maintenance, follow [Cluster maintenance](/docs/runbooks/cluster-maintenance.md). Never use direct mutations as a lasting configuration fix.
 
 ### GitHub Actions workflow authoring
 
@@ -318,7 +318,7 @@ The following repository-wide rules are intentionally centralized in `AGENTS.md`
 - Cross-agent compatibility notes
 
 For authoritative procedures and detailed standards, prefer:
-- [AGENTS.md](/workspaces/elysium/AGENTS.md)
+- [AGENTS.md](/AGENTS.md)
 - [Repository Structure](/docs/standards/repository-structure.md)
 - [Application Deployment Runbook](/docs/runbooks/add-application.md)
 - [Secret Management](/docs/security/secret-management.md)
@@ -353,4 +353,4 @@ For authoritative procedures and detailed standards, prefer:
 
 ---
 
-**Remember**: This is a GitOps repository - all cluster changes must go through Git. Use references to `/docs/` for authoritative documentation.
+**Remember**: Desired configuration goes through Git; direct operational maintenance follows `/docs/runbooks/cluster-maintenance.md`. Use `/docs/` for authoritative documentation.
