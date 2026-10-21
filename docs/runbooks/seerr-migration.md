@@ -1,6 +1,6 @@
 # Overseerr to Seerr migration
 
-The `overseerr` HelmRelease runs Seerr but deliberately retains its Kubernetes identity, `pvc-storage` claim, `overseerr/config` subPath, and ingress. The official image reads configuration at `/app/config`, runs as UID/GID 1000, and migrates Overseerr data on first startup. Do not run both versions against the same directory.
+Seerr's manifests live in `apps/base/seerr/seerr.yaml`, with environment values in `apps/kyrion/arkham/seerr-values.yaml`. The `overseerr` HelmRelease runs Seerr but deliberately retains its Kubernetes identity, `pvc-storage` claim, `overseerr/config` subPath, and ingress. Repository paths and filenames do not determine Kubernetes identity; keeping the release and generated ConfigMap names avoids an uninstall/reinstall or resource replacement during this data migration. The official image reads configuration at `/app/config`, runs as UID/GID 1000, and migrates Overseerr data on first startup. Do not run both versions against the same directory.
 
 LinuxServer.io [deprecated its Overseerr image](https://info.linuxserver.io/issues/2026-02-16-overseerr/) and recommends the official Seerr image. No maintained LinuxServer Seerr image was found at the time of this change; check again before any future image switch. The Seerr tag is pinned: Overseerr's ImagePolicy and automation markers were removed to prevent unreviewed updates during migration.
 
