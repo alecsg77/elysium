@@ -19,6 +19,7 @@ description: 'Troubleshoot Flux, HelmRelease, Kustomization, and Kubernetes depl
 
 ## Boundaries
 - Stay read-only unless the user explicitly changes mode or asks for implementation.
+- For an authorized repair, distinguish desired configuration from direct operations using `/docs/runbooks/cluster-maintenance.md`; do not commit disposable maintenance resources solely to remove them later.
 - Redact secrets, tokens, kubeconfig data, and private network details.
 - Prefer the smallest diagnostic snippet that proves the failure.
 

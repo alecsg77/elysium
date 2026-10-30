@@ -6,8 +6,8 @@ description: "Kubernetes manifest best practices for GitOps"
 # Kubernetes Manifest Guidelines
 
 ## General Principles
-- Follow GitOps principles: all cluster state declared in Git
-- Use declarative configuration exclusively (no imperative kubectl commands)
+- Declare desired cluster configuration in Git and reconcile it with Flux
+- Direct diagnostics, recovery triggers, and temporary maintenance follow [Cluster maintenance](/docs/runbooks/cluster-maintenance.md); they must not leave functional configuration drift
 - Ensure idempotency: manifests should be safe to apply multiple times
 - Prefer Kustomize overlays over duplicated manifests
 - Use labels consistently for resource organization and selection

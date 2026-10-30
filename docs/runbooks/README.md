@@ -18,6 +18,7 @@ This directory contains step-by-step procedures for routine operational tasks. E
 - **[Overseerr to Seerr Migration](seerr-migration.md)** - Data backup, image cutover, validation, and rollback
 
 ### Change Safety and Recovery
+- **[GitOps Changes and Direct Cluster Maintenance](cluster-maintenance.md)** - Decision table, bounded maintenance, data safeguards, and cleanup
 - **[Destructive GitOps Changes](destructive-gitops-change.md)** - R2 classification, required two-PR removal sequence, backup evidence, and rollback
 - **[Backup, Restore, and Out-of-Band Recovery](backup-and-restore.md)** - Required recovery contract, restore drills, and no-private-details policy
 - **[GitHub Merge-Control Break-Glass](github-break-glass.md)** - Repairing a failed required gate without direct pushes

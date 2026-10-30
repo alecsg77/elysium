@@ -6,7 +6,7 @@ If you are unsure where to add or update something, start here.
 
 ## Goals
 
-- **Single source of truth**: all cluster state is defined in Git and reconciled by Flux.
+- **Single source of truth**: desired cluster configuration is defined in Git and reconciled by Flux. Direct operational work follows [Cluster maintenance](../runbooks/cluster-maintenance.md).
 - **Clear ownership**: every file has an obvious “home” and reason to exist.
 - **Separation of concerns**: infrastructure, monitoring, and apps evolve independently.
 - **Environment overlays**: base manifests are reusable; environment overlays are minimal deltas.

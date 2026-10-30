@@ -87,7 +87,7 @@ Use variables in manifests: `${VARIABLE_NAME}`
 - Leverage `valuesFrom` for dynamic value injection
 
 ## Reconciliation Control
-- Use `suspend: true` to pause reconciliation temporarily
+- Keep lasting suspension in Git; bounded operational suspend/resume follows [Cluster maintenance](/docs/runbooks/cluster-maintenance.md)
 - Trigger immediate reconciliation with `flux reconcile`
 - Monitor Flux events with `flux events`
 - Check resource status with `flux get all`
