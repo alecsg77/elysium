@@ -1,0 +1,64 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: seerr
+spec:
+  releaseName: seerr
+  chart:
+    spec:
+      chart: ./charts/onechart
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: seerr-helm-values
+      optional: true
+  values:
+    image:
+      repository: ghcr.io/seerr-team/seerr
+      tag: "v3.0.0"
+    vars:
+      TZ: ${TZ:=Etc/UTC}
+    podSecurityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    volumes:
+      - name: config
+        size: "100Mi"
+        path: /app/config
+        subPath: seerr/config
+        existingClaim: pvc-storage
+    containerPort: 5055
+    probe:
+      enabled: true
+      path: /api/v1/settings/public
+      settings:
+        timeoutSeconds: 5
+    livenessProbe:
+      enabled: true
+      path: /api/v1/settings/public
+      settings:
+        timeoutSeconds: 10
+    container:
+      startupProbe:
+        httpGet:
+          path: /api/v1/settings/public
+          port: 5055
+        periodSeconds: 10
+        failureThreshold: 60
+        timeoutSeconds: 5

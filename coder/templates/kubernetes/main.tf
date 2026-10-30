@@ -214,7 +214,7 @@ module "git-config" {
 module "github-upload-public-key" {
   count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
   source           = "registry.coder.com/coder/github-upload-public-key/coder"
-  version          = "1.1.0"
+  version          = "1.2.0"
   agent_id         = coder_agent.main.id
   external_auth_id = data.coder_external_auth.github.id
 }
@@ -338,7 +338,7 @@ resource "kubernetes_deployment" "main" {
 
         container {
           name              = "dev"
-          image             = "codercom/enterprise-base:ubuntu-20261012"
+          image             = "codercom/enterprise-base:ubuntu-20261028"
           image_pull_policy = "IfNotPresent"
           command           = ["sh", "-c", coder_agent.main.init_script]
           security_context {
@@ -381,7 +381,7 @@ resource "kubernetes_deployment" "main" {
           for_each = var.enable_dind == true ? [1] : []
           content {
             name              = "dind"
-            image             = "docker:29.9.1-dind"
+            image             = "docker:29.9.2-dind"
             image_pull_policy = "IfNotPresent"
             args = [
               "dockerd",

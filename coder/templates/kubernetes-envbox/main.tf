@@ -213,7 +213,7 @@ resource "kubernetes_deployment_v1" "main" {
 
           env {
             name  = "CODER_INNER_IMAGE"
-            value = "codercom/enterprise-node:ubuntu-20261012"
+            value = "codercom/enterprise-node:ubuntu-20261028"
           }
 
           env {
@@ -370,7 +370,7 @@ data "coder_external_auth" "github" {
 module "github-upload-public-key" {
   count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
   source           = "registry.coder.com/coder/github-upload-public-key/coder"
-  version          = "1.1.0"
+  version          = "1.2.0"
   agent_id         = coder_agent.main.id
   external_auth_id = data.coder_external_auth.github.id
 }

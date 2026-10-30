@@ -125,7 +125,7 @@ resource "coder_script" "install-gh-cli" {
   display_name = "Install GitHub CLI"
   icon         = "/icon/terminal.svg"
   script = templatefile("${path.module}/scripts/install-gh-cli.sh.tftpl", {
-    version = "2.102.0" # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
+    version = "2.103.3" # renovate: datasource=github-releases depName=cli/cli extractVersion=^v(?<version>.+)$
   })
   run_on_start       = true
   start_blocks_login = false
@@ -159,7 +159,7 @@ module "mux" {
   count                = data.coder_workspace.me.start_count
   source               = "registry.coder.com/coder/mux/coder"
   version              = "2.0.0"
-  install_version      = "0.31.0" # renovate: datasource=github-releases depName=coder/mux extractVersion=^v(?<version>.+)$
+  install_version      = "0.32.1" # renovate: datasource=github-releases depName=coder/mux extractVersion=^v(?<version>.+)$
   agent_id             = coder_agent.main.id
   additional_arguments = "--host 127.0.0.1"
   subdomain            = true
@@ -193,7 +193,7 @@ module "git-config" {
 module "github-upload-public-key" {
   count            = data.coder_external_auth.github.access_token != "" ? data.coder_workspace.me.start_count : 0
   source           = "registry.coder.com/coder/github-upload-public-key/coder"
-  version          = "1.1.0"
+  version          = "1.2.0"
   agent_id         = coder_agent.main.id
   external_auth_id = data.coder_external_auth.github.id
 }
@@ -311,7 +311,7 @@ resource "kubernetes_deployment" "main" {
           }
           env {
             name  = "CODER_INNER_IMAGE"
-            value = "codercom/enterprise-node:ubuntu-20261012"
+            value = "codercom/enterprise-node:ubuntu-20261028"
           }
           env {
             name  = "CODER_INNER_USERNAME"
