@@ -123,6 +123,8 @@ spec:
       name: gateway
       # Keep the image entrypoint: it runs Doctor under exclusive maintenance
       # ownership before starting the Gateway against retained state.
+      # Explicitly clear the legacy command retained by the live Helm merge.
+      command: []
       env:
         - name: NPM_CONFIG_CACHE
           value: /home/node/.openclaw/.npm

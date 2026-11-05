@@ -37,7 +37,10 @@ The adapter fails with HTTP 502 rather than emitting a partial or mismatched inp
 
 ### OpenClaw retained-state activation
 
-Keep the official image entrypoint and default command. The entrypoint runs
+Keep the official image entrypoint and default command. An explicit empty
+`container.command: []` clears a legacy live override that Helm can retain when
+the field is merely omitted; Kubernetes then uses the image entrypoint.
+The entrypoint runs
 `openclaw doctor --fix --non-interactive` under exclusive maintenance ownership
 before starting the Gateway, including database migrations and their native
 SQLite backups. Running `node /app/dist/index.js gateway run` directly bypasses
