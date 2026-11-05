@@ -121,11 +121,8 @@ spec:
           fi
     container:
       name: gateway
-      command:
-        - node
-        - /app/dist/index.js
-        - gateway
-        - run
+      # Keep the image entrypoint: it runs Doctor under exclusive maintenance
+      # ownership before starting the Gateway against retained state.
       env:
         - name: NPM_CONFIG_CACHE
           value: /home/node/.openclaw/.npm
@@ -178,6 +175,18 @@ spec:
               name: openclaw-secrets
               key: OPENROUTER_API_KEY
               optional: true
+      # Doctor may migrate retained databases before the Gateway binds. Defer
+      # liveness checks until activation finishes, within the Helm timeout.
+      startupProbe:
+        exec:
+          command:
+            - node
+            - -e
+            - >-
+              require("https").get({hostname:"127.0.0.1",port:18789,path:"/healthz",rejectUnauthorized:false}, r => process.exit(r.statusCode < 400 ? 0 : 1)).on("error", () => process.exit(1))
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 72
       readinessProbe:
         exec:
           command:

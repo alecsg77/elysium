@@ -35,6 +35,34 @@ The adapter source is `functions/nodejs/openclaw-release-adapter.js`. On each 24
 
 The adapter fails with HTTP 502 rather than emitting a partial or mismatched input when either public-source crosscheck, stable-version validation, or manifest-digest validation fails. The provider intentionally has no `defaultValues`, so a failed adapter response cannot synthesize an image. Its `limit: 1` preserves the one validated response; the ResourceSet maps its `repository`, normalized stable `tag`, and complete `digest` into `ConfigMap/openclaw-image-auto`'s `values.yaml`. The existing OpenClaw HelmRelease remains the sole workload owner and consumer.
 
+### OpenClaw retained-state activation
+
+Keep the official image entrypoint and default command. The entrypoint runs
+`openclaw doctor --fix --non-interactive` under exclusive maintenance ownership
+before starting the Gateway, including database migrations and their native
+SQLite backups. Running `node /app/dist/index.js gateway run` directly bypasses
+that activation. An upgrade can then exit with code 78 and report that an agent
+database needs a session-identity migration, even though its memory limit is
+adequate. See the [upstream container upgrade procedure](https://github.com/openclaw/openclaw/blob/v2026.10.10/docs/install/docker.md#upgrading-container-images).
+
+The HelmRelease startup probe allows up to 12 minutes for activation before
+liveness checks begin; the Helm timeout is 15 minutes. A failed migration must
+remain visible rather than being bypassed by deleting state or lock files.
+With a read-only container root, the optional full-state capture at the sibling
+`<state-dir>.update-captures` path may be unavailable. Confirm a recent K8up
+backup and free space first, preserve Doctor's required SQLite migration backups
+beside the databases, and investigate any fatal Doctor error separately from an
+optional capture warning. Follow the [backup and restore contract](backup-and-restore.md).
+
+During the November 2026 recovery, the ResourceSet uses a static input for the
+already deployed image to prevent another version change during migration. The
+provider can remain Ready while that input is pinned; its output is not consumed.
+After Doctor completes, verify the HelmRelease and Gateway are Ready, sessions
+are available, and there are no new restarts or OOM kills for at least 10 minutes.
+Then restore `inputsFrom` in a separate PR, removing `inputs` entirely. Preserve
+the entrypoint and startup probe. A downgrade after migration requires matching
+state recovery as well as an image pin; do not roll back only the image.
+
 ## How it works
 
 Each migrated workload has `resourceset-image-automation.yaml` next to its current manifest:
