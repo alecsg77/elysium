@@ -57,8 +57,8 @@ backup and free space first, preserve Doctor's required SQLite migration backups
 beside the databases, and investigate any fatal Doctor error separately from an
 optional capture warning. Follow the [backup and restore contract](backup-and-restore.md).
 
-During the November 2026 recovery, the ResourceSet uses a static input for the
-already deployed image to prevent another version change during migration. The
+During a recovery, use a static input for the already deployed image to prevent
+another version change during migration, following the rollback procedure below. The
 provider can remain Ready while that input is pinned; its output is not consumed.
 After Doctor completes, verify the HelmRelease and Gateway are Ready, sessions
 are available, and there are no new restarts or OOM kills for at least 10 minutes.

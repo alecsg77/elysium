@@ -28,12 +28,10 @@ metadata:
     app.kubernetes.io/component: image-automation
     app.kubernetes.io/part-of: openclaw
 spec:
-  # Freeze the deployed image while restoring its supported startup/migration
-  # path. Restore inputsFrom only after the Gateway is healthy.
-  inputs:
-    - repository: ghcr.io/openclaw/openclaw
-      tag: "2026.10.10"
-      digest: sha256:1e5ee6c7d02d5b5f64f9cf26a30c7ef7d4ec292f0d25fa590f4b7e103e8bf799
+  inputsFrom:
+    - apiVersion: fluxcd.controlplane.io/v1
+      kind: ResourceSetInputProvider
+      name: openclaw-image
   wait: true
   commonMetadata:
     labels:
