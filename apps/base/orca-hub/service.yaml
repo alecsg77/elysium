@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: orca-hub
+spec:
+  selector:
+    app.kubernetes.io/name: orca-hub
+  ports:
+    - name: runtime
+      port: 6768
+      targetPort: runtime
