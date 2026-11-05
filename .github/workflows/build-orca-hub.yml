@@ -1,0 +1,41 @@
+name: Build Orca Hub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - coder/images/orca-hub/**
+      - .github/workflows/build-orca-hub.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-orca-hub
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Build and publish Linux amd64 image
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}/orca-hub"
+          version="$(awk -F= '$1 == "ARG ORCA_VERSION" {print $2}' coder/images/orca-hub/Dockerfile)"
+          test -n "$version"
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build --pull --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            -t "$image:$version" -t "$image:sha-$GITHUB_SHA" coder/images/orca-hub
+          docker push "$image:$version"
+          docker push "$image:sha-$GITHUB_SHA"

@@ -226,6 +226,9 @@ jobs:
             terraform -chdir="$directory" fmt -check -recursive
             terraform -chdir="$directory" init -backend=false -input=false
             terraform -chdir="$directory" validate -no-color
+            if [ -d "$directory/tests" ]; then
+              terraform -chdir="$directory" test -no-color
+            fi
           done < <(find coder/templates -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 | sort -z)
 
       - name: Install actionlint
