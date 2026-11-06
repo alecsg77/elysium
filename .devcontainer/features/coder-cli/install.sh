@@ -31,6 +31,11 @@ preflight () {
 }
 
 main () {
+    if command -v coder > /dev/null; then
+        echo "coder is already installed at $(command -v coder); skipping installation."
+        return
+    fi
+
     preflight
 
     local ARCH="$(uname -m)"
