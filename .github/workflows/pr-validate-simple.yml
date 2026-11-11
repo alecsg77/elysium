@@ -51,6 +51,7 @@ jobs:
               'apps/', 'clusters/', 'infrastructure/', 'monitoring/', '.github/schemas/'));
             core.setOutput('charts', hasPrefix('charts/'));
             core.setOutput('coder', hasPrefix('coder/templates/'));
+            core.setOutput('images', hasPrefix('images/', '.github/workflows/build-images.yml'));
             core.setOutput('actions-scripts', hasPrefix('.github/workflows/', 'scripts/'));
             core.setOutput('fission', hasPrefix(
               'apps/base/fission/', 'apps/kyrion/fission/',
@@ -230,6 +231,18 @@ jobs:
               terraform -chdir="$directory" test -no-color
             fi
           done < <(find coder/templates -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 | sort -z)
+
+      - name: Build repository images
+        if: steps.changes.outputs.images == 'true'
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' dockerfile; do
+            directory="${dockerfile%/Dockerfile}"
+            version="$(cat "$directory/VERSION")"
+            test -n "$version"
+            docker build --platform linux/amd64 \
+              -t "elysium/${directory##*/}:$version" "$directory"
+          done < <(find images -mindepth 2 -maxdepth 2 -name Dockerfile -print0 | sort -z)
 
       - name: Install actionlint
         if: steps.changes.outputs.actions-scripts == 'true'

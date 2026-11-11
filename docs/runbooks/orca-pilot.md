@@ -48,7 +48,7 @@ non-interactive agent launches as well as terminals.
 1. Build the hub from the repository root:
 
    ```bash
-   docker build -t elysium/orca-hub:1.4.248 coder/images/orca-hub
+   docker build -t elysium/orca-hub:1.4.248 images/orca-hub
    docker run -d --name orca-hub-pilot \
      --mount type=volume,src=orca-hub-pilot-home,dst=/home/coder \
      -e ORCA_PAIRING_ADDRESS=ws://127.0.0.1:16768 \
@@ -147,7 +147,7 @@ removal. Existing Mux workspaces remain available throughout.
 ## References
 
 - [Worker template](../../coder/templates/orca-worker/README.md)
-- [Hub image](../../coder/images/orca-hub/README.md)
+- [Hub image](../../images/orca-hub/README.md)
 - [Orca run modes](https://www.onorca.dev/docs/ways-to-run)
 - [Orca SSH](https://www.onorca.dev/docs/ssh)
 - [Envbuilder maintenance notice](https://github.com/coder/envbuilder)

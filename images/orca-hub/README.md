@@ -6,9 +6,14 @@ runtime cannot manage SSH targets. Xvfb provides the virtual display. The
 extracted AppImage launcher automatically handles unavailable user namespaces;
 this container does not provide Chromium sandbox isolation between agent tasks.
 
-Build with `docker build -t elysium/orca-hub:1.4.248 coder/images/orca-hub`.
-The build workflow publishes the version tag and an immutable Git SHA tag after
-merge to main. No runtime profile or provider credentials are baked into the image.
+Build with `docker build -t elysium/orca-hub:1.4.248 images/orca-hub`.
+See the [image catalog](../README.md) for build, publication, and update conventions.
+No runtime profile or provider credentials are baked into the image.
+
+To update Orca, change `ORCA_VERSION` and the matching AppImage `ORCA_SHA256` in
+`Dockerfile`, then update `VERSION`. Coder CLI is pinned by its source image tag.
+Repeat the SSH and client acceptance checks after an upstream update: the Electron
+runtime requirement is specific to the currently pinned Orca release.
 
 Mount the complete `/home/coder` and set `ORCA_PAIRING_ADDRESS` to a private
 address reachable by the clients. Include the published port in a full `ws://`
@@ -20,4 +25,4 @@ are unencrypted; protect the home volume. Prefer agent/provider credentials on
 the workers and retain only Coder access on the hub.
 
 The Kubernetes catalog unit is intentionally not selected by any cluster overlay.
-See [pilot runbook](../../../docs/runbooks/orca-pilot.md) for setup and acceptance.
+See [pilot runbook](../../docs/runbooks/orca-pilot.md) for setup and acceptance.
