@@ -38,7 +38,7 @@ spec:
               mountPath: /home/coder
       containers:
         - name: orca
-          image: ghcr.io/alecsg77/elysium/orca-hub:1.4.248
+          image: ghcr.io/alecsg77/elysium/orca-hub:1.0.0
           env:
             - name: ORCA_PAIRING_ADDRESS
               valueFrom:

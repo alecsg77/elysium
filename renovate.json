@@ -120,6 +120,7 @@
       "matchManagers": ["dockerfile"],
       "matchFileNames": ["images/**"],
       "enabled": true,
+      "pinDigests": true,
       "automerge": false
     },
     {

@@ -6,12 +6,13 @@ runtime cannot manage SSH targets. Xvfb provides the virtual display. The
 extracted AppImage launcher automatically handles unavailable user namespaces;
 this container does not provide Chromium sandbox isolation between agent tasks.
 
-Build with `docker build -t elysium/orca-hub:1.4.248 images/orca-hub`.
+Build with `docker build -t elysium/orca-hub:1.0.0 images/orca-hub/context`.
 See the [image catalog](../README.md) for build, publication, and update conventions.
 No runtime profile or provider credentials are baked into the image.
 
 To update Orca, change `ORCA_VERSION` and the matching AppImage `ORCA_SHA256` in
-`Dockerfile`, then update `VERSION`. Coder CLI is pinned by its source image tag.
+`context/Dockerfile`, then increment the image's independent SemVer `VERSION`.
+Coder CLI is pinned by its source image tag and digest.
 Repeat the SSH and client acceptance checks after an upstream update: the Electron
 runtime requirement is specific to the currently pinned Orca release.
 

@@ -51,7 +51,9 @@ jobs:
               'apps/', 'clusters/', 'infrastructure/', 'monitoring/', '.github/schemas/'));
             core.setOutput('charts', hasPrefix('charts/'));
             core.setOutput('coder', hasPrefix('coder/templates/'));
-            core.setOutput('images', hasPrefix('images/', '.github/workflows/build-images.yml'));
+            core.setOutput('images', hasPrefix('images/', '.github/workflows/build-images.yml',
+              'scripts/ci/plan-image-builds.py', 'scripts/ci/check-image-tag.sh',
+              'tests/ci/test-image-builds.py', 'tests/ci/test-check-image-tag.sh'));
             core.setOutput('actions-scripts', hasPrefix('.github/workflows/', 'scripts/'));
             core.setOutput('fission', hasPrefix(
               'apps/base/fission/', 'apps/kyrion/fission/',
@@ -234,15 +236,19 @@ jobs:
 
       - name: Build repository images
         if: steps.changes.outputs.images == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' dockerfile; do
-            directory="${dockerfile%/Dockerfile}"
-            version="$(cat "$directory/VERSION")"
-            test -n "$version"
+          python3 tests/ci/test-image-builds.py
+          bash tests/ci/test-check-image-tag.sh
+          python3 scripts/ci/plan-image-builds.py --root . --base "$BASE_SHA" \
+            --head "$GITHUB_SHA" --output "$RUNNER_TEMP/images.json"
+          while IFS=$'\t' read -r image version; do
             docker build --platform linux/amd64 \
-              -t "elysium/${directory##*/}:$version" "$directory"
-          done < <(find images -mindepth 2 -maxdepth 2 -name Dockerfile -print0 | sort -z)
+              --label "org.opencontainers.image.version=$version" \
+              -t "elysium/$image:$version" "images/$image/context"
+          done < <(jq -r '.include[] | [.image, .version] | @tsv' "$RUNNER_TEMP/images.json")
 
       - name: Install actionlint
         if: steps.changes.outputs.actions-scripts == 'true'
@@ -263,5 +269,6 @@ jobs:
         run: |
           bash -n scripts/collect-monitoring-baseline.sh \
             scripts/ci/verify-fission-version-alignment.sh \
-            tests/ci/test-verify-fission-version-alignment.sh
+            tests/ci/test-verify-fission-version-alignment.sh \
+            scripts/ci/check-image-tag.sh tests/ci/test-check-image-tag.sh
           sh -n scripts/bootstrap_flux.sh scripts/rotate-oidc-sealed-secrets.sh

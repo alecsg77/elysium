@@ -48,11 +48,11 @@ non-interactive agent launches as well as terminals.
 1. Build the hub from the repository root:
 
    ```bash
-   docker build -t elysium/orca-hub:1.4.248 images/orca-hub
+   docker build -t elysium/orca-hub:1.0.0 images/orca-hub/context
    docker run -d --name orca-hub-pilot \
      --mount type=volume,src=orca-hub-pilot-home,dst=/home/coder \
      -e ORCA_PAIRING_ADDRESS=ws://127.0.0.1:16768 \
-     -p 127.0.0.1:16768:6768 elysium/orca-hub:1.4.248
+     -p 127.0.0.1:16768:6768 elysium/orca-hub:1.0.0
    ```
 
    Loopback is suitable for an SSH-forwarded browser check, not a phone or remote
