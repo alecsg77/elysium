@@ -33,7 +33,8 @@ error_path="${output_path}.error"
 trap 'rm -f -- "$config_path" "$error_path"' EXIT
 
 if docker buildx imagetools inspect "$image_ref" --format '{{json .Image}}' >"$config_path" 2>"$error_path"; then
-  published_hash=$(jq -r '.config.Labels["dev.elysium.build-inputs"] // empty' "$config_path")
+  published_hash=$(jq -r \
+    '(.config // .["linux/amd64"].config).Labels["dev.elysium.build-inputs"] // empty' "$config_path")
   [[ "$published_hash" == "$input_hash" ]] || {
     echo "::error::${image_ref} already exists with different or unknown inputs; use a new SemVer version." >&2
     exit 1

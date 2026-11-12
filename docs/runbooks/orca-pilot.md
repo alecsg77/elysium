@@ -101,9 +101,11 @@ terraform -chdir=coder/templates/orca-worker test
 bash coder/templates/orca-worker/tests/storage-smoke.sh
 ```
 
-The Terraform tests run in PR validation with mocked providers and check that a
-Coder stop removes compute while retaining both PVC identities, then resumes on
-the same storage. The Docker integration check uses
+The Terraform tests run in PR validation. A plan with the real Coder provider checks
+template import before a workspace supplies the required repository. Workspace
+metadata and infrastructure are overridden, so this needs no cluster access.
+Mocked lifecycle tests check that a Coder stop removes compute while retaining both
+PVC identities, then resumes on the same storage. The Docker integration check uses
 synthetic authentication/configuration/history files, removes the whole worker
 container, rebuilds its devcontainer on the same volumes, and verifies those files
 and an uncommitted project file. It creates only disposable named volumes and
