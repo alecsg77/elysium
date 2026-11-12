@@ -31,7 +31,9 @@ data "coder_parameter" "repo" {
   type         = "string"
   mutable      = false
   validation {
-    regex = "^https://[^@[:space:]]+$"
+    # Import evaluates required parameters before a workspace supplies a value.
+    # Omitting default keeps the repository required in Coder's workspace form.
+    regex = "^(|https://[^@[:space:]]+)$"
     error = "Use an HTTPS repository URL without embedded credentials."
   }
 }
