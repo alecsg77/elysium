@@ -1,0 +1,87 @@
+name: Build Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - images/**
+      - .github/workflows/build-images.yml
+      - scripts/ci/plan-image-builds.py
+      - scripts/ci/check-image-tag.sh
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-images
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      has_images: ${{ steps.plan.outputs.has_images }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select changed image inputs
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.before || '0000000000000000000000000000000000000000' }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/plan-image-builds.py --root . --base "$BASE_SHA" \
+            --head "$GITHUB_SHA" --output "$RUNNER_TEMP/images.json"
+          echo "matrix=$(cat "$RUNNER_TEMP/images.json")" >> "$GITHUB_OUTPUT"
+          echo "has_images=$(jq '.include | length > 0' "$RUNNER_TEMP/images.json")" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: plan
+    if: needs.plan.outputs.has_images == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Log in to GHCR
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Check immutable release tag
+        id: tag
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
+          IMAGE_VERSION: ${{ matrix.version }}
+          INPUT_HASH: ${{ matrix.input_hash }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}/$IMAGE_NAME"
+          bash scripts/ci/check-image-tag.sh --image "$image:$IMAGE_VERSION" \
+            --input-hash "$INPUT_HASH" --output "$RUNNER_TEMP/build-needed"
+          echo "needed=$(cat "$RUNNER_TEMP/build-needed")" >> "$GITHUB_OUTPUT"
+      - name: Build and publish Linux amd64 image
+        if: steps.tag.outputs.needed == 'true'
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
+          IMAGE_VERSION: ${{ matrix.version }}
+          INPUT_HASH: ${{ matrix.input_hash }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}/$IMAGE_NAME"
+          docker build --pull --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${IMAGE_VERSION}" \
+            --label "dev.elysium.build-inputs=${INPUT_HASH}" \
+            -t "$image:$IMAGE_VERSION" "images/$IMAGE_NAME/context"
+          docker push "$image:$IMAGE_VERSION"

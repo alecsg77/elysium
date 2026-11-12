@@ -32,6 +32,7 @@ Additional checks are selected from the pull-request file list:
 | `apps/`, `clusters/`, `infrastructure/`, `monitoring/`, `.github/schemas/` | Build `clusters/kyrion/`; render the five Flux apply surfaces; validate each with strict kubeconform using Kubernetes defaults, local schemas, and the commit-pinned CRD catalog. |
 | `charts/` | `helm lint` and `helm unittest` for `charts/cron-job` and `charts/onechart`. |
 | `coder/templates/` | `terraform fmt -check`, `init -backend=false`, and `validate` for every current template root. |
+| `images/`, image publication workflow/helpers/tests | Validate stable SemVer increments, test image selection and registry guards, then build only new/changed `images/<name>/context` inputs for Linux amd64, without publishing. |
 | `.github/workflows/`, `scripts/` | actionlint plus shell syntax checks. |
 
 The five Flux surfaces are `apps`, `infra-controllers`, `infra-configs`,

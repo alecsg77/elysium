@@ -27,6 +27,7 @@ This repository follows a layered GitOps layout inspired by common Flux patterns
 | `docs/` | Human documentation: architecture, standards, runbooks, troubleshooting. | Prefer linking to source manifests instead of copying YAML. |
 | `functions/` | Fission specs / serverless functions and deployment artifacts. | Treat as its own “domain”; keep specs versioned. |
 | `coder/` | Coder templates and related developer-experience assets. | Keep templates self-contained. |
+| `images/` | Project-wide container image build contexts and update metadata. | One self-contained directory per image; consumers stay under `apps/` or `coder/`. See the [image catalog](../../images/README.md). |
 | `etc/` | Local/operator artifacts like kubeconfig and certs. | Never commit private keys or plaintext credentials. |
 | `scripts/` | Bootstrap and automation scripts. | Scripts must be idempotent when possible. |
 

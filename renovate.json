@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["custom.regex", "devcontainer", "flux", "terraform"],
+  "enabledManagers": ["custom.regex", "devcontainer", "dockerfile", "flux", "terraform"],
   "flux": {
     "managerFilePatterns": [
       "/^apps/base/n8n/(?:repository|release)\\.yaml$/"
@@ -110,6 +110,19 @@
     }
   },
   "packageRules": [
+    {
+      "description": "Keep Dockerfile updates opt-in to the project image catalog",
+      "matchManagers": ["dockerfile"],
+      "enabled": false
+    },
+    {
+      "description": "Require reviewed updates for project-maintained container images",
+      "matchManagers": ["dockerfile"],
+      "matchFileNames": ["images/**"],
+      "enabled": true,
+      "pinDigests": true,
+      "automerge": false
+    },
     {
       "description": "Require reviewed PRs for n8n hosting manifests and PostgreSQL",
       "matchManagers": ["flux"],

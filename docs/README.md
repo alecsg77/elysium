@@ -32,6 +32,7 @@ For AI coding agents, `AGENTS.md` at the repository root is the portable entry p
   - **[GitHub Merge-Control Break-Glass](runbooks/github-break-glass.md)** - Required-gate recovery without direct pushes
 
 - **[Troubleshooting](troubleshooting/README.md)** - Diagnostic workflows, known issues, and solutions
+- **[Container Images](../images/README.md)** - Project image catalog, builds, publication, and updates
 
 ## Conventions
 - General project documentation lives under `/docs`
