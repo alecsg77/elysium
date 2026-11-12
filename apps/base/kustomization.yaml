@@ -23,7 +23,6 @@ resources:
   - ollama
   - openclaw
   - openwebui
-  - orca-hub
   - seerr
   - pihole
   - paperclip

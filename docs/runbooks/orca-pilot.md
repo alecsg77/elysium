@@ -4,8 +4,9 @@
 
 This is a pilot, not a migration of existing Mux workspaces. The `orca-worker`
 template is published through the existing Coder template workflow after merge.
-The Orca hub image has its own build workflow. The catalog app is not enabled in
-any cluster overlay: promote it only after the acceptance checks below pass.
+The Orca hub image has its own build workflow. This release contains no Kubernetes
+hub Deployment, Service or PVC. Add those definitions with the cluster activation
+in a later PR, then validate the actual deployment as part of that rollout.
 
 Required: Coder with the existing Kubernetes provisioner in namespace `coder`,
 Linux amd64, private connectivity, Docker for local checks, and a project
@@ -98,7 +99,6 @@ terraform -chdir=coder/templates/orca-worker init -backend=false
 terraform -chdir=coder/templates/orca-worker validate
 terraform -chdir=coder/templates/orca-worker test
 bash coder/templates/orca-worker/tests/storage-smoke.sh
-kustomize build apps/base/orca-hub
 ```
 
 The Terraform tests run in PR validation with mocked providers and check that a
@@ -109,8 +109,8 @@ container, rebuilds its devcontainer on the same volumes, and verifies those fil
 and an uncommitted project file. It creates only disposable named volumes and
 containers and removes them on exit; it uses no real provider credentials.
 
-Before selecting the hub in an overlay, verify all of these on dedicated Coder
-workspaces:
+Verify all of these with the local hub on dedicated Coder workspaces, then repeat
+the relevant checks against the deployed hub during cluster activation:
 
 - Clone, tool installation and Git worktree creation complete successfully.
 - Home files, settings, login and project edits survive stop/start, Pod replacement
@@ -128,13 +128,18 @@ promotion. A per-workspace Orca runtime is a separate architecture decision.
 
 ## Cluster promotion and rollback
 
-After acceptance, select `apps/base/orca-hub` in the existing namespace overlay,
-choose the successfully published immutable SHA image tag, ensure the package
-is pullable by the cluster (public package or namespace image-pull credentials),
-add a private access route, and supply a SealedSecret named `orca-hub-access` with key
-`pairing-address`. The address is read via a native Secret reference. Never commit
-private endpoints, pairing links or Coder/provider credentials. The catalog PVC
-retains the entire hub home and is protected against Flux pruning.
+After local acceptance, prepare a separate PR that adds the hub Deployment,
+Service and home PVC together with their namespace overlay selection, private
+access route and Secret references. Use a successfully published immutable SemVer
+image tag or digest and ensure the package is pullable by the cluster (public
+package or namespace image-pull credentials). Supply pairing configuration through
+a native Secret reference and protect the home PVC against Flux pruning. Never
+commit private endpoints, pairing links or Coder/provider credentials.
+
+Render and schema-validate those manifests before merging. After Flux reconciles,
+verify Pod readiness, private client access, Coder SSH connections and home
+persistence against the actual deployment. Definitions and cluster activation must
+ship together; local rendering alone does not establish runtime correctness.
 
 Stop dedicated Coder workers to pause the experiment; deleting a workspace can
 delete its Terraform-managed PVCs. Export or back up data before deletion.

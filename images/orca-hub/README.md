@@ -25,5 +25,7 @@ Electron without a desktop keyring reports that locally stored provider secrets
 are unencrypted; protect the home volume. Prefer agent/provider credentials on
 the workers and retain only Coder access on the hub.
 
-The Kubernetes catalog unit is intentionally not selected by any cluster overlay.
-See [pilot runbook](../../docs/runbooks/orca-pilot.md) for setup and acceptance.
+This release provides the image and Coder worker template for a local pilot.
+Kubernetes manifests will be added with the hub's cluster activation and validated
+against the running deployment. See [pilot runbook](../../docs/runbooks/orca-pilot.md)
+for setup and acceptance.
