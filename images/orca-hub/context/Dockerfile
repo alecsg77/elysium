@@ -9,7 +9,7 @@ RUN curl -fsSL "https://github.com/stablyai/orca/releases/download/v${ORCA_VERSI
     && chmod +x orca.AppImage \
     && ./orca.AppImage --appimage-extract >/dev/null
 
-FROM ghcr.io/coder/coder:v2.39.0@sha256:5fb8f624dc0d33be89c72c7b2e384cdc7c2c5ac0d5847348d3aa0edaf058605c AS coder
+FROM ghcr.io/coder/coder:v2.39.1@sha256:77500de63a62f733bb1fbbf79da85e8ad4d6ca582e964f5d6021f46f6dc7fc29 AS coder
 FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git openssh-client procps tini xauth xvfb \
