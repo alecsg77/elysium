@@ -13,4 +13,9 @@ if ! mountpoint -q /home/coder || ! mountpoint -q /workspaces; then
   echo 'Refusing to start without the persistent home and project mounts.' >&2
   exit 1
 fi
+# Envbuilder only fixes checkout ownership immediately after a successful clone.
+# A failed first build leaves a root-owned checkout on the persistent volume.
+if [ -d /workspaces/project ]; then
+  chown -R "$uid:$gid" /workspaces/project
+fi
 printf '%s\n' 'TARGET_USER=coder' >> "$ENVBUILDER_ENV"

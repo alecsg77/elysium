@@ -12,7 +12,7 @@ and Envbuilder builds its devcontainer directly in the workspace Pod. The comple
 `/home/coder` and `/workspaces` use separate workspace-scoped PVCs. Only the
 Deployment follows Coder's start/stop count; both PVCs survive a workspace stop.
 
-The project must provide Linux amd64 with glibc (for example Debian/Ubuntu), Bash, curl, tar, sha256sum, getent, cut,
+The project must provide Linux amd64 with glibc (for example Debian/Ubuntu), Bash, curl, tar, sha256sum, getent, cut, chown,
 mountpoint, and the account `coder` with UID/GID 1000 and home `/home/coder`.
 Set `containerUser` and `remoteUser` to `coder` in `devcontainer.json`.
 The setup fails if that account or the persistent mounts are missing.

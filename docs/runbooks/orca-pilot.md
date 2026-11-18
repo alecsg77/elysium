@@ -11,7 +11,7 @@ in a later PR, then validate the actual deployment as part of that rollout.
 Required: Coder with the existing Kubernetes provisioner in namespace `coder`,
 Linux amd64, private connectivity, Docker for local checks, and a project
 repository providing the `coder` account (UID/GID 1000, home `/home/coder`).
-The devcontainer needs Bash, curl, tar, sha256sum, getent, cut, and mountpoint.
+The devcontainer needs Bash, curl, tar, sha256sum, getent, cut, chown, and mountpoint.
 GitHub external auth is optional and enables private HTTPS cloning.
 
 ## Architecture and storage
@@ -30,7 +30,8 @@ flowchart TD
 Each worker has two independent PVCs. Neither depends on `start_count`; only the
 Deployment and installer scripts follow the running state. The home is mounted
 directly in the agent environment and excluded from Envbuilder's image build.
-The setup checks the account and mountpoints before starting the Coder agent.
+The setup checks the account and mountpoints before starting the Coder agent,
+and repairs checkout ownership left by an interrupted first build.
 Project checkout is always `/workspaces/project`. Envbuilder does not apply the
 project's host bind mounts; copying a host `.gitconfig` is therefore optional.
 Authenticate tools inside the workspace instead of relying on host credentials.
@@ -42,7 +43,8 @@ separate storage corruption. No existing Mux PVC or cache is changed here.
 
 Envbuilder 1.3.0 is in maintenance mode and requires a privileged worker Pod.
 This pilot accepts that tradeoff to reuse the existing devcontainer build path
-without nested Docker. It installs Features alphabetically rather than honoring
+without nested Docker. Each replacement Pod rebuilds the project image; this pilot
+does not configure a shared build cache. It installs Features alphabetically rather than honoring
 `installsAfter`; the project therefore uses an official Node base image so npm is
 available before the Renovate Feature runs. The base account is aligned to
 `coder:1000:1000` without writing into the mounted home during the image build.

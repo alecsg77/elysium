@@ -29,7 +29,7 @@ docker volume create "$home_volume" >/dev/null
 docker volume create "$project_volume" >/dev/null
 docker run --rm --mount "type=volume,src=$project_volume,dst=/data" \
   --mount "type=bind,src=$fixture,dst=/fixture,readonly" \
-  debian:bookworm-slim sh -ec 'mkdir -p /data/project; cp -a /fixture/. /data/project/'
+  debian:bookworm-slim sh -ec 'mkdir -p /data/project; cp -a /fixture/. /data/project/; chown -R 0:0 /data/project'
 docker run --rm --mount "type=volume,src=$home_volume,dst=/data" \
   debian:bookworm-slim chown 1000:1000 /data
 
