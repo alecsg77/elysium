@@ -19,7 +19,7 @@
 	//   1. Prefer an official ghcr.io/devcontainers/features/* feature if one exists.
 	//   2. Otherwise prefer a well-maintained community feature (ghcr.io namespace)
 	//      if a suitable one exists (e.g. rio/kustomize, gickis/kubeseal+kubeconform,
-	//      goldsam/flux2, tailscale/codespace, postfinance/npm-packages).
+	//      goldsam/flux2, tailscale/codespace, devcontainers-extra/renovate-cli).
 	//   3. Only when no feature exists at all for a niche/bespoke tool, add a custom
 	//      local feature under ./features/<name>/. All local features follow the
 	//      same pattern: download the exact GitHub release asset, verify its SHA256
@@ -58,14 +58,10 @@
 		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale:1": {},
-		"ghcr.io/devcontainers/features/node:2": {},
 		"./features/kompose": {},
-		// Envbuilder 1.3 sorts Features alphabetically instead of honoring
-		// installsAfter. This npm Feature sorts after the official Node Feature,
-		// avoiding renovate-cli's broken fallback that downloads only Node's install.sh.
-		"ghcr.io/postfinance/devcontainer-features/npm-packages:1": {
-			"packages": "renovate"
-		}
+		// Envbuilder 1.3 ignores installsAfter. Node is supplied by the base
+		// image so Renovate does not invoke its incomplete Node fallback installer.
+		"ghcr.io/devcontainers-extra/features/renovate-cli:2": {}
 		// Removed ghcr.io/devcontainers/features/azure-cli and
 		// ghcr.io/devcontainers/features/copilot-cli:1: no `az` or
 		// `gh copilot`/copilot-cli usage found anywhere in this repo.
