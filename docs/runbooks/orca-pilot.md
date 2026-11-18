@@ -40,7 +40,10 @@ separate storage corruption. No existing Mux PVC or cache is changed here.
 
 Envbuilder 1.3.0 is in maintenance mode and requires a privileged worker Pod.
 This pilot accepts that tradeoff to reuse the existing devcontainer build path
-without nested Docker. A Nix environment can later replace project tooling;
+without nested Docker. It installs Features alphabetically rather than honoring
+`installsAfter`; the project's npm Feature therefore sorts after the official Node
+Feature so Renovate uses the already-installed Node runtime. A Nix environment can
+later replace project tooling;
 it does not replace persistent home storage, and its shell must be activated for
 non-interactive agent launches as well as terminals.
 
