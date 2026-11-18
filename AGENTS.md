@@ -69,7 +69,7 @@ This repo has no application build/test suite — "validation" means rendering m
 - **Render exactly what Flux will apply**: `flux build kustomization apps --path clusters/kyrion`
 - **Render a HelmRelease's chart** (when adding/upgrading one): `helm template <name> <chart> -f values.yaml`
 - **Lint YAML**: `yamllint .` (config in `.yamllint.yaml`; `.md` files and `clusters/*/flux-system/` are excluded)
-- **Validate `renovate.json`**: `renovate-config-validator` (Renovate CLI is preinstalled in the devcontainer via `ghcr.io/devcontainers-extra/features/renovate-cli:2`; outside the devcontainer, run `npx --yes --package renovate -- renovate-config-validator` instead)
+- **Validate `renovate.json`**: `renovate-config-validator` (Renovate CLI is preinstalled in the devcontainer via `ghcr.io/postfinance/devcontainer-features/npm-packages:1`; outside the devcontainer, run `npx --yes --package renovate -- renovate-config-validator` instead)
 - **Dry-run Renovate locally** (see what updates it would open, without pushing anything): `LOG_LEVEL=debug RENOVATE_PLATFORM=local renovate` from the repo root
 - **Lint a local Helm chart** (`charts/cron-job`, `charts/onechart`): `helm lint <chart>`
 - **Run a local chart's `helm-unittest` suite**: `helm unittest <chart>` (e.g. `helm unittest charts/onechart`); requires the `helm-unittest` plugin (`helm plugin install https://github.com/helm-unittest/helm-unittest`)

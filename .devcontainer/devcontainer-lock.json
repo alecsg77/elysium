@@ -1,10 +1,5 @@
 {
   "features": {
-    "ghcr.io/devcontainers-extra/features/renovate-cli:2": {
-      "version": "2.0.16",
-      "resolved": "ghcr.io/devcontainers-extra/features/renovate-cli@sha256:3653309f6b17363ce9cd63d07b35a3c986b08ad24b2aeecf418d9e5e3aaf3520",
-      "integrity": "sha256:3653309f6b17363ce9cd63d07b35a3c986b08ad24b2aeecf418d9e5e3aaf3520"
-    },
     "ghcr.io/devcontainers/features/common-utils:2": {
       "version": "2.5.9",
       "resolved": "ghcr.io/devcontainers/features/common-utils@sha256:cb0c4d3c276f157eed17935747e364178d75fee17f55c4e129966f64633deb3a",
@@ -47,6 +42,11 @@
       "version": "1.0.1",
       "resolved": "ghcr.io/goldsam/dev-container-features/flux2@sha256:8a843dd3af9e1840005e634659b84e67498d09dcbe1a3ce293a924208369fe60",
       "integrity": "sha256:8a843dd3af9e1840005e634659b84e67498d09dcbe1a3ce293a924208369fe60"
+    },
+    "ghcr.io/postfinance/devcontainer-features/npm-packages:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/postfinance/devcontainer-features/npm-packages@sha256:151d2799081a0ff30ba3204f6ab581177e4858357e3cc50b618e19b4ca0f0648",
+      "integrity": "sha256:151d2799081a0ff30ba3204f6ab581177e4858357e3cc50b618e19b4ca0f0648"
     },
     "ghcr.io/rio/features/k9s:1": {
       "version": "1.1.5",
