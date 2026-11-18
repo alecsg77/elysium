@@ -31,7 +31,9 @@ Each worker has two independent PVCs. Neither depends on `start_count`; only the
 Deployment and installer scripts follow the running state. The home is mounted
 directly in the agent environment and excluded from Envbuilder's image build.
 The setup checks the account and mountpoints before starting the Coder agent.
-Project checkout is always `/workspaces/project`.
+Project checkout is always `/workspaces/project`. Envbuilder does not apply the
+project's host bind mounts; copying a host `.gitconfig` is therefore optional.
+Authenticate tools inside the workspace instead of relying on host credentials.
 
 The design incorporates the Mux fixes already in this repository: commit
 `3430eb1` removed the PVC's start/stop count after whole-home data loss; `4a4fde1`
