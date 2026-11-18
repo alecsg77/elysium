@@ -33,7 +33,8 @@ data "coder_parameter" "repo" {
   validation {
     # Import evaluates required parameters before a workspace supplies a value.
     # Omitting default keeps the repository required in Coder's workspace form.
-    regex = "^(|https://[^@[:space:]]+)$"
+    # The same pattern is evaluated by Go and browser JavaScript.
+    regex = "^(|https://[^@\\s]+)$"
     error = "Use an HTTPS repository URL without embedded credentials."
   }
 }

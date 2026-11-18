@@ -35,4 +35,10 @@ run "import_without_workspace_parameters" {
     condition     = !data.coder_parameter.repo.optional && data.coder_parameter.repo.value == ""
     error_message = "Template import must accept an unset repository while keeping it required for workspace creation."
   }
+  assert {
+    condition = can(regex(data.coder_parameter.repo.validation[0].regex, "https://example.com/project.git")) && !can(regex(
+      data.coder_parameter.repo.validation[0].regex, "https://example.com/project name.git"
+    ))
+    error_message = "Backend validation must accept HTTPS repository URLs and reject whitespace."
+  }
 }
