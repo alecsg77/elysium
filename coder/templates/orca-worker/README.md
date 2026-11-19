@@ -8,7 +8,8 @@ tags: [kubernetes, devcontainer, ai]
 # Orca Worker
 
 Creates one project environment for an Orca SSH target. Coder clones the repository
-and Envbuilder builds its devcontainer directly in the workspace Pod. The complete
+and Envbuilder builds its devcontainer directly in the workspace Pod, reusing shared
+registry layers when configured. The complete
 `/home/coder` and `/workspaces` use separate workspace-scoped PVCs. Only the
 Deployment follows Coder's start/stop count; both PVCs survive a workspace stop.
 
@@ -31,6 +32,26 @@ This pilot reuses the repository's existing approach while avoiding nested Docke
 storage. Home is excluded from the in-place image build; install system tools in
 the image, not into the mounted home during image construction. Nix can be added
 to the project image later; non-interactive agent launches must activate its shell.
+
+The checked-in cluster settings enable the existing internal registry's layer
+cache. An unchanged Dockerfile and build context reuse cached installation layers;
+Envbuilder still extracts the base image and starts the project lifecycle hooks.
+Cache entries use Envbuilder content hashes and its default seven-day TTL; they
+are separate from the SemVer releases under `images/`.
+
+Cached builds use a fresh remote Git checkout as their build input. This excludes
+uncommitted workspace files and keeps the provider's cache probe consistent with
+the worker. Commit and push devcontainer changes to the repository/ref selected
+when creating the workspace. Project edits and worktrees remain on their PVC;
+Envbuilder does not reset that checkout. Set `cache_repo` empty to build local
+uncommitted devcontainer changes instead.
+
+Complete-image reuse is available through `use_cached_image`: a miss starts
+Envbuilder and publishes the image; a hit starts its immutable digest. It is
+currently disabled because the node runtime cannot resolve the registry's
+ClusterIP DNS name. Enable it only after verifying native Kubernetes pulls,
+including the runtime's HTTP/TLS settings. Pod-level access alone is insufficient.
+The default layer-cache path does not need that node configuration.
 
 Deleting a Coder workspace can delete its Terraform-managed PVCs. Stop a workspace
 to retain it; export or back up its data before deletion. This template does not

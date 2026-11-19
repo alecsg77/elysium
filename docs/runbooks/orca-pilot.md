@@ -43,8 +43,30 @@ separate storage corruption. No existing Mux PVC or cache is changed here.
 
 Envbuilder 1.3.0 is in maintenance mode and requires a privileged worker Pod.
 This pilot accepts that tradeoff to reuse the existing devcontainer build path
-without nested Docker. Each replacement Pod rebuilds the project image; this pilot
-does not configure a shared build cache. It installs Features alphabetically rather than honoring
+without nested Docker. Replacement Pods reuse devcontainer layers from the existing
+internal registry. Cache keys follow the Dockerfile and remote build-context
+contents, with Envbuilder's default seven-day TTL. Unchanged cached `RUN` steps
+are extracted instead of executed again; the base image still needs extraction
+and lifecycle hooks still run. This is a build cache, independent of the SemVer
+hub image releases.
+
+Build inputs come from a fresh clone of the configured remote repository/ref, so
+uncommitted workspace edits and persistent credentials cannot enter the cache.
+The working checkout and its worktrees remain on the original PVC. Push image
+changes to that configured ref; set `cache_repo = ""` when intentionally testing
+uncommitted devcontainer changes. Home and `/workspaces` are excluded from image
+snapshots. System tools belong in the image, while user settings belong in home.
+
+The template also supports `envbuilder_cached_image` to select the complete image
+by digest on a cache hit. `use_cached_image` remains false in cluster settings:
+a native Kubernetes pull currently fails because the node cannot resolve the
+registry's service DNS name. The HTTP registry also needs the appropriate runtime
+mirror settings. Layer caching runs inside Envbuilder and does not depend on
+native pulls from that registry. Fix registry access through the normal
+configuration workflow and verify a native pull before enabling complete-image
+reuse; changing only `ENVBUILDER_INSECURE` cannot configure containerd.
+
+Envbuilder installs Features alphabetically rather than honoring
 `installsAfter`; the project therefore uses an official Node base image so npm is
 available before the Renovate Feature runs. The base account is aligned to
 `coder:1000:1000` without writing into the mounted home during the image build.
@@ -107,6 +129,8 @@ terraform -chdir=coder/templates/orca-worker init -backend=false
 terraform -chdir=coder/templates/orca-worker validate
 terraform -chdir=coder/templates/orca-worker test
 bash coder/templates/orca-worker/tests/storage-smoke.sh
+ORCA_CACHE_TEST=true bash coder/templates/orca-worker/tests/storage-smoke.sh
+ORCA_CACHE_TEST=full bash coder/templates/orca-worker/tests/storage-smoke.sh
 ```
 
 The Terraform tests run in PR validation. A plan with the real Coder provider checks
@@ -116,7 +140,14 @@ Mocked lifecycle tests check that a Coder stop removes compute while retaining b
 PVC identities, then resumes on the same storage. The Docker integration check uses
 synthetic authentication/configuration/history files, removes the whole worker
 container, rebuilds its devcontainer on the same volumes, and verifies those files
-and an uncommitted project file. It creates only disposable named volumes and
+and an uncommitted project file. Cache modes also start a loopback-only registry
+and local Git daemon (Linux Docker host networking, Git, Python 3 and zstd required).
+The layer mode verifies that an unchanged second build has no layer misses and
+inspects published layers for persistent files and synthetic credentials. The full
+mode uses the real Terraform Envbuilder provider to check a miss, build/push,
+then a hit and a second container started from the returned image digest. Run
+`terraform init` first; `TERRAFORM_BIN` can select a non-default Terraform binary.
+It creates only disposable named volumes and
 containers and removes them on exit; it uses no real provider credentials.
 
 Verify all of these with the local hub on dedicated Coder workspaces, then repeat

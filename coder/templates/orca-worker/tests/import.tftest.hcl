@@ -1,5 +1,6 @@
 provider "coder" {}
 mock_provider "kubernetes" {}
+mock_provider "envbuilder" {}
 
 override_data {
   target = data.coder_workspace.me
@@ -31,6 +32,14 @@ override_module {
 
 run "import_without_workspace_parameters" {
   command = plan
+  variables {
+    cache_repo       = "registry.example.com/devcontainer"
+    use_cached_image = true
+  }
+  assert {
+    condition     = length(envbuilder_cached_image.main) == 0
+    error_message = "Template import must not clone or probe an unset repository."
+  }
   assert {
     condition     = !data.coder_parameter.repo.optional && data.coder_parameter.repo.value == ""
     error_message = "Template import must accept an unset repository while keeping it required for workspace creation."
