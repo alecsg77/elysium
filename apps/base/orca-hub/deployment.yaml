@@ -36,8 +36,7 @@ spec:
               mountPath: /home/coder
       containers:
         - name: orca
-          image: ghcr.io/alecsg77/elysium/orca-hub:1.0.0@sha256:22aeded0ce9c4475b462d78eb43a56956b0161434d0420623f79871e74f7ca27
-          args: [--no-pairing]
+          image: ghcr.io/alecsg77/elysium/orca-hub:2.0.0@sha256:ab0c5c0a8af8440466274ac06c11140a96e5d33233685294995f354d9330b483
           env:
             - name: ORCA_PAIRING_ADDRESS
               value: ws://127.0.0.1:6768
@@ -45,8 +44,7 @@ spec:
             - name: http
               containerPort: 6768
           readinessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: http
           resources:
             requests:
