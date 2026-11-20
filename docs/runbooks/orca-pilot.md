@@ -4,9 +4,8 @@
 
 This is a pilot, not a migration of existing Mux workspaces. The `orca-worker`
 template is published through the existing Coder template workflow after merge.
-The Orca hub image has its own build workflow. This release contains no Kubernetes
-hub Deployment, Service or PVC. Add those definitions with the cluster activation
-in a later PR, then validate the actual deployment as part of that rollout.
+The Orca hub image has its own build workflow. The cluster overlay selects the
+hub and gives it a private HTTPS route through the Tailscale operator.
 
 Required: Coder with the existing Kubernetes provisioner in namespace `coder`,
 Linux amd64, private connectivity, Docker for local checks, and a project
@@ -151,18 +150,36 @@ promotion. A per-workspace Orca runtime is a separate architecture decision.
 
 ## Cluster promotion and rollback
 
-After local acceptance, prepare a separate PR that adds the hub Deployment,
-Service and home PVC together with their namespace overlay selection, private
-access route and Secret references. Use a successfully published immutable SemVer
-image tag or digest and ensure the package is pullable by the cluster (public
-package or namespace image-pull credentials). Supply pairing configuration through
-a native Secret reference and protect the home PVC against Flux pruning. Never
-commit private endpoints, pairing links or Coder/provider credentials.
+The [hub base](../../apps/base/orca-hub) pins the published Linux amd64 image
+by digest. The [AI overlay](../../apps/kyrion/ai) selects it and advertises its
+Tailscale HTTPS hostname over WSS. The hostname uses the existing Flux
+substitution for the tailnet domain. The hub has a single replica and replaces
+the old pod before mounting its home in the new pod. Flux preserves the PVC if
+the app is removed from the overlay.
 
-Render and schema-validate those manifests before merging. After Flux reconciles,
-verify Pod readiness, private client access, Coder SSH connections and home
-persistence against the actual deployment. Definitions and cluster activation must
-ship together; local rendering alone does not establish runtime correctness.
+After Flux reconciles the activation commit:
+
+1. Confirm the hub pod is Ready, its PVC is Bound and the Tailscale ingress has
+   an HTTPS address. Load the web bundle from a client on the tailnet.
+2. Review the pairing output privately from the hub container logs. A link can
+   grant access to a workspace and must stay out of issue comments, PRs and CI
+   logs. Use the runtime link for desktop or browser and a mobile-scoped link
+   for the phone. The image reads `ORCA_MOBILE_PAIRING=1` at startup. Set it
+   through the overlay for a mobile pairing rollout after the desktop is
+   paired. The retained home preserves the desktop grant when the pod is
+   replaced. Revoke temporary test grants after verification.
+3. Authenticate Coder on the hub with a dedicated credential. Configure its
+   OpenSSH alias on the hub and test that it reaches the worker checkout.
+   On the paired desktop, select the hub when adding the SSH target so the
+   connection is owned by the hub. Add `/workspaces/project` from that target
+   and verify the worktree and terminal run on the worker.
+4. Exercise chat, approvals and persistence across a hub replacement before
+   relying on it for agent work.
+
+The hub home contains the Orca profile, grants and Coder client state. This
+pilot has no scheduled backup for that volume. A storage loss means rebuilding
+the profile and pairing again. Coder project files and agent homes are on the
+worker PVCs. Keep provider credentials inside the workers.
 
 Stop dedicated Coder workers to pause the experiment; deleting a workspace can
 delete its Terraform-managed PVCs. Export or back up data before deletion.
