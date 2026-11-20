@@ -13,7 +13,7 @@ so an upstream tag changing in place cannot silently change a release's inputs.
 
 | Image | Image release | Bundled application | Platform |
 | --- | --- | --- | --- |
-| [orca-hub](orca-hub/README.md) | 1.0.0 | Orca 1.4.248 | Linux amd64 |
+| [orca-hub](orca-hub/README.md) | 2.0.0 | Orca Server 1.4.266 | Linux amd64 |
 
 ## Build and publication
 
@@ -62,8 +62,8 @@ an image input change.
 
 Renovate opens reviewed PRs for Dockerfile source/base tags and digests. Such PRs
 must also increment `VERSION` before merging. Upstream binary versions and their
-checksums are updated together following the image README. Orca's version and
-AppImage SHA-256 remain a manual pair.
+checksums are updated together following the image README. The hub's Orca
+version and server archive SHA-256 remain a manual pair.
 
 Build the image and repeat runtime acceptance checks before promoting an update.
 Do not put credentials, SSH keys or runtime profiles in a build context. Publishing

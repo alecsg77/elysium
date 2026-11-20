@@ -9,18 +9,18 @@
   },
   "customManagers": [
     {
-      "description": "Orca workspace server release and matching Linux asset checksums",
+      "description": "Orca workspace server release and matching Linux archive checksum",
       "customType": "regex",
       "managerFilePatterns": [
         "/^coder/templates/orca-worker/scripts/start-orca\\.sh$/"
       ],
       "matchStrings": [
-        "version=(?<currentValue>\\d+\\.\\d+\\.\\d+)\\r?\\nchecksums=(?<currentDigest>[a-f0-9]{64}:[a-f0-9]{64})"
+        "version=(?<currentValue>\\d+\\.\\d+\\.\\d+)\\r?\\nserver_sha=(?<currentDigest>[a-f0-9]{64})"
       ],
       "datasourceTemplate": "custom.orca-releases",
       "depNameTemplate": "stablyai/orca",
       "versioningTemplate": "semver",
-      "autoReplaceStringTemplate": "version={{{newValue}}}\nchecksums={{{newDigest}}}"
+      "autoReplaceStringTemplate": "version={{{newValue}}}\nserver_sha={{{newDigest}}}"
     },
     {
       "description": "Container image field in Kubernetes pod specs inside Coder templates",
@@ -113,7 +113,7 @@
     "orca-releases": {
       "defaultRegistryUrlTemplate": "https://api.github.com/repos/stablyai/orca/releases?per_page=100",
       "transformTemplates": [
-        "{\"releases\": $map($filter($[draft = false and prerelease = false and $match(tag_name, /^v\\d+\\.\\d+\\.\\d+$/)], function($release) { $exists($match($release.assets[name = \"orca-server-linux-x64.tar.gz\"].digest & \"\", /^sha256:[a-f0-9]{64}$/)) and $exists($match($release.assets[name = \"orca-linux.AppImage\"].digest & \"\", /^sha256:[a-f0-9]{64}$/)) }), function($release) { {\"version\": $substringAfter($release.tag_name, \"v\"), \"digest\": $join([$substringAfter($release.assets[name = \"orca-server-linux-x64.tar.gz\"].digest, \"sha256:\"), $substringAfter($release.assets[name = \"orca-linux.AppImage\"].digest, \"sha256:\")], \":\"), \"releaseTimestamp\": $release.published_at, \"sourceUrl\": \"https://github.com/stablyai/orca\", \"changelogUrl\": $release.html_url} })}"
+        "{\"releases\": $map($filter($[draft = false and prerelease = false and $match(tag_name, /^v\\d+\\.\\d+\\.\\d+$/)], function($release) { $exists($match($release.assets[name = \"orca-server-linux-x64.tar.gz\"].digest & \"\", /^sha256:[a-f0-9]{64}$/)) }), function($release) { {\"version\": $substringAfter($release.tag_name, \"v\"), \"digest\": $substringAfter($release.assets[name = \"orca-server-linux-x64.tar.gz\"].digest, \"sha256:\"), \"releaseTimestamp\": $release.published_at, \"sourceUrl\": \"https://github.com/stablyai/orca\", \"changelogUrl\": $release.html_url} })}"
       ]
     },
     "fission-git-tags": {

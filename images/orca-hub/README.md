@@ -1,29 +1,22 @@
 # Orca Hub image
 
-Checksum-pinned Orca 1.4.248 for Linux amd64, with Coder CLI 2.39.0 and OpenSSH.
-The Electron runtime is selected explicitly because this Orca release's Node
-runtime cannot manage SSH targets. Xvfb provides the virtual display. The
-extracted AppImage launcher automatically handles unavailable user namespaces;
-this container does not provide Chromium sandbox isolation between agent tasks.
+This image installs the official checksum-pinned Orca Server 1.4.266
+archive for Linux amd64. Coder CLI 2.39.0 and OpenSSH remain available for
+administrative use. The hub runs its own Orca runtime.
 
-Build with `docker build -t elysium/orca-hub:1.0.0 images/orca-hub/context`.
-See the [image catalog](../README.md) for build, publication, and update conventions.
-No runtime profile or provider credentials are baked into the image.
-
-To update Orca, change `ORCA_VERSION` and the matching AppImage `ORCA_SHA256` in
-`context/Dockerfile`, then increment the image's independent SemVer `VERSION`.
-Coder CLI is pinned by its source image tag and digest.
-Repeat the SSH and client acceptance checks after an upstream update: the Electron
-runtime requirement is specific to the currently pinned Orca release.
+Build with `docker build -t elysium/orca-hub:2.0.0 images/orca-hub/context`.
+See the [image catalog](../README.md) for build and publication conventions.
+To update Orca, change `ORCA_VERSION` and the matching server archive
+`ORCA_SHA256` in `context/Dockerfile`, then increment `VERSION`.
 
 Mount the complete `/home/coder` and set `ORCA_PAIRING_ADDRESS` to a private
-address reachable by the clients. Include the published port in a full `ws://`
-or `wss://` URL when a proxy or port mapping changes it. The initial pairing is runtime-scoped for desktop/browser clients. Set
-`ORCA_MOBILE_PAIRING=1` for a mobile-scoped link on a subsequent start; existing
-paired clients retain their grants. Access links and QR codes in startup logs are credentials. Keep them private.
-Electron without a desktop keyring reports that locally stored provider secrets
-are unencrypted; protect the home volume. Prefer agent/provider credentials on
-the workers and retain only Coder access on the hub.
+address reachable by the clients. Include the published port in a full
+`ws://` or `wss://` URL if a proxy or port mapping changes it.
+
+The server starts with pairing offers disabled. Generate access links on demand
+with `orca-ide pair --address <private-endpoint>` from an authorized shell inside
+the container. Add `--mobile` for Orca Mobile. The links grant access to the
+runtime and should be shared only with the intended client.
 
 The [cluster rollout](../../docs/runbooks/orca-pilot.md#cluster-promotion-and-rollback)
-uses this image with a retained home volume and a private Tailscale ingress.
+uses a retained home volume and a private Tailscale route for WebSocket upgrades.

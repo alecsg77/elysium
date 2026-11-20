@@ -248,21 +248,6 @@ resource "coder_script" "orca" {
   script       = file("${path.module}/scripts/start-orca.sh")
   timeout      = 900
 }
-resource "coder_app" "orca" {
-  count        = data.coder_workspace.me.start_count
-  agent_id     = coder_agent.main.id
-  slug         = "orca"
-  display_name = "Orca"
-  url          = "http://127.0.0.1:6768/"
-  share        = "owner"
-  subdomain    = true
-  open_in      = "tab"
-  healthcheck {
-    url       = "http://127.0.0.1:6768/"
-    interval  = 5
-    threshold = 3
-  }
-}
 module "git_config" {
   count              = data.coder_workspace.me.start_count
   source             = "registry.coder.com/coder/git-config/coder"
