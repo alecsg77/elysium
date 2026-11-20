@@ -42,6 +42,10 @@ override_data {
 run "running" {
   command = apply
   assert {
+    condition     = coder_app.orca[0].share == "owner" && coder_app.orca[0].subdomain
+    error_message = "Automatic Orca pairing requires an owner-only Coder app on its own origin."
+  }
+  assert {
     condition     = length(kubernetes_persistent_volume_claim_v1.data) == 2
     error_message = "Home and project storage must be separate persistent resources."
   }

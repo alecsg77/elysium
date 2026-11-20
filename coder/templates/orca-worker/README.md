@@ -31,16 +31,13 @@ checksums together in a separate PR.
 The test-only profile under `~/.local/share/orca-coder-pilot` stays separate.
 Git worktrees already on the workspace volumes remain available after re-pairing.
 
-Open **Orca** from the workspace dashboard. The app uses an HTTPS subdomain
-restricted to the owner by Coder, so the deployment needs a wildcard access URL.
-From a terminal in the worker, issue a private offer for that browser URL:
-
-```sh
-orca-ide pair --address wss://<orca-app-hostname>
-```
-
-Open the browser link from the command in the same browser session as Coder.
-The link grants access to Orca. Keep it out of shared logs and messages.
+Open **Orca** from the workspace dashboard to pair the browser automatically.
+The app is restricted to the owner by Coder and requires an HTTPS wildcard on
+the Coder access domain. A loopback proxy issues the invite only on a
+same-origin request from that app. Orca uses the fragment in the pairing link,
+which stays out of proxy requests and logs.
+If browser credentials need to be replaced, revisit the app root with
+`?pair=1`. Use the **Open Orca** link on the setup page for manual pairing.
 
 For desktop or mobile, use a private tunnel to port 6768. From the worker, run
 `orca-ide pair --address ws://<private-tunnel-address>:<port>`, adding

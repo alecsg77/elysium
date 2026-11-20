@@ -118,9 +118,12 @@ resource "coder_agent" "main" {
   arch = "amd64"
   dir  = "/workspaces/project"
   env = {
-    HOME                = "/home/coder"
-    CODEX_HOME          = "/home/coder/.codex"
-    ORCA_USER_DATA_PATH = "/home/coder/.local/share/orca/profile"
+    HOME                 = "/home/coder"
+    CODEX_HOME           = "/home/coder/.codex"
+    ORCA_USER_DATA_PATH  = "/home/coder/.local/share/orca/profile"
+    ORCA_CODER_URL       = data.coder_workspace.me.access_url
+    ORCA_CODER_WORKSPACE = data.coder_workspace.me.name
+    ORCA_CODER_OWNER     = data.coder_workspace_owner.me.name
   }
   startup_script = <<-EOT
     set -eu
@@ -245,7 +248,11 @@ resource "coder_script" "orca" {
   agent_id     = coder_agent.main.id
   display_name = "Start Orca"
   run_on_start = true
-  script       = file("${path.module}/scripts/start-orca.sh")
+  script       = <<-EOT
+    #!/usr/bin/env bash
+    export ORCA_WEB_BOOTSTRAP_BASE64='${base64encode(file("${path.module}/scripts/web-bootstrap.cjs"))}'
+    ${file("${path.module}/scripts/start-orca.sh")}
+  EOT
   timeout      = 900
 }
 resource "coder_app" "orca" {
@@ -253,12 +260,12 @@ resource "coder_app" "orca" {
   agent_id     = coder_agent.main.id
   slug         = "orca"
   display_name = "Orca"
-  url          = "http://127.0.0.1:6768/"
+  url          = "http://127.0.0.1:6769/"
   share        = "owner"
   subdomain    = true
   open_in      = "tab"
   healthcheck {
-    url       = "http://127.0.0.1:6768/"
+    url       = "http://127.0.0.1:6769/_coder_orca/health"
     interval  = 5
     threshold = 3
   }

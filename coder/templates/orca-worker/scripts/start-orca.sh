@@ -67,4 +67,22 @@ if ! ready; then
 fi
 
 "$cli" repo add --path "$project" --kind git >/dev/null
+proxy_ready() {
+  curl --fail --silent --max-time 2 http://127.0.0.1:6769/_coder_orca/health >/dev/null
+}
+if ! proxy_ready; then
+  nodes=("$install_dir"/runtimes/node-*/bin/node)
+  printf '%s' "$ORCA_WEB_BOOTSTRAP_BASE64" | base64 -d >"$state/web-bootstrap.cjs"
+  unset ORCA_WEB_BOOTSTRAP_BASE64
+  nohup "${nodes[0]}" "$state/web-bootstrap.cjs" "$cli" \
+    </dev/null >"$state/web-bootstrap.log" 2>&1 &
+  for ((attempt = 0; attempt < 10; attempt++)); do
+    if proxy_ready; then break; fi
+    sleep 1
+  done
+  if ! proxy_ready; then
+    echo "Orca web bootstrap did not start. Inspect $state/web-bootstrap.log." >&2
+    exit 1
+  fi
+fi
 printf '%s\n' "Orca $version is ready."
