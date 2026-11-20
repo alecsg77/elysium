@@ -116,7 +116,7 @@ data "coder_parameter" "repo" {
 }
 
 data "coder_parameter" "fallback_image" {
-  default      = "codercom/enterprise-base:ubuntu-20261112"
+  default      = "codercom/enterprise-base:ubuntu-20261119"
   description  = "This image runs if the devcontainer fails to build."
   display_name = "Fallback Image"
   mutable      = true
@@ -477,7 +477,7 @@ module "jetbrains" {
 module "codex" {
   count               = data.coder_workspace.me.start_count
   source              = "registry.coder.com/coder-labs/codex/coder"
-  version             = "5.5.0"
+  version             = "5.5.1"
   agent_id            = coder_agent.main.id
   workdir             = local.workspace_folder
   post_install_script = file("${path.module}/scripts/install-codex-code-mode-host.sh")

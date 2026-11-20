@@ -224,7 +224,7 @@ resource "kubernetes_deployment_v1" "main" {
 module "codex" {
   count         = data.coder_workspace.me.start_count
   source        = "registry.coder.com/coder-labs/codex/coder"
-  version       = "5.5.0"
+  version       = "5.5.1"
   agent_id      = coder_agent.main.id
   workdir       = "/workspaces/project"
   codex_version = "0.166.0"
