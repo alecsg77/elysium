@@ -394,6 +394,6 @@ module "git_clone" {
 module "devcontainers-cli" {
   count    = data.coder_parameter.git_repo.value != "" ? data.coder_workspace.me.start_count : 0
   source   = "registry.coder.com/coder/devcontainers-cli/coder"
-  version  = "~> 1.0"
+  version  = "~> 2.0"
   agent_id = coder_agent.main.id
 }
