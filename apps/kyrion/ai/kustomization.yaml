@@ -9,6 +9,7 @@ resources:
   - ../../base/local-ai
   - ../../base/openclaw
   - ../../base/orca-hub
+  - ../../base/orca-web
   - ../../base/paperclip
   - copilot-api-sealed-secret.yaml
   - openclaw-backup-repository-pv.yaml
@@ -19,6 +20,7 @@ resources:
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml
   - orca-hub-ingress.yaml
+  - orca-web-ingress.yaml
   - paperclip-db-auth-sealed-secret.yaml
   - paperclip-sealed-secret.yaml
 

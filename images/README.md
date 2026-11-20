@@ -14,6 +14,7 @@ so an upstream tag changing in place cannot silently change a release's inputs.
 | Image | Image release | Bundled application | Platform |
 | --- | --- | --- | --- |
 | [orca-hub](orca-hub/README.md) | 1.0.0 | Orca 1.4.248 | Linux amd64 |
+| [orca-web](orca-web/README.md) | 1.0.0 | Orca Web 1.4.265 | Linux amd64 |
 
 ## Build and publication
 
