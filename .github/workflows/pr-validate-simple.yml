@@ -219,6 +219,12 @@ jobs:
         with:
           terraform_wrapper: false
 
+      - name: Validate browser parameter rules
+        if: steps.changes.outputs.coder == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: require(process.env.GITHUB_WORKSPACE + '/coder/templates/orca-worker/tests/browser-validation.cjs');
+
       - name: Validate Coder templates
         if: steps.changes.outputs.coder == 'true'
         env:

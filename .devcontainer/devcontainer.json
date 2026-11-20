@@ -58,15 +58,9 @@
 		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"./features/coder-cli": {},
 		"ghcr.io/tailscale/codespace/tailscale:1": {},
-		"ghcr.io/devcontainers/features/node:2": {},
 		"./features/kompose": {},
-		// Renovate CLI: no local-feature pattern applies here (Renovate ships as
-		// an npm package, not a checksummed GitHub-release binary), so this uses
-		// the official community feature instead (tier 2 of the policy above).
-		// It declares installsAfter node, so install order relative to
-		// features/node:2 is handled automatically. Enables local config
-		// validation (`renovate-config-validator`) and local dry-runs
-		// (`renovate --platform=local ...`) without relying on npx.
+		// Envbuilder 1.3 ignores installsAfter. Node is supplied by the base
+		// image so Renovate does not invoke its incomplete Node fallback installer.
 		"ghcr.io/devcontainers-extra/features/renovate-cli:2": {}
 		// Removed ghcr.io/devcontainers/features/azure-cli and
 		// ghcr.io/devcontainers/features/copilot-cli:1: no `az` or
@@ -139,7 +133,9 @@
 		"terraform": "terraform -install-autocomplete",
 		// Keep these operations in one command: GitHub CLI setup modifies the
 		// copied config and must happen after the host configuration is in $HOME.
-		"git-auth": "set -eu; install -m 0600 /tmp/host-gitconfig \"$HOME/.gitconfig\"; if [ -n \"${GH_TOKEN:-}\" ]; then (cd \"$HOME\" && gh auth setup-git); fi",
+		// Envbuilder does not provide the host bind mount; retain the workspace
+		// configuration in that case.
+		"git-auth": "set -eu; if [ -f /tmp/host-gitconfig ]; then install -m 0600 /tmp/host-gitconfig \"$HOME/.gitconfig\"; fi; if [ -n \"${GH_TOKEN:-}\" ]; then (cd \"$HOME\" && gh auth setup-git); fi",
 		"coder": "sudo sh -c 'coder completion -s bash -p > /etc/bash_completion.d/coder'",
 		"tailscale": "sudo sh -c 'tailscale completion bash > /etc/bash_completion.d/tailscale'"
 	}

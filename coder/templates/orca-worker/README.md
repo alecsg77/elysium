@@ -12,7 +12,7 @@ and Envbuilder builds its devcontainer directly in the workspace Pod. The comple
 `/home/coder` and `/workspaces` use separate workspace-scoped PVCs. Only the
 Deployment follows Coder's start/stop count; both PVCs survive a workspace stop.
 
-The project must provide Linux amd64 with glibc (for example Debian/Ubuntu), Bash, curl, tar, sha256sum, getent, cut,
+The project must provide Linux amd64 with glibc (for example Debian/Ubuntu), Bash, curl, tar, sha256sum, getent, cut, chown,
 mountpoint, and the account `coder` with UID/GID 1000 and home `/home/coder`.
 Set `containerUser` and `remoteUser` to `coder` in `devcontainer.json`.
 The setup fails if that account or the persistent mounts are missing.
@@ -31,6 +31,12 @@ This pilot reuses the repository's existing approach while avoiding nested Docke
 storage. Home is excluded from the in-place image build; install system tools in
 the image, not into the mounted home during image construction. Nix can be added
 to the project image later; non-interactive agent launches must activate its shell.
+
+The cluster settings enable layer caching through the internal registry.
+Envbuilder builds from the workspace checkout, so local devcontainer edits still
+apply. Cached layers contain build outputs. Keep credentials out of the Docker
+build context and avoid copying local secrets into the image. See the
+[cache validation steps](../../../docs/runbooks/orca-pilot.md#validation-and-acceptance).
 
 Deleting a Coder workspace can delete its Terraform-managed PVCs. Stop a workspace
 to retain it; export or back up its data before deletion. This template does not

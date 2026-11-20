@@ -18,6 +18,11 @@ variable "namespace" {
   default     = "coder"
   description = "Existing namespace used by the Coder provisioner."
 }
+variable "cache_repo" {
+  type        = string
+  default     = ""
+  description = "Registry repository for Envbuilder layer caching. Empty disables caching."
+}
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 data "coder_external_auth" "github" {
@@ -33,7 +38,8 @@ data "coder_parameter" "repo" {
   validation {
     # Import evaluates required parameters before a workspace supplies a value.
     # Omitting default keeps the repository required in Coder's workspace form.
-    regex = "^(|https://[^@[:space:]]+)$"
+    # The same pattern is evaluated by Go and browser JavaScript.
+    regex = "^(|https://[^@\\s]+)$"
     error = "Use an HTTPS repository URL without embedded credentials."
   }
 }
@@ -179,7 +185,8 @@ resource "kubernetes_deployment_v1" "main" {
               ENVBUILDER_GIT_URL               = data.coder_parameter.repo.value
               ENVBUILDER_WORKSPACE_FOLDER      = "/workspaces/project"
               ENVBUILDER_DEVCONTAINER_DIR      = data.coder_parameter.devcontainer_dir.value
-              ENVBUILDER_IGNORE_PATHS          = "/var/run,/product_uuid,/product_name,/home/coder"
+              ENVBUILDER_IGNORE_PATHS          = "/var/run,/product_uuid,/product_name,/home/coder,/workspaces"
+              ENVBUILDER_CACHE_REPO            = var.cache_repo
               ENVBUILDER_EXIT_ON_BUILD_FAILURE = "true"
               ENVBUILDER_GIT_USERNAME          = data.coder_external_auth.github.access_token != "" ? "x-access-token" : ""
               ENVBUILDER_GIT_PASSWORD          = data.coder_external_auth.github.access_token

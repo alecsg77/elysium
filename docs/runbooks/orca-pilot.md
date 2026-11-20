@@ -11,7 +11,7 @@ in a later PR, then validate the actual deployment as part of that rollout.
 Required: Coder with the existing Kubernetes provisioner in namespace `coder`,
 Linux amd64, private connectivity, Docker for local checks, and a project
 repository providing the `coder` account (UID/GID 1000, home `/home/coder`).
-The devcontainer needs Bash, curl, tar, sha256sum, getent, cut, and mountpoint.
+The devcontainer needs Bash, curl, tar, sha256sum, getent, cut, chown, and mountpoint.
 GitHub external auth is optional and enables private HTTPS cloning.
 
 ## Architecture and storage
@@ -30,8 +30,11 @@ flowchart TD
 Each worker has two independent PVCs. Neither depends on `start_count`; only the
 Deployment and installer scripts follow the running state. The home is mounted
 directly in the agent environment and excluded from Envbuilder's image build.
-The setup checks the account and mountpoints before starting the Coder agent.
-Project checkout is always `/workspaces/project`.
+The setup checks the account and mountpoints before starting the Coder agent,
+and repairs checkout ownership left by an interrupted first build.
+Project checkout is always `/workspaces/project`. Envbuilder does not apply the
+project's host bind mounts; copying a host `.gitconfig` is therefore optional.
+Authenticate tools inside the workspace instead of relying on host credentials.
 
 The design incorporates the Mux fixes already in this repository: commit
 `3430eb1` removed the PVC's start/stop count after whole-home data loss; `4a4fde1`
@@ -40,7 +43,23 @@ separate storage corruption. No existing Mux PVC or cache is changed here.
 
 Envbuilder 1.3.0 is in maintenance mode and requires a privileged worker Pod.
 This pilot accepts that tradeoff to reuse the existing devcontainer build path
-without nested Docker. A Nix environment can later replace project tooling;
+without nested Docker. Replacement pods reuse matching build layers from the
+internal registry. Envbuilder still builds from the persistent checkout and runs
+the project lifecycle hooks. The cache uses content hashes and Envbuilder's
+default seven-day TTL. Build context files deliberately copied into an image can
+be cached, so keep secrets out of that context. Set `cache_repo` to an empty string
+to disable caching.
+
+Envbuilder accesses the HTTP registry from the pod using its full `.cluster.local`
+service name. The registry client recognizes the `.local` suffix as local, so Git
+and external HTTPS registries keep certificate verification. It does not require
+the node runtime to resolve the service name.
+
+Envbuilder installs Features alphabetically rather than honoring
+`installsAfter`; the project therefore uses an official Node base image so npm is
+available before the Renovate Feature runs. The base account is aligned to
+`coder:1000:1000` without writing into the mounted home during the image build.
+A Nix environment can later replace project tooling;
 it does not replace persistent home storage, and its shell must be activated for
 non-interactive agent launches as well as terminals.
 
@@ -98,7 +117,7 @@ Run local checks:
 terraform -chdir=coder/templates/orca-worker init -backend=false
 terraform -chdir=coder/templates/orca-worker validate
 terraform -chdir=coder/templates/orca-worker test
-bash coder/templates/orca-worker/tests/storage-smoke.sh
+ORCA_CACHE_TEST=true bash coder/templates/orca-worker/tests/storage-smoke.sh
 ```
 
 The Terraform tests run in PR validation. A plan with the real Coder provider checks
@@ -109,7 +128,9 @@ PVC identities, then resumes on the same storage. The Docker integration check u
 synthetic authentication/configuration/history files, removes the whole worker
 container, rebuilds its devcontainer on the same volumes, and verifies those files
 and an uncommitted project file. It creates only disposable named volumes and
-containers and removes them on exit; it uses no real provider credentials.
+containers and removes them on exit. Cache mode starts a disposable HTTP registry,
+verifies the second build hits the cache and inspects the cached layers for
+synthetic credentials and persistent files (requires Python 3 and zstd).
 
 Verify all of these with the local hub on dedicated Coder workspaces, then repeat
 the relevant checks against the deployed hub during cluster activation:

@@ -1,14 +1,14 @@
-# This custom Dockerfile selects a minimal Bookworm base and applies the
-# upstream buildpack-deps timezone-data workaround. Application tooling stays
-# in Dev Container Features; build.options in devcontainer.json still passes
-# --network=host while those Features are layered onto this image.
-ARG VARIANT="bookworm"
-FROM buildpack-deps:${VARIANT}-curl
+# Envbuilder ignores Feature installation dependencies, so npm-based Features
+# need Node before any Feature runs. Keep the runtime in the official base image.
+FROM node:26.13.1-bookworm@sha256:b7087bc4d973034b30854b378ba107f9fab622b47514cb7e2592e41b8bab8d49
 
-# Set a UTF-8 locale so Unicode renders correctly in locale-aware tools.
 ENV LANG=C.UTF-8
 
-# Work around timezone-data issues in buildpack-deps images.
+# Reuse the base image's UID/GID 1000 for the persistent Coder home.
+RUN usermod --login coder --home /home/coder node \
+    && groupmod --new-name coder node
+
+# Work around timezone-data issues in the underlying buildpack-deps image.
 RUN apt-get update \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y reinstall --no-install-recommends tzdata \
