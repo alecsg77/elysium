@@ -118,8 +118,9 @@ resource "coder_agent" "main" {
   arch = "amd64"
   dir  = "/workspaces/project"
   env = {
-    HOME       = "/home/coder"
-    CODEX_HOME = "/home/coder/.codex"
+    HOME                = "/home/coder"
+    CODEX_HOME          = "/home/coder/.codex"
+    ORCA_USER_DATA_PATH = "/home/coder/.local/share/orca/profile"
   }
   startup_script = <<-EOT
     set -eu
@@ -154,6 +155,7 @@ resource "kubernetes_deployment_v1" "main" {
       }
       spec {
         automount_service_account_token = false
+        hostname                        = local.name
         node_selector                   = { "kubernetes.io/arch" = "amd64" }
         init_container {
           name    = "home-owner"
@@ -227,7 +229,7 @@ module "codex" {
   version       = "5.5.1"
   agent_id      = coder_agent.main.id
   workdir       = "/workspaces/project"
-  codex_version = "0.166.0"
+  codex_version = "0.171.0" # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>\d+\.\d+\.\d+)$ versioning=semver
   manage_config = false
 }
 resource "coder_script" "opencode" {
@@ -237,6 +239,29 @@ resource "coder_script" "opencode" {
   run_on_start       = true
   start_blocks_login = true
   script             = file("${path.module}/scripts/install-opencode.sh")
+}
+resource "coder_script" "orca" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  display_name = "Start Orca"
+  run_on_start = true
+  script       = file("${path.module}/scripts/start-orca.sh")
+  timeout      = 900
+}
+resource "coder_app" "orca" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  slug         = "orca"
+  display_name = "Orca"
+  url          = "http://127.0.0.1:6768/"
+  share        = "owner"
+  subdomain    = true
+  open_in      = "tab"
+  healthcheck {
+    url       = "http://127.0.0.1:6768/"
+    interval  = 5
+    threshold = 3
+  }
 }
 module "git_config" {
   count              = data.coder_workspace.me.start_count
