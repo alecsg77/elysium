@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orca-hub
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: orca-hub
+      port:
+        name: http
+  tls:
+    - hosts:
+        - orca-hub
