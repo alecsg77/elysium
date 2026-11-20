@@ -161,13 +161,13 @@ After Flux reconciles the activation commit:
 
 1. Confirm the hub pod is Ready, its PVC is Bound and the Tailscale ingress has
    an HTTPS address. Load the web bundle from a client on the tailnet.
-2. Review the pairing output privately from the hub container logs. A link can
-   grant access to a workspace and must stay out of issue comments, PRs and CI
-   logs. Use the runtime link for desktop or browser and a mobile-scoped link
-   for the phone. The image reads `ORCA_MOBILE_PAIRING=1` at startup. Set it
-   through the overlay for a mobile pairing rollout after the desktop is
-   paired. The retained home preserves the desktop grant when the pod is
-   replaced. Revoke temporary test grants after verification.
+2. The hub starts with pairing offers disabled. Keep this flag in the deployed
+   manifest so Kubernetes log readers cannot obtain an access link. The pinned
+   hub release lacks the on-demand `pair` command. Before onboarding new
+   clients, upgrade to a release that supports it and verify that an authorized
+   operator can issue an invite over `kubectl exec`. Keep the output private.
+   Review previously issued invites and device grants and revoke any
+   unrecognized grants. Changing startup arguments cannot remove old logs.
 3. Authenticate Coder on the hub with a dedicated credential. Configure its
    OpenSSH alias on the hub and test that it reaches the worker checkout.
    On the paired desktop, select the hub when adding the SSH target so the
