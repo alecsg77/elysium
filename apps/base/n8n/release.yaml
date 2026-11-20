@@ -15,7 +15,7 @@ spec:
   wait: true
   images:
     - name: postgres
-      newTag: "18.6@sha256:979bccfde35445db618c65107d27d08c6c21339d8dc3ad4c830c6633947be0e4"
+      newTag: "19.0@sha256:bb6e70add742cd868fb62cb3b2f67d1dd2bdd2b65a521e778420748753687c60"
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment
