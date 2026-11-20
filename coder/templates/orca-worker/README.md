@@ -22,31 +22,22 @@ OpenCode is downloaded from a checksum-pinned upstream release. Neither installe
 rewrites authentication. Authenticate Codex and OpenRouter in the workspace once;
 their files, settings and histories then live in the persistent home.
 
-The Coder startup script installs the checksum-pinned Orca server and web bundle
-from the same upstream release, starts Orca and imports `/workspaces/project`.
-The installation, pairing state and logs live in `~/.local/share/orca`. The first
-start downloads both upstream assets. Later starts reuse the installation.
-Renovate proposes Codex CLI upgrades and updates the Orca release and both asset
-checksums together in a separate PR.
-The test-only profile under `~/.local/share/orca-coder-pilot` stays separate.
-Git worktrees already on the workspace volumes remain available after re-pairing.
+The Coder startup script installs the checksum-pinned Orca server-only archive,
+starts the runtime, and imports `/workspaces/project`. The installation, pairing
+state and logs live in `~/.local/share/orca`. Renovate proposes Codex CLI upgrades
+and updates the Orca version and server archive checksum together. The pilot
+profile under `~/.local/share/orca-coder-pilot` stays separate.
 
-Open **Orca** from the workspace dashboard. The app uses an HTTPS subdomain
-restricted to the owner by Coder, so the deployment needs a wildcard access URL.
-From a terminal in the worker, issue a private offer for that browser URL:
+For Orca Desktop or Mobile, use a private tunnel to port 6768. From the Coder
+terminal, generate a private access link with:
 
 ```sh
-orca-ide pair --address wss://<orca-app-hostname>
+orca-ide pair --address ws://<private-tunnel-address>:<port>
 ```
 
-Open the browser link from the command in the same browser session as Coder.
-The link grants access to Orca. Keep it out of shared logs and messages.
-
-For desktop or mobile, use a private tunnel to port 6768. From the worker, run
-`orca-ide pair --address ws://<private-tunnel-address>:<port>`, adding
-`--mobile` for the phone. The Coder web app uses the browser's authenticated
-session. Keep the private tunnel for native clients. The native listener is
-reachable on pod interfaces and no Kubernetes Service is created for it.
+Use `--mobile` for the phone. The address must be reachable from the client.
+The runtime listens on pod interfaces. Coder creates no web app or Kubernetes
+Service for it. Keep pairing links out of shared logs and messages.
 
 Parameters select the HTTPS repository, devcontainer directory, CPU, memory, and
 the size of each volume. The repository and disk size are immutable. GitHub

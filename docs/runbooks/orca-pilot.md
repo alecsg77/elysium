@@ -17,9 +17,9 @@ GitHub external auth is optional and enables private HTTPS cloning.
 
 ```mermaid
 flowchart TD
-  Clients[Desktop, Android, optional browser] --> Hub[Orca Electron hub]
-  Hub -->|SSH through Coder| A[Project A workspace]
-  Hub -->|SSH through Coder| B[Project B workspace]
+  Clients[Orca Desktop and Mobile] --> Hub[Orca hub runtime]
+  Clients -->|Private tunnel| A[Project A Orca runtime]
+  Clients -->|Private tunnel| B[Project B Orca runtime]
   A --> AH[Persistent home A]
   A --> AR[Persistent project A and worktrees]
   B --> BH[Persistent home B]
@@ -64,49 +64,27 @@ non-interactive agent launches as well as terminals.
 
 ## Local hub and worker setup
 
-1. Build the hub from the repository root:
+1. Build and start a local server-only hub:
 
    ```bash
-   docker build -t elysium/orca-hub:1.0.0 images/orca-hub/context
+   docker build -t elysium/orca-hub:2.0.0 images/orca-hub/context
    docker run -d --name orca-hub-pilot \
      --mount type=volume,src=orca-hub-pilot-home,dst=/home/coder \
      -e ORCA_PAIRING_ADDRESS=ws://127.0.0.1:16768 \
-     -p 127.0.0.1:16768:6768 elysium/orca-hub:1.0.0
+     -p 127.0.0.1:16768:6768 elysium/orca-hub:2.0.0
+   docker exec -it orca-hub-pilot orca-ide pair --address ws://127.0.0.1:16768
    ```
 
-   Loopback is suitable for an SSH-forwarded browser check, not a phone or remote
-   native client. For native clients, bind only an approved private interface and
-   advertise its reachable address. Do not expose the runtime port publicly.
-   The browser bundle is served at the forwarded port. Pairing is still required.
+   For a remote client, use a private forwarding address reachable from that
+   client. Add `--mobile` to the pairing command for the phone.
 
-2. Create an `orca-worker` workspace in Coder. Select the project repository and
-   devcontainer directory. Wait for the Codex and OpenCode installers to finish.
-   Use one workspace per project. A normal Coder stop retains its two PVCs.
+2. Create one `orca-worker` workspace per project. Select the repository and
+   devcontainer directory. Authenticate Codex and OpenCode inside each worker.
+   Their installers preserve user configuration and login in `/home/coder`.
 
-3. Authenticate the hub's Coder CLI interactively:
-
-   ```bash
-   docker exec -it orca-hub-pilot coder login https://coder.example.com
-   docker exec -it orca-hub-pilot coder config-ssh
-   ```
-
-   Substitute the deployment URL locally. The hub home retains CLI configuration
-   and SSH config. Never place its session token in Git or a command argument.
-   Import the generated OpenSSH workspace alias in Orca's SSH settings. Verify
-   that the generated Coder `ProxyCommand` works before launching an agent.
-
-4. In the worker, authenticate Codex with its supported browser/device login and
-   connect OpenCode to OpenRouter. Keep their files under `/home/coder`.
-   The Codex module has `manage_config = false` and supplies no API key, so it
-   preserves user configuration and login. OpenCode installation changes only its
-   executable. No AI agent needs to run on the hub for a project task.
-
-5. On desktop, add/pair the hub and select the workspace as an SSH target. Create
-   task worktrees below the persistent project path. For Android, recreate the hub on the same home volume with
-   `ORCA_MOBILE_PAIRING=1` to request a mobile-scoped link. Previously paired
-   desktop clients retain their grants. Direct SSH and paired Orca runtimes differ in structured
-   chat features: validate the actual chat, approval, and history flow on both
-   clients rather than assuming identical behavior.
+3. Forward the worker's TCP port 6768 through a private tunnel. In the Coder
+   terminal, run `orca-ide pair --address ws://<tunnel-host>:<port>`. Add
+   `--mobile` for the phone. Enter the link in the relevant Orca client.
 
 ## Validation and acceptance
 
@@ -131,22 +109,12 @@ containers and removes them on exit. Cache mode starts a disposable HTTP registr
 verifies the second build hits the cache and inspects the cached layers for
 synthetic credentials and persistent files (requires Python 3 and zstd).
 
-Verify all of these with the local hub on dedicated Coder workspaces, then repeat
-the relevant checks against the deployed hub during cluster activation:
-
-- Clone, tool installation and Git worktree creation complete successfully.
-- Home files, settings, login and project edits survive stop/start, Pod replacement
-  and template/image update. Compare PVC identities before and after each step.
-- Codex and OpenCode run concurrently on different worktrees; project A cannot
-  access project B's mounted files. Shared cluster permissions/network access are
-  separate from filesystem isolation.
-- Desktop and Android can read chat, answer approvals and inspect diffs through
-  the hub. Disconnecting desktop leaves worker processes running.
-- Hub replacement retains SSH targets and pairing identity, then reconnects to
-  running workers without duplicating agent sessions.
-
-If hub-to-worker SSH or the required chat flow fails, retain the evidence and stop
-promotion. A per-workspace Orca runtime is a separate architecture decision.
+On a dedicated Coder workspace, verify that Docker builds the devcontainer,
+the startup script imports the checkout, and Desktop and Mobile can pair through
+a private tunnel. Create worktrees in the worker and start agents in parallel.
+After a stop/start or template update, compare PVC identities and confirm
+pairings, settings, agent login and uncommitted project edits are still present.
+Use the worker directly for project sessions. The hub is an independent runtime.
 
 ## Cluster promotion and rollback
 
@@ -157,24 +125,20 @@ substitution for the tailnet domain. The hub has a single replica and replaces
 the old pod before mounting its home in the new pod. Flux preserves the PVC if
 the app is removed from the overlay.
 
+Publish and test the server-only image before changing the deployment digest.
+Before activating it, preserve the existing Orca profile in a private backup
+outside the hub PVC and verify that it can be read back. Preserve the previous
+digest for rollback.
+
 After Flux reconciles the activation commit:
 
-1. Confirm the hub pod is Ready, its PVC is Bound and the Tailscale ingress has
-   an HTTPS address. Load the web bundle from a client on the tailnet.
-2. The hub starts with pairing offers disabled. Keep this flag in the deployed
-   manifest so Kubernetes log readers cannot obtain an access link. The pinned
-   hub release lacks the on-demand `pair` command. Before onboarding new
-   clients, upgrade to a release that supports it and verify that an authorized
-   operator can issue an invite over `kubectl exec`. Keep the output private.
-   Review previously issued invites and device grants and revoke any
-   unrecognized grants. Changing startup arguments cannot remove old logs.
-3. Authenticate Coder on the hub with a dedicated credential. Configure its
-   OpenSSH alias on the hub and test that it reaches the worker checkout.
-   On the paired desktop, select the hub when adding the SSH target so the
-   connection is owned by the hub. Add `/workspaces/project` from that target
-   and verify the worktree and terminal run on the worker.
-4. Exercise chat, approvals and persistence across a hub replacement before
-   relying on it for agent work.
+1. Confirm the hub pod is Ready on TCP port 6768, its PVC is Bound, and the
+   Tailscale ingress still routes WSS. The server-only root URL returns HTTP 404.
+2. Confirm startup logs contain no offers. To issue one interactively, run
+   `kubectl -n ai exec -it deployment/orca-hub -- orca-ide pair --address <hub-wss-url>`.
+   Add `--mobile` for the phone and give the link only to the intended client.
+3. Verify a client can connect, that an existing grant still works after
+   replacement and that the hub uses the same PVC.
 
 The hub home contains the Orca profile, grants and Coder client state. This
 pilot has no scheduled backup for that volume. A storage loss means rebuilding
