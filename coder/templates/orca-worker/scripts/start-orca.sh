@@ -2,9 +2,11 @@
 set -euo pipefail
 umask 077
 
+# Renovate updates both SHA-256 values together with the release version.
 version=1.4.265
-server_sha=eaba2039f351d47e2ddc5d1c1f0335df3ae81b5830565adc1bcba23fc7004d0c
-appimage_sha=8a51a08e241899d86775ad33f3af3a9e114b9cb300b79de1e764c922a0337026
+checksums=eaba2039f351d47e2ddc5d1c1f0335df3ae81b5830565adc1bcba23fc7004d0c:8a51a08e241899d86775ad33f3af3a9e114b9cb300b79de1e764c922a0337026
+server_sha=${checksums%:*}
+appimage_sha=${checksums#*:}
 release="https://github.com/stablyai/orca/releases/download/v$version"
 state="$HOME/.local/share/orca"
 install_dir="$state/$version"

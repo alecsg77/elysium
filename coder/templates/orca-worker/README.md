@@ -26,6 +26,8 @@ The Coder startup script installs the checksum-pinned Orca server and web bundle
 from the same upstream release, starts Orca and imports `/workspaces/project`.
 The installation, pairing state and logs live in `~/.local/share/orca`. The first
 start downloads both upstream assets. Later starts reuse the installation.
+Renovate proposes Codex CLI upgrades and updates the Orca release and both asset
+checksums together in a separate PR.
 The test-only profile under `~/.local/share/orca-coder-pilot` stays separate.
 Git worktrees already on the workspace volumes remain available after re-pairing.
 
