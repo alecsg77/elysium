@@ -5,10 +5,6 @@ terraform {
       source  = "coder/coder"
       version = ">= 2.12, < 3.0"
     }
-    envbuilder = {
-      source  = "coder/envbuilder"
-      version = "1.0.0"
-    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 3.2"
@@ -17,7 +13,6 @@ terraform {
 }
 provider "coder" {}
 provider "kubernetes" {}
-provider "envbuilder" {}
 variable "namespace" {
   type        = string
   default     = "coder"
@@ -26,21 +21,7 @@ variable "namespace" {
 variable "cache_repo" {
   type        = string
   default     = ""
-  description = "Registry repository for shared devcontainer layers; empty disables caching."
-}
-variable "insecure_cache_repo" {
-  type        = bool
-  default     = false
-  description = "Allow HTTP to the cache registry (trusted internal registry only)."
-}
-variable "use_cached_image" {
-  type        = bool
-  default     = false
-  description = "Probe and pull the complete cached image. Requires registry DNS and TLS/HTTP configuration in the node container runtime, in addition to pod/provisioner access."
-  validation {
-    condition     = !var.use_cached_image || var.cache_repo != ""
-    error_message = "Complete-image reuse requires a cache repository."
-  }
+  description = "Registry repository for Envbuilder layer caching. Empty disables caching."
 }
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
@@ -104,32 +85,7 @@ data "coder_parameter" "disk" {
   }
 }
 locals {
-  name          = "coder-${data.coder_workspace.me.id}-orca"
-  builder_image = "ghcr.io/coder/envbuilder:1.3.0"
-  cache_enabled = var.cache_repo != ""
-  probe_cache   = local.cache_enabled && var.use_cached_image && data.coder_parameter.repo.value != ""
-  build_env = {
-    ENVBUILDER_DEVCONTAINER_DIR       = data.coder_parameter.devcontainer_dir.value
-    ENVBUILDER_IGNORE_PATHS           = "/var/run,/product_uuid,/product_name,/home/coder,/workspaces"
-    ENVBUILDER_EXIT_ON_BUILD_FAILURE  = "true"
-    ENVBUILDER_GIT_USERNAME           = data.coder_external_auth.github.access_token != "" ? "x-access-token" : ""
-    ENVBUILDER_GIT_PASSWORD           = data.coder_external_auth.github.access_token
-    ENVBUILDER_REMOTE_REPO_BUILD_MODE = tostring(local.cache_enabled)
-    ENVBUILDER_PUSH_IMAGE             = tostring(local.cache_enabled && var.use_cached_image)
-  }
-  # Keep the provider's temporary clone path out of the worker's runtime configuration.
-  runtime_env = merge(local.build_env, {
-    CODER_AGENT_URL                 = data.coder_workspace.me.access_url
-    CODER_AGENT_TOKEN               = coder_agent.main.token
-    ENVBUILDER_GIT_URL              = data.coder_parameter.repo.value
-    ENVBUILDER_WORKSPACE_FOLDER     = "/workspaces/project"
-    ENVBUILDER_CACHE_REPO           = var.cache_repo
-    ENVBUILDER_INSECURE             = tostring(var.insecure_cache_repo)
-    ENVBUILDER_EXIT_ON_PUSH_FAILURE = "true"
-    ENVBUILDER_SETUP_SCRIPT         = file("${path.module}/scripts/check-user.sh")
-    ENVBUILDER_INIT_SCRIPT          = "export PATH=\"$HOME/.local/bin:$PATH\"\n${coder_agent.main.init_script}"
-  })
-  worker_image = local.probe_cache && data.coder_workspace.me.start_count > 0 ? envbuilder_cached_image.main[0].image : local.builder_image
+  name = "coder-${data.coder_workspace.me.id}-orca"
   labels = {
     "app.kubernetes.io/name"   = "coder-orca-worker"
     "com.coder.workspace.id"   = data.coder_workspace.me.id
@@ -137,14 +93,6 @@ locals {
     "com.coder.user.id"        = data.coder_workspace_owner.me.id
     "com.coder.resource"       = "true"
   }
-}
-resource "envbuilder_cached_image" "main" {
-  count         = local.probe_cache ? data.coder_workspace.me.start_count : 0
-  builder_image = local.builder_image
-  git_url       = data.coder_parameter.repo.value
-  cache_repo    = var.cache_repo
-  insecure      = var.insecure_cache_repo
-  extra_env     = local.build_env
 }
 # Storage must outlive the deployment removed by a normal Coder stop.
 resource "kubernetes_persistent_volume_claim_v1" "data" {
@@ -222,7 +170,7 @@ resource "kubernetes_deployment_v1" "main" {
         }
         container {
           name  = "dev"
-          image = local.worker_image
+          image = "ghcr.io/coder/envbuilder:1.3.0"
           security_context {
             privileged = true
           }
@@ -231,11 +179,24 @@ resource "kubernetes_deployment_v1" "main" {
             limits   = { cpu = data.coder_parameter.cpu.value, memory = "${data.coder_parameter.memory.value}Gi" }
           }
           dynamic "env" {
-            for_each = nonsensitive(toset(keys(local.runtime_env)))
+            for_each = {
+              CODER_AGENT_URL                  = data.coder_workspace.me.access_url
+              CODER_AGENT_TOKEN                = coder_agent.main.token
+              ENVBUILDER_GIT_URL               = data.coder_parameter.repo.value
+              ENVBUILDER_WORKSPACE_FOLDER      = "/workspaces/project"
+              ENVBUILDER_DEVCONTAINER_DIR      = data.coder_parameter.devcontainer_dir.value
+              ENVBUILDER_IGNORE_PATHS          = "/var/run,/product_uuid,/product_name,/home/coder,/workspaces"
+              ENVBUILDER_CACHE_REPO            = var.cache_repo
+              ENVBUILDER_EXIT_ON_BUILD_FAILURE = "true"
+              ENVBUILDER_GIT_USERNAME          = data.coder_external_auth.github.access_token != "" ? "x-access-token" : ""
+              ENVBUILDER_GIT_PASSWORD          = data.coder_external_auth.github.access_token
+              ENVBUILDER_SETUP_SCRIPT          = file("${path.module}/scripts/check-user.sh")
+              ENVBUILDER_INIT_SCRIPT           = "export PATH=\"$HOME/.local/bin:$PATH\"\n${coder_agent.main.init_script}"
+            }
             iterator = setting
             content {
-              name  = setting.value
-              value = local.runtime_env[setting.value]
+              name  = setting.key
+              value = setting.value
             }
           }
           volume_mount {

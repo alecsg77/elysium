@@ -9,14 +9,12 @@ container="$prefix-worker"
 fixture=$(mktemp -d)
 cache_test=${ORCA_CACHE_TEST:-false}
 registry="$prefix-registry"
-git_pid=
 cache_args=()
-worker_image=ghcr.io/coder/envbuilder:1.3.0
+network="$prefix-network"
 cleanup() {
   docker rm -f "$container" "$registry" >/dev/null 2>&1 || true
-  if [[ -n "$git_pid" ]]; then kill "$git_pid" 2>/dev/null || true; wait "$git_pid" 2>/dev/null || true; fi
+  docker network rm "$network" >/dev/null 2>&1 || true
   docker volume rm "$home_volume" "$project_volume" >/dev/null 2>&1 || true
-  if [[ "$worker_image" == 127.0.0.1:*@sha256:* ]]; then docker image rm "$worker_image" >/dev/null 2>&1 || true; fi
   rm -rf -- "$fixture"
 }
 trap cleanup EXIT
@@ -29,33 +27,22 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends passwd util-linux ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 1000 --create-home coder
-RUN printf build-once-fixture > /opt/orca-build-marker
 USER coder
 DOCKERFILE
 
-if [[ "$cache_test" != false ]]; then
-  git -C "$fixture" init -q --initial-branch=main
-  git -C "$fixture" add .
-  git -C "$fixture" -c user.name=Fixture -c user.email=fixture@example.com commit -qm fixture
-  git_port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')
-  git daemon --reuseaddr --export-all --listen=127.0.0.1 --port="$git_port" --base-path="$fixture" "$fixture" &
-  git_pid=$!
-  docker run -d --name "$registry" -p 127.0.0.1::5000 registry:3 >/dev/null
+if [[ "$cache_test" == true ]]; then
+  docker network create "$network" >/dev/null
+  docker run -d --name "$registry" --network "$network" --network-alias registry.test.local \
+    -p 127.0.0.1::5000 registry:3 >/dev/null
   registry_port=$(docker port "$registry" 5000/tcp | cut -d: -f2)
-  cache_args=(--network host
-    -e "ENVBUILDER_GIT_URL=git://127.0.0.1:$git_port/"
-    -e "ENVBUILDER_CACHE_REPO=127.0.0.1:$registry_port/devcontainer"
-    -e ENVBUILDER_INSECURE=true
-    -e ENVBUILDER_REMOTE_REPO_BUILD_MODE=true
-    -e "ENVBUILDER_PUSH_IMAGE=$([[ "$cache_test" == full ]] && echo true || echo false)"
-    -e ENVBUILDER_EXIT_ON_PUSH_FAILURE=true)
+  cache_args=(--network "$network" -e ENVBUILDER_CACHE_REPO=registry.test.local:5000/devcontainer)
 fi
 
 docker volume create "$home_volume" >/dev/null
 docker volume create "$project_volume" >/dev/null
 docker run --rm --mount "type=volume,src=$project_volume,dst=/data" \
   --mount "type=bind,src=$fixture,dst=/fixture,readonly" \
-  debian:bookworm-slim sh -ec 'mkdir -p /data/project; cp -a /fixture/. /data/project/; chown -R 0:0 /data/project'
+  debian:bookworm-slim sh -ec 'mkdir -p /data/project; cp -a /fixture/. /data/project/; printf project-fixture > /data/project/uncommitted-fixture; chown -R 0:0 /data/project'
 docker run --rm --mount "type=volume,src=$home_volume,dst=/data" \
   debian:bookworm-slim sh -ec 'mkdir -p /data/.codex; printf synthetic-auth-fixture > /data/.codex/auth.json; chown -R 1000:1000 /data'
 
@@ -68,7 +55,7 @@ start_worker() {
     -e ENVBUILDER_EXIT_ON_BUILD_FAILURE=true \
     -e ENVBUILDER_SETUP_SCRIPT="$(cat "$root/scripts/check-user.sh")" \
     -e ENVBUILDER_INIT_SCRIPT='test "$HOME" = /home/coder; exec sleep infinity' \
-    "$worker_image" >/dev/null
+    ghcr.io/coder/envbuilder:1.3.0 >/dev/null
   for _attempt in $(seq 1 120); do
     if docker exec --user coder "$container" test -f /etc/debian_version 2>/dev/null \
       && docker top "$container" -eo pid,comm | awk 'NR > 1 { print $2 }' | grep -qx sleep; then
@@ -84,66 +71,17 @@ start_worker() {
   return 1
 }
 
-probe_cache() {
-  local expected=$1
-  local terraform_bin=${TERRAFORM_BIN:-terraform}
-  mkdir -p "$fixture/probe"
-  cat > "$fixture/probe/main.tf" <<'TERRAFORM'
-terraform {
-  required_providers {
-    envbuilder = { source = "coder/envbuilder", version = "1.0.0" }
-  }
-}
-variable "git_url" { type = string }
-variable "cache_repo" { type = string }
-resource "envbuilder_cached_image" "test" {
-  builder_image = "ghcr.io/coder/envbuilder:1.3.0"
-  git_url       = var.git_url
-  cache_repo    = var.cache_repo
-  insecure      = true
-  extra_env = {
-    ENVBUILDER_DEVCONTAINER_DIR       = ".devcontainer"
-    ENVBUILDER_IGNORE_PATHS           = "/var/run,/product_uuid,/product_name,/home/coder,/workspaces"
-    ENVBUILDER_EXIT_ON_BUILD_FAILURE  = "true"
-    ENVBUILDER_REMOTE_REPO_BUILD_MODE = "true"
-    ENVBUILDER_PUSH_IMAGE             = "true"
-  }
-}
-output "exists" { value = envbuilder_cached_image.test.exists }
-output "image" { value = envbuilder_cached_image.test.image }
-TERRAFORM
-  "$terraform_bin" -chdir="$fixture/probe" init -backend=false -input=false -plugin-dir="$root/.terraform/providers" > "$fixture/probe-init.log" 2>&1
-  TF_LOG=INFO TF_LOG_PATH="$fixture/provider.log" "$terraform_bin" -chdir="$fixture/probe" apply -auto-approve -input=false \
-    -replace=envbuilder_cached_image.test \
-    -var="git_url=file://$fixture" \
-    -var="cache_repo=127.0.0.1:$registry_port/devcontainer" > "$fixture/probe-apply.log" 2>&1
-  if [[ "$("$terraform_bin" -chdir="$fixture/probe" output -raw exists)" != "$expected" ]]; then
-    cat "$fixture/probe-apply.log" >&2
-    tail -45 "$fixture/provider.log" >&2
-    return 1
-  fi
-  worker_image=$("$terraform_bin" -chdir="$fixture/probe" output -raw image)
-}
-if [[ "$cache_test" == full ]]; then probe_cache false; fi
-cold_started=$SECONDS
 start_worker
-cold_seconds=$((SECONDS - cold_started))
 docker exec --user coder "$container" sh -ec '
   mkdir -p /home/coder/.codex /home/coder/.config/orca /home/coder/.local/share/opencode
   test "$(cat /home/coder/.codex/auth.json)" = synthetic-auth-fixture
   printf settings-fixture > /home/coder/.config/orca/settings.json
   printf history-fixture > /home/coder/.local/share/opencode/history-fixture
-  printf project-fixture > /workspaces/project/uncommitted-fixture
+  test "$(cat /workspaces/project/uncommitted-fixture)" = project-fixture
 '
-if [[ "$cache_test" != false ]]; then
-  docker logs "$container" > "$fixture/cold.log" 2>&1
-fi
-if [[ "$cache_test" == full ]]; then probe_cache true; fi
 # Remove the whole container to force a fresh in-place image build on the same data.
 docker rm -f "$container" >/dev/null
-warm_started=$SECONDS
 start_worker
-warm_seconds=$((SECONDS - warm_started))
 docker exec --user coder "$container" sh -ec '
   test "$(cat /home/coder/.codex/auth.json)" = synthetic-auth-fixture
   test "$(cat /home/coder/.config/orca/settings.json)" = settings-fixture
@@ -152,24 +90,18 @@ docker exec --user coder "$container" sh -ec '
 '
 printf '%s\n' 'PASS: complete home and project data survived container replacement and rebuild.'
 
-if [[ "$cache_test" != false ]]; then
+if [[ "$cache_test" == true ]]; then
   docker logs "$container" > "$fixture/warm.log" 2>&1
-  if [[ "$cache_test" == full ]]; then
-    [[ "$worker_image" == *@sha256:* ]]
-    if grep -q 'Building image' "$fixture/warm.log"; then
-      cat "$fixture/warm.log" >&2
-      echo 'The cached complete image unexpectedly rebuilt the devcontainer.' >&2
-      exit 1
-    fi
-  else
-    grep -q 'Found cached layer, extracting' "$fixture/warm.log"
+  if ! grep -q 'Found cached layer, extracting' "$fixture/warm.log"; then
+    cat "$fixture/warm.log" >&2
+    echo 'The second build did not reuse registry layers.' >&2
+    exit 1
   fi
   if grep -q 'No cached layer found' "$fixture/warm.log"; then
     cat "$fixture/warm.log" >&2
     echo 'The unchanged second build missed a cached layer.' >&2
     exit 1
   fi
-  docker exec "$container" test -f /opt/orca-build-marker
   python3 - "$registry_port" <<'PYTHON'
 import io
 import json
@@ -213,5 +145,5 @@ for tag in tags:
                     assert b"project-fixture" not in content, path
 print(f"PASS: {len(checked)} published layers exclude persistent home/project files and synthetic credentials.")
 PYTHON
-  printf 'PASS: cache mode %s (cold %ss, warm %ss).\n' "$cache_test" "$cold_seconds" "$warm_seconds"
+  printf '%s\n' 'PASS: unchanged second build reused layers from the HTTP registry.'
 fi

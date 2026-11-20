@@ -19,7 +19,6 @@ mock_provider "coder" {
   }
 }
 mock_provider "kubernetes" {}
-mock_provider "envbuilder" {}
 override_data {
   target = data.coder_parameter.repo
   values = { value = "https://example.com/project.git" }
