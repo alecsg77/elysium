@@ -164,11 +164,17 @@ After Flux reconciles the activation commit:
 2. Review the pairing output privately from the hub container logs. A link can
    grant access to a workspace and must stay out of issue comments, PRs and CI
    logs. Use the runtime link for desktop or browser and a mobile-scoped link
-   for the phone. Revoke any temporary test grants after verification.
-3. Authenticate Coder on the hub with a dedicated credential and verify SSH to
-   the pilot workspace before importing its OpenSSH alias. Test that a paired
-   client can see and use that SSH workspace. Exercise chat, approvals and
-   persistence across a hub replacement before relying on it for agent work.
+   for the phone. The image reads `ORCA_MOBILE_PAIRING=1` at startup. Set it
+   through the overlay for a mobile pairing rollout after the desktop is
+   paired. The retained home preserves the desktop grant when the pod is
+   replaced. Revoke temporary test grants after verification.
+3. Authenticate Coder on the hub with a dedicated credential. Configure its
+   OpenSSH alias on the hub and test that it reaches the worker checkout.
+   On the paired desktop, select the hub when adding the SSH target so the
+   connection is owned by the hub. Add `/workspaces/project` from that target
+   and verify the worktree and terminal run on the worker.
+4. Exercise chat, approvals and persistence across a hub replacement before
+   relying on it for agent work.
 
 The hub home contains the Orca profile, grants and Coder client state. This
 pilot has no scheduled backup for that volume. A storage loss means rebuilding
