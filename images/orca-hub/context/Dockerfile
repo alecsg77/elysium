@@ -1,4 +1,4 @@
-FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS unpack
+FROM ubuntu:26.04@sha256:d66b366dac61b575bee2aef07e9c26e8070096fbe84a3d4d3eb0da069b5d76db AS unpack
 ARG ORCA_VERSION=1.4.266
 ARG ORCA_SHA256=a45ca96d3c781b78231d5af2cd534149607d05df9c5b9fdcd545fe6c87ee88b5
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
@@ -12,7 +12,7 @@ RUN asset=orca-server-linux-x64.tar.gz \
     && test -x server/bin/orca-ide
 
 FROM ghcr.io/coder/coder:v2.39.0@sha256:5fb8f624dc0d33be89c72c7b2e384cdc7c2c5ac0d5847348d3aa0edaf058605c AS coder
-FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+FROM ubuntu:26.04@sha256:d66b366dac61b575bee2aef07e9c26e8070096fbe84a3d4d3eb0da069b5d76db
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git openssh-client procps tini \
     && rm -rf /var/lib/apt/lists/* \
