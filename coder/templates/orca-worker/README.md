@@ -17,6 +17,7 @@ Bash, curl, sha256sum, getent, cut, chown, mountpoint, and the account
 `coder` with UID/GID 1000 and home `/home/coder`. Set `containerUser`
 and `remoteUser` to `coder` in `devcontainer.json`. The Coder template installs
 the shared libraries for the packaged Orca CLI during Envbuilder setup.
+The pairing shortcut uses Node.js from the project devcontainer.
 
 Codex CLI 0.171.0 is installed by `coder-labs/codex` without managing user configuration.
 OpenCode is downloaded from a checksum-pinned upstream release. Neither installer

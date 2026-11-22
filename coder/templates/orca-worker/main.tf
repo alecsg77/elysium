@@ -278,7 +278,7 @@ resource "coder_app" "orca_pair" {
   command      = <<-EOT
     set -eu
     "$HOME/.local/bin/orca-ide" pair --json --address ${jsonencode("wss://${coder_app.orca[0].slug}--${data.coder_workspace.me.name}--${data.coder_workspace_owner.me.name}.${local.coder_app_domain}")} |
-      python3 -c 'import json, sys; print(json.load(sys.stdin)["result"]["webClientUrl"])'
+      node -e 'const { webClientUrl } = JSON.parse(require("fs").readFileSync(0, "utf8")).result; if (!webClientUrl) throw new Error("Missing Orca Web pairing link"); console.log(webClientUrl)'
     printf '\nApri il link nello stesso profilo browser. Premi Invio per terminare.\n'
     IFS= read -r _
   EOT
