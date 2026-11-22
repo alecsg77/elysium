@@ -159,7 +159,7 @@ module "mux" {
   count                = data.coder_workspace.me.start_count
   source               = "registry.coder.com/coder/mux/coder"
   version              = "2.0.0"
-  install_version      = "0.32.4" # renovate: datasource=github-releases depName=coder/mux extractVersion=^v(?<version>.+)$
+  install_version      = "0.32.5" # renovate: datasource=github-releases depName=coder/mux extractVersion=^v(?<version>.+)$
   agent_id             = coder_agent.main.id
   additional_arguments = "--host 127.0.0.1"
   subdomain            = true
@@ -177,7 +177,7 @@ module "mux" {
 module "devcontainers-cli" {
   count              = data.coder_workspace.me.start_count
   source             = "registry.coder.com/coder/devcontainers-cli/coder"
-  version            = "1.1.0"
+  version            = "2.0.0"
   agent_id           = coder_agent.main.id
   start_blocks_login = false
 }
