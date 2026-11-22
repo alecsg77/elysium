@@ -17,6 +17,7 @@ Bash, curl, sha256sum, getent, cut, chown, mountpoint, and the account
 `coder` with UID/GID 1000 and home `/home/coder`. Set `containerUser`
 and `remoteUser` to `coder` in `devcontainer.json`. The Coder template installs
 the shared libraries for the packaged Orca CLI during Envbuilder setup.
+The pairing shortcut uses Node.js from the project devcontainer.
 
 Codex CLI 0.171.0 is installed by `coder-labs/codex` without managing user configuration.
 OpenCode is downloaded from a checksum-pinned upstream release. Neither installer
@@ -30,14 +31,12 @@ Desktop `.deb` into the persistent home and runs `orca-ide serve` with
 state and logs live in `~/.local/share/orca`. Renovate updates the Orca version
 and the matching Debian package checksum together.
 
-Open **Orca Web** from the Coder workspace dashboard. Coder serves the app on
-its wildcard access domain and restricts it to the workspace owner. On first
-use, run the following in the workspace terminal and paste the access link
-into Orca Web in the same browser session as Coder:
-
-```sh
-orca-ide pair --address wss://<orca-web-app-hostname>
-```
+For the first use in each browser profile, click **Genera link Orca Web**
+on the Coder workspace dashboard. Open the link printed in the terminal
+in the same browser profile that is signed in to Coder. On subsequent visits,
+click **Orca Web**. Both apps are private to the workspace owner. The pairing
+shortcut uses the deployment's wildcard HTTPS domain under the Coder
+dashboard hostname.
 
 Orca Desktop and Mobile can still connect through a private tunnel to port
 6768. For native clients, use the reachable tunnel address instead of the
