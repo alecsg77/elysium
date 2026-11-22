@@ -177,7 +177,7 @@ module "mux" {
 module "devcontainers-cli" {
   count              = data.coder_workspace.me.start_count
   source             = "registry.coder.com/coder/devcontainers-cli/coder"
-  version            = "1.1.0"
+  version            = "2.0.0"
   agent_id           = coder_agent.main.id
   start_blocks_login = false
 }
