@@ -86,6 +86,8 @@ data "coder_parameter" "disk" {
 }
 locals {
   name = "coder-${data.coder_workspace.me.id}-orca"
+  # This deployment serves workspace apps under *.<access URL authority>.
+  coder_app_domain = trimsuffix(trimprefix(data.coder_workspace.me.access_url, "https://"), "/")
   labels = {
     "app.kubernetes.io/name"   = "coder-orca-worker"
     "com.coder.workspace.id"   = data.coder_workspace.me.id
@@ -118,8 +120,9 @@ resource "coder_agent" "main" {
   arch = "amd64"
   dir  = "/workspaces/project"
   env = {
-    HOME       = "/home/coder"
-    CODEX_HOME = "/home/coder/.codex"
+    HOME                = "/home/coder"
+    CODEX_HOME          = "/home/coder/.codex"
+    ORCA_USER_DATA_PATH = "/home/coder/.local/share/orca/profile"
   }
   startup_script = <<-EOT
     set -eu
@@ -154,6 +157,7 @@ resource "kubernetes_deployment_v1" "main" {
       }
       spec {
         automount_service_account_token = false
+        hostname                        = local.name
         node_selector                   = { "kubernetes.io/arch" = "amd64" }
         init_container {
           name    = "home-owner"
@@ -190,8 +194,11 @@ resource "kubernetes_deployment_v1" "main" {
               ENVBUILDER_EXIT_ON_BUILD_FAILURE = "true"
               ENVBUILDER_GIT_USERNAME          = data.coder_external_auth.github.access_token != "" ? "x-access-token" : ""
               ENVBUILDER_GIT_PASSWORD          = data.coder_external_auth.github.access_token
-              ENVBUILDER_SETUP_SCRIPT          = file("${path.module}/scripts/check-user.sh")
-              ENVBUILDER_INIT_SCRIPT           = "export PATH=\"$HOME/.local/bin:$PATH\"\n${coder_agent.main.init_script}"
+              ENVBUILDER_SETUP_SCRIPT = join("\n", [
+                file("${path.module}/scripts/check-user.sh"),
+                file("${path.module}/scripts/install-orca-libs.sh"),
+              ])
+              ENVBUILDER_INIT_SCRIPT = "export PATH=\"$HOME/.local/bin:$PATH\"\n${coder_agent.main.init_script}"
             }
             iterator = setting
             content {
@@ -227,7 +234,7 @@ module "codex" {
   version       = "5.5.1"
   agent_id      = coder_agent.main.id
   workdir       = "/workspaces/project"
-  codex_version = "0.166.0"
+  codex_version = "0.171.0" # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>\d+\.\d+\.\d+)$ versioning=semver
   manage_config = false
 }
 resource "coder_script" "opencode" {
@@ -237,6 +244,44 @@ resource "coder_script" "opencode" {
   run_on_start       = true
   start_blocks_login = true
   script             = file("${path.module}/scripts/install-opencode.sh")
+}
+resource "coder_script" "orca" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  display_name = "Start Orca"
+  run_on_start = true
+  script       = file("${path.module}/scripts/start-orca.sh")
+  timeout      = 900
+}
+resource "coder_app" "orca" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  slug         = "orca"
+  display_name = "Orca Web"
+  url          = "http://127.0.0.1:6768/"
+  share        = "owner"
+  subdomain    = true
+  open_in      = "tab"
+  healthcheck {
+    url       = "http://127.0.0.1:6768/"
+    interval  = 5
+    threshold = 3
+  }
+}
+resource "coder_app" "orca_pair" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  slug         = "orca-pair"
+  display_name = "Genera link Orca Web"
+  share        = "owner"
+  open_in      = "tab"
+  command      = <<-EOT
+    set -eu
+    "$HOME/.local/bin/orca-ide" pair --json --address ${jsonencode("wss://${coder_app.orca[0].slug}--${data.coder_workspace.me.name}--${data.coder_workspace_owner.me.name}.${local.coder_app_domain}")} |
+      node -e 'const { webClientUrl } = JSON.parse(require("fs").readFileSync(0, "utf8")).result; if (!webClientUrl) throw new Error("Missing Orca Web pairing link"); console.log(webClientUrl)'
+    printf '\nApri il link nello stesso profilo browser. Premi Invio per terminare.\n'
+    IFS= read -r _
+  EOT
 }
 module "git_config" {
   count              = data.coder_workspace.me.start_count

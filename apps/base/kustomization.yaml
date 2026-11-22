@@ -22,6 +22,7 @@ resources:
   - n8n
   - ollama
   - openclaw
+  - orca-hub
   - openwebui
   - seerr
   - pihole
