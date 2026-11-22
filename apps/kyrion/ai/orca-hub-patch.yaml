@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orca-hub
+spec:
+  template:
+    spec:
+      containers:
+        - name: orca
+          env:
+            - name: ORCA_PAIRING_ADDRESS
+              value: wss://orca-hub.${ts_net}

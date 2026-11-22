@@ -8,6 +8,7 @@ resources:
   - ../../base/copilot-api
   - ../../base/local-ai
   - ../../base/openclaw
+  - ../../base/orca-hub
   - ../../base/paperclip
   - copilot-api-sealed-secret.yaml
   - openclaw-backup-repository-pv.yaml
@@ -17,6 +18,7 @@ resources:
   - openclaw-sealed-secret.yaml
   - openclaw-tls-certificate.yaml
   - openclaw-copilot-auth-secret.yaml
+  - orca-hub-ingress.yaml
   - paperclip-db-auth-sealed-secret.yaml
   - paperclip-sealed-secret.yaml
 
@@ -33,3 +35,6 @@ configMapGenerator:
       disableNameSuffixHash: true
       labels:
         reconcile.fluxcd.io/watch: Enabled
+
+patches:
+  - path: orca-hub-patch.yaml
