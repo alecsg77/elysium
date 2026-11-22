@@ -86,6 +86,8 @@ data "coder_parameter" "disk" {
 }
 locals {
   name = "coder-${data.coder_workspace.me.id}-orca"
+  # This deployment serves workspace apps under *.<access URL authority>.
+  coder_app_domain = trimsuffix(trimprefix(data.coder_workspace.me.access_url, "https://"), "/")
   labels = {
     "app.kubernetes.io/name"   = "coder-orca-worker"
     "com.coder.workspace.id"   = data.coder_workspace.me.id
@@ -265,6 +267,21 @@ resource "coder_app" "orca" {
     interval  = 5
     threshold = 3
   }
+}
+resource "coder_app" "orca_pair" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  slug         = "orca-pair"
+  display_name = "Genera link Orca Web"
+  share        = "owner"
+  open_in      = "tab"
+  command      = <<-EOT
+    set -eu
+    "$HOME/.local/bin/orca-ide" pair --json --address ${jsonencode("wss://${coder_app.orca[0].slug}--${data.coder_workspace.me.name}--${data.coder_workspace_owner.me.name}.${local.coder_app_domain}")} |
+      python3 -c 'import json, sys; print(json.load(sys.stdin)["result"]["webClientUrl"])'
+    printf '\nApri il link nello stesso profilo browser. Premi Invio per terminare.\n'
+    IFS= read -r _
+  EOT
 }
 module "git_config" {
   count              = data.coder_workspace.me.start_count
