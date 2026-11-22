@@ -253,6 +253,14 @@ resource "coder_script" "orca" {
   script       = file("${path.module}/scripts/start-orca.sh")
   timeout      = 900
 }
+resource "coder_script" "orca_stop" {
+  count        = data.coder_workspace.me.start_count
+  agent_id     = coder_agent.main.id
+  display_name = "Stop Orca"
+  run_on_stop  = true
+  script       = file("${path.module}/scripts/stop-orca.sh")
+  timeout      = 20
+}
 resource "coder_app" "orca" {
   count        = data.coder_workspace.me.start_count
   agent_id     = coder_agent.main.id

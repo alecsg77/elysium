@@ -40,6 +40,7 @@ if ! ready; then
   ORCA_SERVE_RUNTIME=orcad nohup "$cli" serve --bind 0.0.0.0 --port 6768 --refuse-public --no-pairing \
     </dev/null >"$state/server.log" 2>&1 &
   server_pid=$!
+  printf '%s\n' "$server_pid" >/tmp/coder-orca-serve.pid
   for ((attempt = 0; attempt < 30; attempt++)); do
     if ready; then break; fi
     if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
