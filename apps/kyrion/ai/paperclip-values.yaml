@@ -1,5 +1,7 @@
 vars:
   HOST: "0.0.0.0"
+  USER_UID: "1001"
+  USER_GID: "1001"
   # Enables the board-authorized company hard-delete endpoint and CLI command.
   PAPERCLIP_ENABLE_COMPANY_DELETION: "true"
   PAPERCLIP_DEPLOYMENT_MODE: authenticated
