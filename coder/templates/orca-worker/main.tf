@@ -234,7 +234,7 @@ module "codex" {
   version       = "5.5.1"
   agent_id      = coder_agent.main.id
   workdir       = "/workspaces/project"
-  codex_version = "0.171.0" # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>\d+\.\d+\.\d+)$ versioning=semver
+  codex_version = "0.172.0" # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>\d+\.\d+\.\d+)$ versioning=semver
   manage_config = false
 }
 resource "coder_script" "opencode" {
