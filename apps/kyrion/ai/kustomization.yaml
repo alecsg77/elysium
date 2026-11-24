@@ -38,4 +38,3 @@ configMapGenerator:
 
 patches:
   - path: orca-hub-patch.yaml
-  - path: paperclip-uid-migration-patch.yaml
