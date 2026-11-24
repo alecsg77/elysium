@@ -38,20 +38,21 @@ spec:
     containerPort: 3100
     svcPort: 3100
     podSecurityContext:
-      fsGroup: 1000
+      fsGroup: 1001
+      fsGroupChangePolicy: OnRootMismatch
       seccompProfile:
         type: RuntimeDefault
     podSpec:
       automountServiceAccountToken: false
-    # The upstream entrypoint supports direct non-root execution as uid/gid 1000.
+    # Match the image's node user so bundled plugins can build in /app.
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:
         drop:
           - ALL
-      runAsGroup: 1000
+      runAsGroup: 1001
       runAsNonRoot: true
-      runAsUser: 1000
+      runAsUser: 1001
     resources:
       requests:
         cpu: 250m
