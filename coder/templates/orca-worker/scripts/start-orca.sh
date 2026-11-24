@@ -3,8 +3,8 @@ set -euo pipefail
 umask 077
 
 # Renovate updates the release version and its SHA-256 together.
-version=1.4.271
-deb_sha=7fad3d721dc0b0920f248353f5391fe0138331791acb64c9677c7a91bf41e755
+version=1.4.273
+deb_sha=8e3a3497c208bc0d53c0cfc3ce6fef7f1cf659361246eee4d3da0ccf73eb4d15
 asset="orca-ide_${version}_amd64.deb"
 release="https://github.com/stablyai/orca/releases/download/v$version"
 state="$HOME/.local/share/orca"
