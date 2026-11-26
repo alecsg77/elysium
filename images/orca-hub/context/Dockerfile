@@ -11,7 +11,7 @@ RUN asset=orca-server-linux-x64.tar.gz \
     && tar -xzf "$asset" --strip-components=1 -C server \
     && test -x server/bin/orca-ide
 
-FROM ghcr.io/coder/coder:v2.39.0@sha256:5fb8f624dc0d33be89c72c7b2e384cdc7c2c5ac0d5847348d3aa0edaf058605c AS coder
+FROM ghcr.io/coder/coder:v2.39.5@sha256:40fade40473a8a143d762f8ba0be07c0239be9932651f22046c0c0b21800552d AS coder
 FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git openssh-client procps tini \
